@@ -162,8 +162,6 @@ export default function DonasiSection() {
           background: linear-gradient(90deg, #22c55e, #4ade80);
           border-radius: 999px;
           animation: progressBar 1.8s ease forwards;
-          --pct: ${pct}%;
-          width: var(--pct);
         }
         .prog-meta {
           font-size: 13px;
@@ -256,7 +254,10 @@ export default function DonasiSection() {
               </span>
             </div>
             <div className="prog-bg">
-              <div className="prog-fill" />
+              <div
+                className="prog-fill"
+                style={{ width: `${pct}%` } as React.CSSProperties}
+              />
             </div>
             <p className="prog-meta">
               <span>{pct}%</span> dari target — Real-time

@@ -3,7 +3,8 @@ import Link from "next/link";
 interface KategoriItem {
   id: string;
   nama: string;
-  harga: string; // TODO: ganti dengan env variable dari panitia
+  tagline: string;
+  harga: string;
   ikon: string;
   bannerClass: string;
   slotLabel: string;
@@ -14,45 +15,37 @@ interface KategoriItem {
 
 const kategoriList: KategoriItem[] = [
   {
-    id: "tanpa-race-pack",
-    nama: "Fun Run 5K (Tanpa Race Pack)",
-    harga: "Rp 50.000", // TODO: isi harga dari panitia — env HARGA_FUN_RUN_TANPA
+    id: "fun-run",
+    nama: "Fun Run 5K",
+    tagline: "Lari santai 5 kilometer bersama komunitas",
+    harga: "Mulai Rp 50.000", // TODO: isi harga dari panitia — env HARGA_FUN_RUN
     ikon: "🏃",
     bannerClass: "cb-tanpa",
+    slotLabel: "🔥 Slot Terbatas",
+    slotClass: "slot-low",
+    benefits: [
+      "Pilihan paket: Tanpa Pack, Medal, Jersey, Fullpack",
+      "E-Certificate",
+      "Akses Rute Lari",
+      "Ikut Kegiatan Komunitas",
+    ],
+    popular: true, // tambahkan field ini
+  },
+  {
+    id: "fun-walk",
+    nama: "Fun Walk",
+    tagline: "Jalan santai untuk semua kalangan usia",
+    harga: "Segera Diumumkan", // TODO: isi harga dari panitia — env HARGA_FUN_WALK
+    ikon: "🚶",
+    bannerClass: "cb-medal",
     slotLabel: "♾ Unlimited Slot",
     slotClass: "slot-unlimited",
-    benefits: ["E-Certificate", "Akses Rute Lari", "Ikut Kegiatan Komunitas"],
-  },
-  {
-    id: "medal-only",
-    nama: "Fun Run 5K (Medal Only)",
-    harga: "Rp 120.000", // TODO: isi harga dari panitia — env HARGA_FUN_RUN_MEDAL
-    ikon: "🥇",
-    bannerClass: "cb-medal",
-    slotLabel: "🔥 15 Slot Tersisa",
-    slotClass: "slot-low",
-    benefits: ["Finisher Medal", "E-Certificate", "Akses Rute Lari"],
-    popular: true,
-  },
-  {
-    id: "jersey-only",
-    nama: "Fun Run 5K (Jersey Only)",
-    harga: "Rp 165.000", // TODO: isi harga dari panitia — env HARGA_FUN_RUN_JERSEY
-    ikon: "👕",
-    bannerClass: "cb-jersey",
-    slotLabel: "📦 23 Slot Tersisa",
-    slotClass: "slot-mid",
-    benefits: ["Jersey Event", "E-Certificate", "Akses Rute Lari"],
-  },
-  {
-    id: "fullpack",
-    nama: "Fun Run 5K (Fullpack)",
-    harga: "Rp 215.000", // TODO: isi harga dari panitia — env HARGA_FUN_RUN_FULLPACK
-    ikon: "🎁",
-    bannerClass: "cb-full",
-    slotLabel: "🔥 14 Slot Tersisa",
-    slotClass: "slot-low",
-    benefits: ["Jersey Event", "Finisher Medal", "E-Certificate", "Goodie Bag"],
+    benefits: [
+      "Cocok untuk keluarga dan lansia",
+      "E-Certificate",
+      "Akses Area Event",
+      "Ikut Kegiatan Komunitas",
+    ],
   },
 ];
 
@@ -117,9 +110,12 @@ export default function KategoriSection() {
 
         .cat-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 18px;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 24px;
           margin-top: 44px;
+          max-width: 760px;
+          margin-left: auto;
+          margin-right: auto;
         }
 
         .cat-card {
@@ -300,10 +296,6 @@ export default function KategoriSection() {
         }
         .btn-link:hover { gap: 8px; }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-          .cat-grid { grid-template-columns: repeat(2, 1fr); }
-        }
         @media (max-width: 580px) {
           .cat-grid { grid-template-columns: 1fr; }
           .kat-sec { padding: 60px 20px; }

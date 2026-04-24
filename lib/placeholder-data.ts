@@ -194,3 +194,15 @@ export const totalPesertaDummy = kategoriStatsDummy.reduce(
   (acc, k) => acc + k.jumlah,
   0
 );
+
+// ------------------------------------------------------------
+// STATS BAND DUMMY — Hero section
+// Akan diganti data real dari database di DEV-10
+// ------------------------------------------------------------
+
+export const statsBandDummy = {
+  pesertaSolo: 500,
+  kotaSerentak: 15,
+  persentaseDonasi: 62, // akan mengikuti donasiDummy.persentase
+  untukGaza: 100,
+};

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { donasiDummy, totalPesertaDummy } from "@/lib/placeholder-data";
 
 export default function HeroSection() {
   return (
@@ -351,6 +352,25 @@ export default function HeroSection() {
           .sb-item { padding: 16px 12px; }
           .sb-num { font-size: 24px; }
         }
+
+        .hero-organizers {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          animation: fadeUp 0.8s 0.5s ease both;
+        }
+        .hero-org-badge {
+          background: rgba(255,255,255,0.12);
+          border: 1px solid rgba(255,255,255,0.22);
+          border-radius: 6px;
+          padding: 6px 14px;
+          font-size: 11px;
+          font-weight: 700;
+          color: rgba(255,255,255,0.8);
+          letter-spacing: 1px;
+          font-family: 'Barlow Condensed', sans-serif;
+          text-transform: uppercase;
+        }
       `}</style>
 
       <section className="hero-section">
@@ -445,10 +465,10 @@ export default function HeroSection() {
             </Link>
           </div>
 
-          {/* Tag pills */}
-          <div className="hero-tags">
-            {["Fun Run 5K", "Tanpa Race Pack", "Medal Only", "Jersey Only", "Fullpack", "Virtual Run"].map((tag) => (
-              <div key={tag} className="hero-tag">{tag}</div>
+          {/* Logo penyelenggara — placeholder, TODO: ganti dengan logo asli dari panitia */}
+          <div className="hero-organizers">
+            {["Masjid Runners", "Baik Berisik", "SMART171"].map((org) => (
+              <div key={org} className="hero-org-badge">{org}</div>
             ))}
           </div>
         </div>
