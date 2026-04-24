@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { name: "Beranda", href: "/" },
@@ -21,7 +20,6 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -30,7 +28,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Tutup menu mobile saat rute berubah
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
@@ -48,9 +45,16 @@ export default function Navbar() {
     >
       <div className="container-public flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex flex-col text-blue-darker hover:opacity-90 transition-opacity">
-          <span className="font-bebas text-2xl leading-none tracking-wider">RUN FOR</span>
-          <span className="font-bebas text-2xl leading-none tracking-wider text-red">LIBERATION</span>
+        <Link
+          href="/"
+          className="flex flex-col text-blue-darker hover:opacity-90 transition-opacity"
+        >
+          <span className="font-bebas text-2xl leading-none tracking-wider">
+            RUN FOR
+          </span>
+          <span className="font-bebas text-2xl leading-none tracking-wider text-red">
+            LIBERATION
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -76,12 +80,12 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden md:block">
-          <Button
-            asChild
-            className="bg-blue hover:bg-blue-dark text-white font-barlow-condensed text-lg tracking-wide uppercase px-6 py-6 rounded-md shadow-sm"
+          <Link
+            href="/daftar"
+            className="inline-block bg-blue hover:bg-blue-dark text-white font-barlow-condensed text-lg tracking-wide uppercase px-6 py-3 rounded-md shadow-sm transition-colors"
           >
-            <Link href="/daftar">Daftar Sekarang</Link>
-          </Button>
+            Daftar Sekarang
+          </Link>
         </div>
 
         {/* Mobile Hamburger Toggle */}
@@ -98,7 +102,9 @@ export default function Navbar() {
       <div
         className={cn(
           "absolute top-full left-0 w-full bg-white shadow-md border-t border-gray-light flex flex-col md:hidden transition-all duration-300 origin-top overflow-hidden",
-          isMobileMenuOpen ? "max-h-[500px] opacity-100 py-4" : "max-h-0 opacity-0 py-0"
+          isMobileMenuOpen
+            ? "max-h-[500px] opacity-100 py-4"
+            : "max-h-0 opacity-0 py-0"
         )}
       >
         <div className="container-public flex flex-col gap-2">
@@ -120,12 +126,12 @@ export default function Navbar() {
             );
           })}
           <div className="mt-4 px-4 pb-2">
-            <Button
-              asChild
-              className="w-full bg-blue hover:bg-blue-dark text-white font-barlow-condensed text-lg tracking-wide uppercase py-6 shadow-sm"
+            <Link
+              href="/daftar"
+              className="block w-full text-center bg-blue hover:bg-blue-dark text-white font-barlow-condensed text-lg tracking-wide uppercase py-3 rounded-md shadow-sm transition-colors"
             >
-              <Link href="/daftar">Daftar Sekarang</Link>
-            </Button>
+              Daftar Sekarang
+            </Link>
           </div>
         </div>
       </div>
