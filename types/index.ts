@@ -134,3 +134,39 @@ export interface ActionResult<T = unknown> {
   error?: string;
   field?: string;
 }
+
+// ============================================================
+// FORM STATE TYPES — DEV-04 (Pendaftaran Flow)
+// ============================================================
+
+/** Data satu anggota kelompok (bukan ketua) */
+export interface FormDataAnggota {
+  namaLengkap: string;
+  tanggalLahir: string; // format: "YYYY-MM-DD"
+  jenisKelamin: JenisKelamin | "";
+  ukuranJersey: UkuranJersey | "";
+}
+
+/** Data peserta individu atau ketua kelompok */
+export interface FormDataPeserta {
+  namaLengkap: string;
+  email: string;
+  noWhatsapp: string;
+  tanggalLahir: string; // format: "YYYY-MM-DD"
+  jenisKelamin: JenisKelamin | "";
+  ukuranJersey: UkuranJersey | "";
+  namaKontak: string;
+  noKontak: string;
+}
+
+/** State form keseluruhan — sumber kebenaran untuk usePendaftaranForm */
+export interface FormDataPendaftaran {
+  tipe: TipePendaftaran | null;
+  kategori: KategoriLomba | null;
+  namaKelompok: string;
+  peserta: FormDataPeserta;
+  anggota: FormDataAnggota[];
+  donasiTambahan: number;
+  metodePembayaran: MetodePembayaran | null;
+  buktiBayar: File | null;
+}
