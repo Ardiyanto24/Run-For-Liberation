@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 /**
  * Middleware Placeholder - Logika proteksi akan diimplementasikan di DEV-09
  */
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   // Saat ini hanya meneruskan request tanpa modifikasi
   return NextResponse.next();
 }

@@ -5,9 +5,6 @@ import {
   FormDataAnggota,
   FormDataPendaftaran,
   FormDataPeserta,
-  KategoriLomba,
-  MetodePembayaran,
-  TipePendaftaran,
 } from "@/types";
 import { validateFileBuktiBayar } from "@/lib/utils";
 
@@ -57,7 +54,7 @@ export function usePendaftaranForm() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [formData, setFormData] = useState<FormDataPendaftaran>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmitting, _setIsSubmitting] = useState<boolean>(false);
 
   // ----------------------------------------------------------
   // KALKULASI HARGA

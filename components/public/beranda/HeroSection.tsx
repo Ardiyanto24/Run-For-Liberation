@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { donasiDummy, totalPesertaDummy } from "@/lib/placeholder-data";
 
 export default function HeroSection() {
   return (

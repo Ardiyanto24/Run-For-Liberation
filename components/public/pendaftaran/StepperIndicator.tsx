@@ -32,7 +32,6 @@ export default function StepperIndicator({
           const stepNumber = index + 1;
           const isDone = stepNumber < currentStep;
           const isActive = stepNumber === currentStep;
-          const isUpcoming = stepNumber > currentStep;
 
           return (
             <div key={stepNumber} className="flex items-center">
