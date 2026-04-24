@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import FieldError from "./FieldError";
 
 // ============================================================
 // KONSTANTA PRESET

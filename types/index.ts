@@ -170,3 +170,24 @@ export interface FormDataPendaftaran {
   metodePembayaran: MetodePembayaran | null;
   buktiBayar: File | null;
 }
+
+// ============================================================
+// DONASI FORM
+// ============================================================
+
+export type FormDataDonasi = {
+  nominal: number;
+  namaDonatur: string;
+  sembunyikanNama: boolean;
+  emailDonatur: string;
+  pesan: string;
+  metodePembayaran: MetodePembayaran | null;
+  buktiBayar: File | null;
+};
+
+export type DonasiErrors = {
+  nominal?: string;
+  emailDonatur?: string;
+  metodePembayaran?: string;
+  buktiBayar?: string;
+};
