@@ -1,27 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&family=Bebas+Neue&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* 1. shadcn/ui HSL Variables (Disesuaikan dengan palette Run For Liberation) */
+    --background: 0 0% 100%; /* White */
+    --foreground: 216 60% 10%; /* #0A1628 - Black Navy */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 216 60% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 60% 10%;
+    
+    --primary: 220 77% 44%; /* #1A54C8 - Blue */
+    --primary-foreground: 0 0% 100%; /* White */
+    
+    --secondary: 222 47% 96%; /* #F0F4FF - Gray X-Light */
+    --secondary-foreground: 216 60% 10%; 
+    
+    --muted: 222 47% 96%; /* #F0F4FF */
+    --muted-foreground: 221 22% 51%; /* #6B7A99 - Gray */
+    
+    --accent: 222 47% 96%; 
+    --accent-foreground: 216 60% 10%;
+    
+    --destructive: 353 85% 44%; /* #CE1126 - Red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 47% 90%; /* Light grayish blue */
+    --input: 222 47% 90%;
+    --ring: 220 77% 44%;
+    
+    --radius: 0.5rem;
+
+    /* 2. Event Design Tokens (Hex & RGBA) */
+    --color-blue: #1A54C8;
+    --color-blue-dark: #1340A0;
+    --color-blue-darker: #0E2D7A;
+    --color-blue-mid: #4A7CE8;
+    --color-blue-light: #EEF3FF;
+    --color-blue-xlight: #F5F8FF;
+    
+    --color-red: #CE1126;
+    --color-red-dark: #8B0000;
+    --color-red-light: rgba(206, 17, 38, 0.08);
+    
+    --color-green: #007A3D;
+    --color-green-dark: #005229;
+    --color-green-light: rgba(0, 122, 61, 0.09);
+    
+    --color-black: #0A1628;
+    --color-white: #FFFFFF;
+    --color-gray: #6B7A99;
+    --color-gray-light: #E4E9F5;
+    --color-gray-xlight: #F0F4FF;
+
+    --shadow-sm: 0 2px 12px rgba(26, 84, 200, 0.08);
+    --shadow-md: 0 6px 28px rgba(26, 84, 200, 0.12);
+    --shadow-lg: 0 16px 56px rgba(26, 84, 200, 0.16);
+    --shadow-card: 0 2px 16px rgba(10, 22, 40, 0.07);
+
+    /* Font Mapping */
+    --font-bebas: 'Bebas Neue', sans-serif;
+    --font-barlow: 'Barlow', sans-serif;
+    --font-barlow-condensed: 'Barlow Condensed', sans-serif;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-barlow);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-barlow);
+  }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .container-public {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .section-spacing {
+    @apply py-12 md:py-20 lg:py-24;
+  }
+  .hero-gradient {
+    background: linear-gradient(135deg, var(--color-blue-darker) 0%, var(--color-blue) 100%);
+  }
+  .sub-hero-gradient {
+    background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue-mid) 100%);
+  }
+  .palestine-stripe {
+    @apply h-2 w-full block;
+    background: linear-gradient(to right, #0A1628 25%, #FFFFFF 25%, #FFFFFF 50%, #007A3D 50%, #007A3D 75%, #CE1126 75%);
   }
 }
