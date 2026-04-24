@@ -73,14 +73,8 @@ export default function TentangPage() {
       />
 
       {/* ── Section 1: About Grid ── */}
-      <section
-        style={{ padding: '88px 56px' }}
-        className="max-w-[1200px] mx-auto px-6 md:px-14"
-      >
-        <div
-          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}
-          className="flex flex-col md:grid"
-        >
+      <section className="max-w-[1200px] mx-auto px-6 md:px-14 py-16 md:py-[88px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[60px] items-center">
           {/* Kiri — Teks deskripsi */}
           <div>
             <span

@@ -21,14 +21,7 @@ export default function GaleriGrid({ photos }: GaleriGridProps) {
   return (
     <>
       {/* Grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '12px',
-        }}
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {photos.map((photo, index) => (
           <div
             key={photo.src}
