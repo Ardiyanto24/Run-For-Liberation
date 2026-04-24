@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { DonasiProgress } from '@/components/public/donasi/DonasiProgress';
 import { FormDonasi } from '@/components/public/donasi/FormDonasi';
-import { SubHero } from '@/components/public/SubHero';
+import SubHero from '@/components/public/SubHero';
 
 // ── Metadata ──────────────────────────────────────────
 export const metadata: Metadata = {
@@ -25,8 +25,7 @@ export default function DonasiPage() {
       {/* ── Sub-hero ── */}
       <SubHero
         title="DONASI SEKARANG"
-        breadcrumbs={['Beranda', 'Donasi']}
-        tagline="Tidak perlu berlari untuk memberi dampak"
+        breadcrumb={['Beranda', 'Donasi']}
         subtitle="Terbuka untuk semua"
       />
 
@@ -214,23 +213,6 @@ export default function DonasiPage() {
           </div>
         </div>
       </div>
-
-      {/* ── Responsive grid styles ── */}
-      <style>{`
-        .donasi-page-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 52px;
-          align-items: start;
-        }
-
-        @media (max-width: 768px) {
-          .donasi-page-grid {
-            grid-template-columns: 1fr;
-            gap: 32px;
-          }
-        }
-      `}</style>
     </>
   );
 }

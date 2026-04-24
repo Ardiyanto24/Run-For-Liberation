@@ -19,16 +19,15 @@ export function DonasiProgress({
   const pct = Math.min(Math.max(persentase, 0), 100);
 
   return (
-    <div className="reveal up d3">
+    <div>
       {/* ── 4 Stat Cards (grid 2×2) ── */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '10px',
-          marginTop: '20px',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '10px',
         }}
-      >
+        >
         {/* Terkumpul */}
         <div
           style={{
