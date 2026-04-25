@@ -5,7 +5,6 @@ import {
   FormDataPeserta,
   JenisKelamin,
   TipePendaftaran,
-  UkuranJersey,
 } from "@/types";
 import FieldError from "./FieldError";
 
@@ -17,13 +16,6 @@ const JENIS_KELAMIN_OPTIONS: { value: JenisKelamin; label: string }[] = [
   { value: "PEREMPUAN", label: "Perempuan" },
 ];
 
-const UKURAN_JERSEY_OPTIONS: { value: UkuranJersey; label: string }[] = [
-  { value: "S", label: "S" },
-  { value: "M", label: "M" },
-  { value: "L", label: "L" },
-  { value: "XL", label: "XL" },
-  { value: "XXL", label: "XXL" },
-];
 
 // ============================================================
 // SUB-KOMPONEN: FormField (input text/email/tel/date)
@@ -169,22 +161,6 @@ function FormPeserta({ data, errors, onUpdate, isKetua = false }: FormPesertaPro
         </StyledSelect>
       </FormField>
 
-      {/* Ukuran Jersey */}
-      <FormField label="Ukuran Jersey" error={errors.ukuranJersey}>
-        <StyledSelect
-          value={data.ukuranJersey}
-          onChange={(e) => onUpdate("ukuranJersey", e.target.value)}
-          hasError={!!errors.ukuranJersey}
-        >
-          <option value="">-- Pilih Ukuran --</option>
-          {UKURAN_JERSEY_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </StyledSelect>
-      </FormField>
-
       {/* Nama Kontak Darurat */}
       <FormField label="Nama Kontak Darurat" error={errors.namaKontak}>
         <StyledInput
@@ -289,25 +265,6 @@ function CardAnggota({ anggota, index, errors, canDelete, onUpdate, onRemove }: 
           >
             <option value="">-- Pilih --</option>
             {JENIS_KELAMIN_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </StyledSelect>
-        </FormField>
-
-        {/* Ukuran Jersey */}
-        <FormField
-          label="Ukuran Jersey"
-          error={errors[`anggota_${index}_ukuranJersey`]}
-        >
-          <StyledSelect
-            value={anggota.ukuranJersey}
-            onChange={(e) => onUpdate(index, "ukuranJersey", e.target.value)}
-            hasError={!!errors[`anggota_${index}_ukuranJersey`]}
-          >
-            <option value="">-- Pilih --</option>
-            {UKURAN_JERSEY_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>

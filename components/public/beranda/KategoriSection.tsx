@@ -15,36 +15,68 @@ interface KategoriItem {
 
 const kategoriList: KategoriItem[] = [
   {
-    id: "fun-run",
-    nama: "Fun Run 5K",
-    tagline: "Lari santai 5 kilometer bersama komunitas",
-    harga: "Mulai Rp 50.000", // TODO: isi harga dari panitia — env HARGA_FUN_RUN
+    id: "fun-run-gaza",
+    nama: "Fun Run - Gaza",
+    tagline: "Lari 5K dengan semangat solidaritas untuk Gaza",
+    harga: "Rp 120.000",
     ikon: "🏃",
-    bannerClass: "cb-tanpa",
+    bannerClass: "cb-tanpa", // Biru
     slotLabel: "🔥 Slot Terbatas",
     slotClass: "slot-low",
     benefits: [
-      "Pilihan paket: Tanpa Pack, Medal, Jersey, Fullpack",
+      "Race Pack Lengkap (Jersey + Medali)",
       "E-Certificate",
       "Akses Rute Lari",
-      "Ikut Kegiatan Komunitas",
+      "Donasi Solidaritas Gaza",
     ],
-    popular: true, // tambahkan field ini
+    popular: true,
   },
   {
-    id: "fun-walk",
-    nama: "Fun Walk",
-    tagline: "Jalan santai untuk semua kalangan usia",
-    harga: "Segera Diumumkan", // TODO: isi harga dari panitia — env HARGA_FUN_WALK
+    id: "fun-run-rafah",
+    nama: "Fun Run - Rafah",
+    tagline: "Lari santai 5K untuk kemanusiaan di Rafah",
+    harga: "Rp 30.000",
+    ikon: "🏃",
+    bannerClass: "cb-full", // Biru Gelap
+    slotLabel: "⚡ Fast Selling",
+    slotClass: "slot-mid",
+    benefits: [
+      "E-Certificate",
+      "Akses Rute Lari",
+      "Refreshment",
+      "Donasi Rafah",
+    ],
+  },
+  {
+    id: "fun-walk-gaza",
+    nama: "Fun Walk - Gaza",
+    tagline: "Jalan santai keluarga untuk Gaza",
+    harga: "Rp 120.000",
     ikon: "🚶",
-    bannerClass: "cb-medal",
+    bannerClass: "cb-medal", // Hijau
     slotLabel: "♾ Unlimited Slot",
     slotClass: "slot-unlimited",
     benefits: [
-      "Cocok untuk keluarga dan lansia",
+      "Race Pack Lengkap (Jersey + Medali)",
+      "E-Certificate",
+      "Akses Area Event",
+      "Donasi Solidaritas Gaza",
+    ],
+  },
+  {
+    id: "fun-walk-rafah",
+    nama: "Fun Walk - Rafah",
+    tagline: "Langkah kecil untuk perubahan di Rafah",
+    harga: "Rp 30.000",
+    ikon: "🚶",
+    bannerClass: "cb-jersey", // Merah
+    slotLabel: "♾ Unlimited Slot",
+    slotClass: "slot-unlimited",
+    benefits: [
       "E-Certificate",
       "Akses Area Event",
       "Ikut Kegiatan Komunitas",
+      "Donasi Rafah",
     ],
   },
 ];
@@ -72,7 +104,7 @@ export default function KategoriSection() {
         }
 
         .kat-inner {
-          max-width: 1180px;
+          max-width: 1280px;
           margin: 0 auto;
         }
 
@@ -110,10 +142,10 @@ export default function KategoriSection() {
 
         .cat-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 24px;
           margin-top: 44px;
-          max-width: 760px;
+          max-width: 900px;
           margin-left: auto;
           margin-right: auto;
         }
@@ -306,7 +338,7 @@ export default function KategoriSection() {
         <div className="kat-inner">
           {/* Header */}
           <span className="sec-label blue">Pilih Paketmu</span>
-          <h2 className="sec-title">4 Kategori Pendaftaran</h2>
+          <h2 className="sec-title">Kategori Event</h2>
           <p className="sec-sub">
             Fun Run 5K dengan berbagai pilihan race pack sesuai kebutuhan dan kemampuanmu.
           </p>

@@ -1,4 +1,5 @@
-// app/(public)/tentang/page.tsx
+// app/(public)/tentang/page.
+
 import { Metadata } from 'next'
 import SubHero from '@/components/public/SubHero'
 import Link from 'next/link'
@@ -25,8 +26,8 @@ const aboutPoints = [
   {
     icon: '💚',
     color: 'green' as const,
-    title: 'Donasi untuk Gaza',
-    desc: '100% pendapatan dialokasikan untuk bantuan kemanusiaan bagi Gaza.',
+    title: 'Donasi untuk Palestina',
+    desc: '100% pendapatan dialokasikan untuk bantuan kemanusiaan bagi Palestina.',
   },
   {
     icon: '📚',
@@ -53,13 +54,13 @@ const whyCards = [
     icon: '💪',
     delay: '0.4s',
     title: 'Aksi Nyata',
-    desc: 'Biaya pendaftaran 100% tersalurkan sebagai donasi kemanusiaan.',
+    desc: 'Keuntungan akan disalurkan 100% sebagai donasi kemanusiaan.',
   },
   {
     icon: '🌿',
     delay: '0.8s',
     title: 'Dampak',
-    desc: 'Setiap rupiah memberi dampak nyata bagi saudara kita di Gaza.',
+    desc: 'Setiap rupiah memberi dampak nyata bagi saudara kita di Palestina.',
   },
 ]
 
@@ -119,7 +120,7 @@ export default function TentangPage() {
               silaturahmi, serta penggalangan donasi, di mana sebagian
               pendapatan dialokasikan untuk{' '}
               <strong style={{ color: 'var(--red)' }}>
-                bantuan kemanusiaan bagi Gaza
+                bantuan kemanusiaan bagi Palestina
               </strong>
               .
             </p>
@@ -204,7 +205,7 @@ export default function TentangPage() {
                 marginBottom: '10px',
               }}
             >
-              Untuk Gaza
+              Untuk Palestina
             </span>
             <h2
               style={{

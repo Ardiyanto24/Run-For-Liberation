@@ -1,3 +1,5 @@
+// app/(admin)/admin/peserta/page.tsx
+
 "use client";
 
 import { useState, useMemo } from "react";

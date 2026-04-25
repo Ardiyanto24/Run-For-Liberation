@@ -1,5 +1,11 @@
-// Layout khusus login — mengisolasi halaman login dari admin layout (sidebar + header)
-// Hanya meneruskan children tanpa wrapper apapun
+// app/(admin)/admin/login/layout.tsx
+
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Login",
+};
+
 export default function LoginLayout({
   children,
 }: {

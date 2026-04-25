@@ -1,3 +1,5 @@
+// app/(public)/page.tsx
+
 import { Metadata } from "next";
 import HeroSection from "@/components/public/beranda/HeroSection";
 import CountdownTimer from "@/components/public/beranda/CountdownTimer";

@@ -1,4 +1,5 @@
-// app/(public)/faq/page.tsx
+// app/(public)/faq/page.
+
 import { Metadata } from 'next'
 import SubHero from '@/components/public/SubHero'
 import {

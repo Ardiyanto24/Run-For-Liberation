@@ -25,9 +25,9 @@ const TIPE_CARDS: TipeCard[] = [
   {
     value: "KELOMPOK",
     icon: "👥",
-    label: "Kelompok",
+    label: "Keluarga",
     description: "Mendaftar bersama 2–6 orang",
-    detail: "Daftarkan tim kamu sekaligus. Satu ketua mendaftarkan seluruh anggota kelompok.",
+    detail: "Khusus Buat Kamu yang Ingin Mendaftar Bersama Keluarga Tercinta.",
   },
 ];
 
@@ -51,7 +51,7 @@ export default function Step1Tipe({ value, onChange, error }: Step1TipeProps) {
         Pilih Tipe Pendaftaran
       </h2>
       <p className="text-sm text-[#6B7A99] mb-7 leading-relaxed">
-        Pilih apakah kamu akan mendaftar secara individu atau bersama kelompok.
+        Pilih apakah kamu akan mendaftar secara Individu atau bersama Keluarga.
       </p>
 
       {/* Grid Card */}

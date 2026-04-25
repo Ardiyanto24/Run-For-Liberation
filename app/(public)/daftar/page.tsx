@@ -1,3 +1,5 @@
+// app/(public)/daftar/page.tsx
+
 "use client";
 
 import { usePendaftaranForm } from "@/hooks/usePendaftaranForm";

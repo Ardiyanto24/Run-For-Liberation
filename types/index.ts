@@ -2,7 +2,11 @@
 // 1. ENUMS (Union Type Strings)
 // ==========================================
 export type TipePendaftaran = "INDIVIDU" | "KELOMPOK";
-export type KategoriLomba = "FUN_RUN" | "FUN_WALK";
+export type KategoriLomba =
+  | "FUN_RUN_GAZA"
+  | "FUN_RUN_RAFAH"
+  | "FUN_WALK_GAZA"
+  | "FUN_WALK_RAFAH";
 export type JenisKelamin = "LAKI_LAKI" | "PEREMPUAN";
 export type UkuranJersey = "S" | "M" | "L" | "XL" | "XXL";
 export type StatusPeserta = "PENDING" | "VERIFIED" | "DITOLAK";

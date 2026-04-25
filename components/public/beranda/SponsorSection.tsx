@@ -1,4 +1,4 @@
-// import Image from "next/image"; // Aktifkan saat logo tersedia
+import Image from "next/image";
 
 interface SponsorItem {
   id: string;
@@ -17,9 +17,12 @@ const sponsorGroups: SponsorGroup[] = [
     label: "Diselenggarakan Oleh",
     labelColor: "#1A54C8",
     items: [
-      { id: "masjid-runners", nama: "Masjid Runners", logoFile: "masjid-runners.png" },
-      { id: "baik-berisik", nama: "Baik Berisik", logoFile: "baik-berisik.png" },
+      // 1. SMART171 di urutan pertama (Kiri)
       { id: "smart171", nama: "SMART171", logoFile: "smart171.png" },
+      // 2. Baik Berisik di urutan kedua (Tengah)
+      { id: "baik-berisik", nama: "Baik Berisik", logoFile: "baik-berisik.png" },
+      // 3. Masjid Runners (Ngejar Pahala) di urutan ketiga (Kanan)
+      { id: "masjid-runners", nama: "Masjid Runners", logoFile: "ngejar-pahala.png" },
     ],
   },
   {
@@ -87,7 +90,6 @@ export default function SponsorSection() {
           animation: fadeUpSp 0.6s ease both;
         }
 
-        /* Setiap kelompok sponsor */
         .sp-groups {
           display: flex;
           flex-direction: column;
@@ -98,7 +100,6 @@ export default function SponsorSection() {
           animation: fadeUpSp 0.6s ease both;
         }
 
-        /* Label kelompok */
         .sp-group-label {
           font-family: 'Barlow Condensed', sans-serif;
           font-size: 10px;
@@ -121,7 +122,6 @@ export default function SponsorSection() {
           background: rgba(26,84,200,0.15);
         }
 
-        /* Row logo cards */
         .sp-row {
           display: flex;
           flex-wrap: wrap;
@@ -129,7 +129,6 @@ export default function SponsorSection() {
           gap: 14px;
         }
 
-        /* Logo card */
         .sp-card {
           background: #fff;
           border: 1.5px solid rgba(26,84,200,0.13);
@@ -149,17 +148,6 @@ export default function SponsorSection() {
           box-shadow: 0 8px 24px rgba(26,84,200,0.15);
         }
 
-        /* Logo placeholder text */
-        .sp-logo-text {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 14px;
-          font-weight: 800;
-          color: #0E2D7A;
-          letter-spacing: 0.5px;
-          white-space: nowrap;
-        }
-
-        /* Divider antara kelompok */
         .sp-divider {
           width: 100%;
           height: 1px;
@@ -170,17 +158,14 @@ export default function SponsorSection() {
         @media (max-width: 480px) {
           .sp-sec { padding: 60px 16px; }
           .sp-card { min-width: 110px; padding: 12px 18px; }
-          .sp-logo-text { font-size: 12px; }
         }
       `}</style>
 
-      <section className="sp-sec">
+              <section className="sp-sec">
         <div className="sp-inner">
-          {/* Header */}
           <span className="sec-label-sp">Didukung Oleh</span>
           <h2 className="sp-title">Sponsor & Partners</h2>
 
-          {/* Sponsor groups */}
           <div className="sp-groups">
             {sponsorGroups.map((group, gi) => (
               <div key={group.label}>
@@ -188,7 +173,6 @@ export default function SponsorSection() {
                   className="sp-group"
                   style={{ animationDelay: `${gi * 0.12}s` }}
                 >
-                  {/* Group label dengan garis dekoratif */}
                   <p
                     className="sp-group-label"
                     style={{ color: group.labelColor }}
@@ -196,7 +180,6 @@ export default function SponsorSection() {
                     {group.label}
                   </p>
 
-                  {/* Logo cards */}
                   <div className="sp-row">
                     {group.items.map((item, ii) => (
                       <div
@@ -204,22 +187,19 @@ export default function SponsorSection() {
                         className="sp-card"
                         style={{ animationDelay: `${gi * 0.5 + ii * 0.5}s` }}
                       >
-                        {/* TODO: ganti dengan file logo dari panitia
                         <Image
-                          src={`/images/sponsor/${item.logoFile}`}
+                          /* PERUBAHAN ADA DI BARIS BAWAH INI */
+                          src={`/images/logos/${item.logoFile}`}
                           alt={item.nama}
-                          width={120}
-                          height={48}
+                          width={180}
+                          height={75}
                           style={{ objectFit: "contain" }}
                         />
-                        */}
-                        <span className="sp-logo-text">{item.nama}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Divider antara kelompok (kecuali setelah yang terakhir) */}
                 {gi < sponsorGroups.length - 1 && (
                   <div className="sp-divider" style={{ marginTop: "40px" }} />
                 )}

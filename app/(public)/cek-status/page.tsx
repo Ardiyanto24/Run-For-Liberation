@@ -1,3 +1,5 @@
+// app/(public)/cek-status/page.tsx
+
 "use client";
 
 // TODO: Di DEV-09, logika submit diganti dengan Server Action requestMagicLink()

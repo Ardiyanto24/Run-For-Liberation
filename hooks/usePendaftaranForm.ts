@@ -24,7 +24,6 @@ const initialPeserta: FormDataPeserta = {
   noWhatsapp: "",
   tanggalLahir: "",
   jenisKelamin: "",
-  ukuranJersey: "",
   namaKontak: "",
   noKontak: "",
 };
@@ -33,7 +32,6 @@ const initialAnggota: FormDataAnggota = {
   namaLengkap: "",
   tanggalLahir: "",
   jenisKelamin: "",
-  ukuranJersey: "",
 };
 
 const initialFormData: FormDataPendaftaran = {
@@ -59,20 +57,24 @@ export function usePendaftaranForm() {
   // ----------------------------------------------------------
   // KALKULASI HARGA
   // ----------------------------------------------------------
-  function hitungBiayaPendaftaran(): number {
-    if (!formData.kategori) return 0;
+    // TODO: ganti dengan nilai dari env variable saat DEV-10
+    const HARGA: Record<KategoriLomba, number> = {
+    FUN_RUN_GAZA: 120_000,
+    FUN_RUN_RAFAH: 30_000,
+    FUN_WALK_GAZA: 120_000,
+    FUN_WALK_RAFAH: 30_000,
+    };
 
-    // TODO: ganti dengan nilai dari env variable HARGA_FUN_RUN / HARGA_FUN_WALK saat DEV-10
-    const hargaPerOrang =
-      formData.kategori === "FUN_RUN" ? HARGA_FUN_RUN : HARGA_FUN_WALK;
+    function hitungBiayaPendaftaran(): number {
+        if (!formData.kategori) return 0;
+        const hargaPerOrang = HARGA[formData.kategori];
+        const jumlahPeserta = 1 + formData.anggota.length;
+        return hargaPerOrang * jumlahPeserta;
+        }
 
-    const jumlahPeserta = 1 + formData.anggota.length; // ketua + anggota
-    return hargaPerOrang * jumlahPeserta;
-  }
-
-  function hitungTotal(): number {
-    return hitungBiayaPendaftaran() + formData.donasiTambahan;
-  }
+    function hitungTotal(): number {
+        return hitungBiayaPendaftaran() + formData.donasiTambahan;
+        }
 
   // ----------------------------------------------------------
   // VALIDASI PER STEP
@@ -116,9 +118,6 @@ export function usePendaftaranForm() {
         if (!p.jenisKelamin)
           newErrors.jenisKelamin = "Jenis kelamin wajib dipilih.";
 
-        if (!p.ukuranJersey)
-          newErrors.ukuranJersey = "Ukuran jersey wajib dipilih.";
-
         if (!p.namaKontak.trim())
           newErrors.namaKontak = "Nama kontak darurat wajib diisi.";
 
@@ -141,9 +140,6 @@ export function usePendaftaranForm() {
               if (!anggota.jenisKelamin)
                 newErrors[`anggota_${idx}_jenisKelamin`] =
                   `Jenis kelamin anggota ${idx + 1} wajib dipilih.`;
-              if (!anggota.ukuranJersey)
-                newErrors[`anggota_${idx}_ukuranJersey`] =
-                  `Ukuran jersey anggota ${idx + 1} wajib dipilih.`;
             });
           }
         }

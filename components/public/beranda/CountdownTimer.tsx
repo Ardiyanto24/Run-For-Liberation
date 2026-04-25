@@ -188,7 +188,7 @@ export default function CountdownTimer() {
       <section className="cd-sec">
         <h2 className="cd-title">Event Dimulai Dalam</h2>
         <p className="cd-sub">
-          Run For Liberation — Solo &bull; Sabtu, 24 Mei 2026
+          Run For Liberation Chapter Solo &bull; Ahad, 24 Mei 2026
         </p>
 
         {/* Sebelum mount (SSR): tampilkan skeleton agar tidak hydration mismatch */}

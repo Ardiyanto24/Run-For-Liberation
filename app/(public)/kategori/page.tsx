@@ -1,4 +1,5 @@
-// app/(public)/kategori/page.tsx
+// app/(public)/kategori/page.
+
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'

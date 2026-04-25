@@ -1,3 +1,5 @@
+// app/(public)/donasi/page.tsx
+
 import type { Metadata } from 'next';
 import { DonasiProgress } from '@/components/public/donasi/DonasiProgress';
 import { FormDonasi } from '@/components/public/donasi/FormDonasi';

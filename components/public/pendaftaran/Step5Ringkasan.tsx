@@ -14,8 +14,10 @@ function formatRupiah(angka: number): string {
 }
 
 function labelKategori(kategori: string | null): string {
-  if (kategori === "FUN_RUN") return "Fun Run 5K";
-  if (kategori === "FUN_WALK") return "Fun Walk 5K";
+  if (kategori === "FUN_RUN_GAZA") return "Fun Run - Gaza";
+  if (kategori === "FUN_RUN_RAFAH") return "Fun Run - Rafah";
+  if (kategori === "FUN_WALK_GAZA") return "Fun Walk - Gaza";
+  if (kategori === "FUN_WALK_RAFAH") return "Fun Walk - Rafah";
   return "—";
 }
 

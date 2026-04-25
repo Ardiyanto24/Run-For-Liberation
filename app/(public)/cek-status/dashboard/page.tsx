@@ -1,3 +1,5 @@
+// app/(public)/cek-status/dashboard/page.tsx
+
 "use client";
 
 // TODO DEV-09: Ubah halaman ini menjadi Server Component yang:

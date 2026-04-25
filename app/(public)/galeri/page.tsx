@@ -1,4 +1,5 @@
-// app/(public)/galeri/page.tsx
+// app/(public)/galeri/page.
+
 import { Metadata } from 'next'
 import SubHero from '@/components/public/SubHero'
 import GaleriGrid from '@/components/public/galeri/GaleriGrid'

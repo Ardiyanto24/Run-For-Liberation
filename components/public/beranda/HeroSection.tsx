@@ -1,4 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
+
+const organizers = [
+  { name: "SMART171", src: "/images/logos/smart171.png" },
+  { name: "Baik Berisik", src: "/images/logos/baik-berisik.png" },
+  { name: "Ngejar Pahala", src: "/images/logos/ngejar-pahala.png" },
+];
 
 export default function HeroSection() {
   return (
@@ -370,6 +377,41 @@ export default function HeroSection() {
           font-family: 'Barlow Condensed', sans-serif;
           text-transform: uppercase;
         }
+          .hero-organizers {
+          margin-top: 42px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          animation: fadeUp 0.8s 0.6s ease both;
+        }
+
+        .org-label {
+          font-size: 11px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.4);
+          text-transform: uppercase;
+          letter-spacing: 2px;
+        }
+
+        .org-logos-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 28px;
+          flex-wrap: wrap;
+        }
+
+        .hero-org-logo {
+          position: relative;
+          transition: all 0.3s ease;
+          opacity: 0.75;
+          /* Filter ini membuat logo berwarna putih agar estetik di background gelap */
+          filter: brightness(0) invert(1); 
+        }
+
+        .hero-org-logo:hover {
+          opacity: 1;
+          transform: translateY(-3px);
+        }
       `}</style>
 
       <section className="hero-section">
@@ -466,9 +508,20 @@ export default function HeroSection() {
 
           {/* Logo penyelenggara — placeholder, TODO: ganti dengan logo asli dari panitia */}
           <div className="hero-organizers">
-            {["Masjid Runners", "Baik Berisik", "SMART171"].map((org) => (
-              <div key={org} className="hero-org-badge">{org}</div>
-            ))}
+            <p className="org-label">Diselenggarakan oleh</p>
+            <div className="org-logos-wrapper">
+              {organizers.map((org) => (
+                <div key={org.name} className="hero-org-logo">
+                  <Image
+                    src={org.src}
+                    alt={`Logo ${org.name}`}
+                    width={110}
+                    height={45}
+                    style={{ objectFit: "contain" }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
