@@ -208,7 +208,6 @@ export default function PesertaPage() {
         peserta={filteredPeserta}
         onOpenModal={setSelectedPeserta}
         onVerify={handleVerify}
-        onTolak={handleTolak}
       />
 
       {/* Modal Detail Peserta */}
