@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FormDataDonasi, DonasiErrors, MetodePembayaran } from '@/types';
+import { FormDataDonasi, DonasiErrors } from '@/types';
 import { validateFileBuktiBayar } from '@/lib/utils';
 
 type NominalMode = 'preset' | 'custom';

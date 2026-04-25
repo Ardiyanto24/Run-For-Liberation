@@ -6,6 +6,7 @@ import {
   KategoriLomba,
   TipePendaftaran,
   MetodePembayaran,
+  JenisKelamin
 } from "../types";
 
 /**
