@@ -117,6 +117,7 @@ export interface Donasi {
 export interface PesertaLengkap extends Peserta {
   anggota: Anggota[];
   pembayaran: Pembayaran | null;
+  checkIn: CheckIn | null;
 }
 
 export interface FotoGaleri {
