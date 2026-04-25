@@ -115,3 +115,9 @@ export function validateFileBuktiBayar(file: File): string | null {
 
   return null; // Valid
 }
+
+// import { KategoriLomba, TipePendaftaran, MetodePembayaran, JenisKelamin } from "../types";
+
+export function labelJenisKelamin(jk: JenisKelamin): string {
+  return jk === "LAKI_LAKI" ? "Laki-laki" : "Perempuan";
+}
