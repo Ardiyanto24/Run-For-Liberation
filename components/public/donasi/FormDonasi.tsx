@@ -1,12 +1,12 @@
 'use client';
 
-import Link from 'next/link';
+
 import { useDonasiForm } from '@/hooks/useDonasiForm';
 import { NominalSelector } from './NominalSelector';
-import { DonasiSukses } from './DonasiSukses';
-import { FieldError } from '@/components/public/pendaftaran/FieldError';
-import { MetodePembayaranSelector } from '@/components/public/pendaftaran/MetodePembayaranSelector';
-import { UploadBuktiBayar } from '@/components/public/pendaftaran/UploadBuktiBayar';
+import { DonasiSukses } from '@/components/public/donasi/DonasiSukses';
+import FieldError from '@/components/public/pendaftaran/FieldError';
+import MetodePembayaranSelector from '@/components/public/pendaftaran/MetodePembayaranSelector';
+import UploadBuktiBayar from '@/components/public/pendaftaran/UploadBuktiBayar';
 import { MetodePembayaran } from '@/types';
 
 // ── Style helpers ─────────────────────────────────

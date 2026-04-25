@@ -1,6 +1,6 @@
 'use client';
 
-import { FieldError } from '@/components/public/pendaftaran/FieldError';
+import FieldError from '@/components/public/pendaftaran/FieldError';
 
 // ── Konstanta preset nominal ──
 const PRESET_NOMINALS = [
@@ -11,7 +11,7 @@ const PRESET_NOMINALS = [
   { label: 'Rp 1.000.000', value: 1000000 },
 ] as const;
 
-const CUSTOM_KEY = 'custom';
+
 
 interface NominalSelectorProps {
   value: number;
