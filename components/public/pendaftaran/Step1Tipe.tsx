@@ -23,7 +23,7 @@ const TIPE_CARDS: TipeCard[] = [
     detail: "Satu pendaftar, satu e-ticket. Cocok untuk kamu yang ingin berlari secara mandiri.",
   },
   {
-    value: "KELOMPOK",
+    value: "KELUARGA",
     icon: "👥",
     label: "Keluarga",
     description: "Mendaftar bersama 2–6 orang",

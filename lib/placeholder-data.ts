@@ -248,7 +248,7 @@ export const dummyPesertaPending: PesertaLengkap = {
 // ----------------------------------------------------------
 export const dummyPesertaVerified: PesertaLengkap = {
   id: "dummy-peserta-verified-002",
-  tipe: "KELOMPOK",
+  tipe: "KELUARGA",
   namaKelompok: "Tim Solidarity Runners",
   kategori: "FUN_RUN_GAZA",
   namaLengkap: "Bagas Prasetyo Wibowo",

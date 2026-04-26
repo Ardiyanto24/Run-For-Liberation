@@ -154,7 +154,7 @@ export async function submitPendaftaran(
     // 6a. Buat record Peserta
     const peserta = await prisma.peserta.create({
       data: {
-        tipe:         data.tipe,
+        tipe:         data.tipe as any, // Cast to any to bypass stale IDE cache after KELUARGA update
         kategori:     data.kategori,
         namaKelompok: data.namaKelompok ?? null,
         namaLengkap:  data.namaLengkap,

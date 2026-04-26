@@ -10,6 +10,7 @@ import {
 
 interface DetailPendaftaranProps {
   peserta: PesertaLengkap;
+  buktiBayarSignedUrl?: string | null;
 }
 
 // ── Sub-komponen: satu baris field-value ──
@@ -42,10 +43,13 @@ function labelLengan(lengan: string | null | undefined): string {
   return "—";
 }
 
-export default function DetailPendaftaran({ peserta }: DetailPendaftaranProps) {
+export default function DetailPendaftaran({
+  peserta,
+  buktiBayarSignedUrl,
+}: DetailPendaftaranProps) {
   const pembayaran = peserta.pembayaran;
   const isDitolak = peserta.status === "DITOLAK";
-  const isKeluarga = peserta.tipe === "KELOMPOK";
+  const isKeluarga = peserta.tipe === "KELUARGA";
   const isGaza =
     peserta.kategori === "FUN_RUN_GAZA" ||
     peserta.kategori === "FUN_WALK_GAZA";
@@ -116,6 +120,20 @@ export default function DetailPendaftaran({ peserta }: DetailPendaftaranProps) {
                 value={formatRupiah(pembayaran.totalPembayaran)}
                 valueClass="text-[#1A54C8]"
               />
+
+              {/* Link Bukti Pembayaran — hanya jika signed URL berhasil digenerate */}
+              {buktiBayarSignedUrl && (
+                <div className="mt-2 text-right">
+                  <a
+                    href={buktiBayarSignedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] text-[#1A54C8] hover:underline font-semibold"
+                  >
+                    Lihat Bukti Pembayaran →
+                  </a>
+                </div>
+              )}
             </>
           )}
         </div>
