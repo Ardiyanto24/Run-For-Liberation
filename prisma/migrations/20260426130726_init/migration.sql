@@ -2,13 +2,16 @@
 CREATE TYPE "TipePendaftaran" AS ENUM ('INDIVIDU', 'KELUARGA');
 
 -- CreateEnum
-CREATE TYPE "KategoriLomba" AS ENUM ('FUN_RUN_GAZA', 'FUN_RUN_RAFAH', 'FUN_WALK_GAZA', 'FUN_WALK_RAFAH');
+CREATE TYPE "kategori_lomba" AS ENUM ('FUN_RUN_GAZA', 'FUN_RUN_RAFAH', 'FUN_WALK_GAZA', 'FUN_WALK_RAFAH');
+
+-- CreateEnum
+CREATE TYPE "ukuran_jersey" AS ENUM ('S', 'M', 'L', 'XL', 'XXL');
+
+-- CreateEnum
+CREATE TYPE "ukuran_lengan" AS ENUM ('PENDEK', 'PANJANG');
 
 -- CreateEnum
 CREATE TYPE "JenisKelamin" AS ENUM ('LAKI_LAKI', 'PEREMPUAN');
-
--- CreateEnum
-CREATE TYPE "UkuranJersey" AS ENUM ('S', 'M', 'L', 'XL', 'XXL');
 
 -- CreateEnum
 CREATE TYPE "StatusPeserta" AS ENUM ('PENDING', 'VERIFIED', 'DITOLAK');
@@ -35,13 +38,14 @@ CREATE TABLE "peserta" (
     "id" TEXT NOT NULL,
     "tipe" "TipePendaftaran" NOT NULL,
     "nama_kelompok" TEXT,
-    "kategori" "KategoriLomba" NOT NULL,
+    "kategori" "kategori_lomba" NOT NULL,
     "nama_lengkap" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "no_whatsapp" TEXT NOT NULL,
     "tanggal_lahir" TIMESTAMP(3) NOT NULL,
     "jenis_kelamin" "JenisKelamin" NOT NULL,
-    "ukuran_jersey" "UkuranJersey" NOT NULL,
+    "ukuran_jersey" "ukuran_jersey",
+    "ukuran_lengan" "ukuran_lengan",
     "nama_kontak" TEXT NOT NULL,
     "no_kontak" TEXT NOT NULL,
     "nomor_bib" TEXT,
@@ -60,7 +64,8 @@ CREATE TABLE "anggota" (
     "nama_lengkap" TEXT NOT NULL,
     "tanggal_lahir" TIMESTAMP(3) NOT NULL,
     "jenis_kelamin" "JenisKelamin" NOT NULL,
-    "ukuran_jersey" "UkuranJersey" NOT NULL,
+    "ukuran_jersey" "ukuran_jersey",
+    "ukuran_lengan" "ukuran_lengan",
     "urutan" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
