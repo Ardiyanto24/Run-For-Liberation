@@ -36,8 +36,8 @@ export default function HeroSection() {
           100% { opacity: 1; letter-spacing: 2px; }
         }
         @keyframes badgeIn {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(24px); }
@@ -114,29 +114,23 @@ export default function HeroSection() {
         .hs1 { width:60px; height:6px; background:rgba(255,255,255,0.22); right:18%; top:22%; animation-duration:5.5s; }
         .hs2 { width:90px; height:6px; background:rgba(206,17,38,0.6); right:16%; top:30%; animation-duration:7s; animation-delay:-2s; }
         .hs3 { width:40px; height:6px; background:rgba(0,122,61,0.7); right:20%; top:38%; animation-duration:6s; animation-delay:-1s; }
-        .hs4 { width:70px; height:6px; background:rgba(255,255,255,0.14); right:14%; top:46%; animation-duration:8s; animation-delay:-3s; }
-        .hs5 { width:50px; height:50px; background:rgba(255,255,255,0.06); border-radius:50%; right:28%; top:15%; animation:float2 9s ease-in-out infinite; }
-        .hs6 { width:20px; height:20px; background:rgba(206,17,38,0.3); border-radius:50%; right:38%; top:65%; animation:float 8s ease-in-out infinite; animation-delay:-4s; }
-        .hs7 { width:14px; height:14px; background:rgba(0,122,61,0.5); border-radius:50%; right:55%; top:20%; animation:float2 7s ease-in-out infinite; animation-delay:-1.5s; }
+        .hs4 { width:70px; height:6px; background:rgba(255,255,255,0.14); left:14%; top:46%; animation-duration:8s; animation-delay:-3s; }
+        .hs5 { width:50px; height:50px; background:rgba(255,255,255,0.06); border-radius:50%; left:28%; top:15%; animation:float2 9s ease-in-out infinite; }
+        .hs6 { width:20px; height:20px; background:rgba(206,17,38,0.3); border-radius:50%; left:38%; top:65%; animation:float 8s ease-in-out infinite; animation-delay:-4s; }
+        .hs7 { width:14px; height:14px; background:rgba(0,122,61,0.5); border-radius:50%; left:55%; top:20%; animation:float2 7s ease-in-out infinite; animation-delay:-1.5s; }
 
-        /* Hero visual (SVG runner) */
-        .hero-visual {
-          position: absolute;
-          right: 48px; top: 50%;
-          transform: translateY(-50%);
-          width: min(380px, 38vw);
-          pointer-events: none;
-          animation: float2 8s ease-in-out infinite;
-        }
-
-        /* Hero content */
+        /* Hero content - Rata Tengah */
         .hero-content {
-          padding: 80px 56px 72px;
-          max-width: 660px;
+          padding: 80px 24px;
+          max-width: 800px;
           width: 100%;
           position: relative;
           z-index: 2;
-          align-self: flex-start;
+          margin: auto; /* Vertikal center */
+          display: flex;
+          flex-direction: column;
+          align-items: center; /* Horizontal center */
+          text-align: center;
         }
 
         /* Badge */
@@ -194,6 +188,7 @@ export default function HeroSection() {
         .hero-meta {
           display: flex;
           align-items: center;
+          justify-content: center; /* Rata Tengah */
           gap: 14px;
           margin-bottom: 36px;
           flex-wrap: wrap;
@@ -227,6 +222,7 @@ export default function HeroSection() {
         /* CTA Buttons */
         .hero-btns {
           display: flex;
+          justify-content: center; /* Rata Tengah */
           gap: 14px;
           flex-wrap: wrap;
           margin-bottom: 52px;
@@ -274,6 +270,7 @@ export default function HeroSection() {
         /* Tag pills */
         .hero-tags {
           display: flex;
+          justify-content: center;
           gap: 10px;
           flex-wrap: wrap;
           animation: fadeUp 0.8s 0.5s ease both;
@@ -350,37 +347,19 @@ export default function HeroSection() {
         /* Mobile responsive */
         @media (max-width: 768px) {
           .hero-content {
-            padding: 60px 24px 48px;
-            max-width: 100%;
+            padding: 40px 24px;
           }
-          .hero-visual { display: none; }
           .hero-title { font-size: clamp(52px, 14vw, 80px); }
           .sb-item { padding: 16px 12px; }
           .sb-num { font-size: 24px; }
         }
 
+        /* Organizers */
         .hero-organizers {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          animation: fadeUp 0.8s 0.5s ease both;
-        }
-        .hero-org-badge {
-          background: rgba(255,255,255,0.12);
-          border: 1px solid rgba(255,255,255,0.22);
-          border-radius: 6px;
-          padding: 6px 14px;
-          font-size: 11px;
-          font-weight: 700;
-          color: rgba(255,255,255,0.8);
-          letter-spacing: 1px;
-          font-family: 'Barlow Condensed', sans-serif;
-          text-transform: uppercase;
-        }
-          .hero-organizers {
           margin-top: 42px;
           display: flex;
           flex-direction: column;
+          align-items: center; /* Rata Tengah */
           gap: 14px;
           animation: fadeUp 0.8s 0.6s ease both;
         }
@@ -395,6 +374,7 @@ export default function HeroSection() {
 
         .org-logos-wrapper {
           display: flex;
+          justify-content: center; /* Rata Tengah */
           align-items: center;
           gap: 28px;
           flex-wrap: wrap;
@@ -404,7 +384,6 @@ export default function HeroSection() {
           position: relative;
           transition: all 0.3s ease;
           opacity: 0.75;
-          /* Filter ini membuat logo berwarna putih agar estetik di background gelap */
           filter: brightness(0) invert(1); 
         }
 
@@ -420,7 +399,7 @@ export default function HeroSection() {
         <div className="hero-blob hb2" />
         <div className="hero-blob hb3" />
 
-        {/* Floating geometric shapes */}
+        {/* Floating geometric shapes (di-adjust position-nya agar balance) */}
         <div className="hero-shapes">
           <div className="hs hs1" />
           <div className="hs hs2" />
@@ -431,44 +410,7 @@ export default function HeroSection() {
           <div className="hs hs7" />
         </div>
 
-        {/* Runner SVG illustration */}
-        <div className="hero-visual">
-          <svg viewBox="0 0 380 460" xmlns="http://www.w3.org/2000/svg" width="100%">
-            <defs>
-              <linearGradient id="hg2" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.07" />
-                <stop offset="100%" stopColor="#CE1126" stopOpacity="0.09" />
-              </linearGradient>
-            </defs>
-            <rect width="380" height="460" fill="url(#hg2)" rx="20" />
-            {/* Decorative Palestine flag stripes */}
-            <g opacity="0.18" transform="rotate(-35,190,230)">
-              <rect x="20" y="-120" width="10" height="800" fill="#000" />
-              <rect x="45" y="-120" width="10" height="800" fill="#fff" />
-              <rect x="70" y="-120" width="10" height="800" fill="#007A3D" />
-              <rect x="95" y="-120" width="10" height="800" fill="#CE1126" />
-              <rect x="120" y="-120" width="10" height="800" fill="#fff" />
-              <rect x="145" y="-120" width="10" height="800" fill="#007A3D" />
-              <rect x="170" y="-120" width="10" height="800" fill="#000" />
-              <rect x="195" y="-120" width="10" height="800" fill="#fff" />
-            </g>
-            {/* Runner silhouette */}
-            <g fill="rgba(255,255,255,0.12)">
-              <circle cx="190" cy="82" r="32" />
-              <ellipse cx="184" cy="192" rx="40" ry="66" />
-              <rect x="96" y="122" width="21" height="80" rx="10" transform="rotate(-30,106,162)" />
-              <rect x="228" y="138" width="21" height="68" rx="10" transform="rotate(25,238,172)" />
-              <rect x="146" y="240" width="22" height="115" rx="11" transform="rotate(-16,157,297)" />
-              <rect x="174" y="240" width="22" height="108" rx="11" transform="rotate(20,185,294)" />
-            </g>
-            <text x="190" y="435" textAnchor="middle" fontFamily="'Bebas Neue',sans-serif" fontSize="18"
-              fill="rgba(255,255,255,0.35)" letterSpacing="4">RUN FOR LIBERATION</text>
-            <text x="190" y="452" textAnchor="middle" fontSize="11" fill="rgba(255,255,255,0.18)"
-              fontFamily="sans-serif">Solo — 24 Mei 2026</text>
-          </svg>
-        </div>
-
-        {/* Main hero content */}
+        {/* Main hero content - Sekarang otomatis rata tengah di layar */}
         <div className="hero-content">
           {/* Badge */}
           <div className="hero-badge">
@@ -478,9 +420,7 @@ export default function HeroSection() {
 
           {/* Headline */}
           <h1 className="hero-title">
-            RUN<br />
-            FOR<br />
-            <span className="pal-r">LIBERATION</span>
+            RUN FOR <span className="pal-r">LIBERATION</span>
           </h1>
 
           {/* Sub tagline */}
@@ -506,7 +446,7 @@ export default function HeroSection() {
             </Link>
           </div>
 
-          {/* Logo penyelenggara — placeholder, TODO: ganti dengan logo asli dari panitia */}
+          {/* Logo penyelenggara */}
           <div className="hero-organizers">
             <p className="org-label">Diselenggarakan oleh</p>
             <div className="org-logos-wrapper">
@@ -546,7 +486,7 @@ export default function HeroSection() {
         </div>
       </section>
 
-      {/* Flag stripe Palestina — transisi ke section berikutnya */}
+      {/* Flag stripe Palestina */}
       <div className="flag-stripe">
         <div className="fs-bk" />
         <div className="fs-wh" />

@@ -1,4 +1,4 @@
-// app/(public)/kategori/page.
+// app/(public)/kategori/page.tsx
 
 import { Metadata } from 'next'
 import Link from 'next/link'
@@ -12,32 +12,69 @@ export const metadata: Metadata = {
     'Pilih kategori larimu: Fun Run atau Fun Walk. Daftar sekarang dan berkontribusi untuk kemanusiaan Palestina.',
 }
 
+// Data disinkronkan dengan Beranda
 const categories = [
   {
+    id: 'fun-run-gaza',
     icon: '🏃',
-    gradientFrom: '#1A54C8',
+    gradientFrom: '#1A54C8', // Biru
     gradientTo: '#4A7CE8',
-    name: 'Fun Run',
-    distance: '[TBD]', // TODO: isi jarak dari panitia
-    desc: 'Kategori lari untuk kamu yang ingin berlari sambil menyuarakan solidaritas. Semua level pelari disambut — yang penting semangat dan kepedulian.',
-    packs: ['E-Certificate', 'Akses Rute', 'Komunitas'],
-    packColor: { bg: 'var(--blue-light)', text: 'var(--blue-darker)' },
-    priceColor: 'var(--blue)',
-    btnStyle: { background: 'var(--blue)', color: '#fff' },
-    badge: null,
+    name: 'Fun Run - Gaza',
+    distance: '5K', 
+    desc: 'Lari 5K dengan semangat solidaritas untuk Gaza.',
+    packs: ['Race Pack Lengkap (Jersey + Medali)', 'E-Certificate', 'Akses Rute Lari', 'Donasi Solidaritas Gaza'],
+    // Menggunakan kode HEX langsung sebagai pengganti var(--blue)
+    packColor: { bg: '#E0EBFF', text: '#1A54C8' }, 
+    priceColor: '#1A54C8',
+    btnStyle: { background: '#1A54C8', color: '#fff' },
+    badge: '🔥 Slot Terbatas',
+    harga: 'Rp 120.000',
   },
   {
+    id: 'fun-run-rafah',
+    icon: '🏃',
+    gradientFrom: '#0A2558', // Biru Gelap
+    gradientTo: '#1A54C8',
+    name: 'Fun Run - Rafah',
+    distance: '5K',
+    desc: 'Lari santai 5K untuk kemanusiaan di Rafah.',
+    packs: ['E-Certificate', 'Akses Rute Lari', 'Refreshment', 'Donasi Rafah'],
+    packColor: { bg: '#e0e7ff', text: '#1e3a8a' },
+    priceColor: '#1e3a8a',
+    btnStyle: { background: '#1e3a8a', color: '#fff' },
+    badge: '⚡ Fast Selling',
+    harga: 'Rp 30.000',
+  },
+  {
+    id: 'fun-walk-gaza',
     icon: '🚶',
-    gradientFrom: '#007A3D',
+    gradientFrom: '#007A3D', // Hijau
     gradientTo: '#00a84f',
-    name: 'Fun Walk',
-    distance: '[TBD]', // TODO: isi jarak dari panitia
-    desc: 'Kategori jalan santai untuk semua kalangan — keluarga, lansia, anak-anak. Tidak perlu berlari, cukup hadir dan tunjukkan kepedulianmu.',
-    packs: ['E-Certificate', 'Akses Rute', 'Komunitas'],
-    packColor: { bg: 'var(--green-light)', text: 'var(--green)' },
-    priceColor: 'var(--green)',
-    btnStyle: { background: 'var(--green)', color: '#fff' },
-    badge: null,
+    name: 'Fun Walk - Gaza',
+    distance: 'WALK',
+    desc: 'Jalan santai keluarga untuk Gaza. Tidak perlu berlari, cukup hadir dan tunjukkan kepedulianmu.',
+    packs: ['Race Pack Lengkap (Jersey + Medali)', 'E-Certificate', 'Akses Area Event', 'Donasi Solidaritas Gaza'],
+    // Menggunakan kode HEX langsung sebagai pengganti var(--green)
+    packColor: { bg: '#E6F4EA', text: '#007A3D' },
+    priceColor: '#007A3D',
+    btnStyle: { background: '#007A3D', color: '#fff' },
+    badge: '♾ Unlimited Slot',
+    harga: 'Rp 120.000',
+  },
+  {
+    id: 'fun-walk-rafah',
+    icon: '🚶',
+    gradientFrom: '#C62828', // Merah
+    gradientTo: '#E53935',
+    name: 'Fun Walk - Rafah',
+    distance: 'WALK',
+    desc: 'Langkah kecil untuk perubahan di Rafah. Ikuti kegiatan komunitas untuk aksi nyata.',
+    packs: ['E-Certificate', 'Akses Area Event', 'Ikut Kegiatan Komunitas', 'Donasi Rafah'],
+    packColor: { bg: '#ffebee', text: '#c62828' },
+    priceColor: '#c62828',
+    btnStyle: { background: '#c62828', color: '#fff' },
+    badge: '♾ Unlimited Slot',
+    harga: 'Rp 30.000',
   },
 ]
 
@@ -87,15 +124,14 @@ export default function KategoriPage() {
             maxWidth: '560px',
           }}
         >
-          Tersedia dua kategori: Fun Run dan Fun Walk. Pilih yang sesuai dengan kemampuan dan
-          keinginanmu — yang terpenting adalah kehadiranmu.
+          Tersedia pilihan kategori Fun Run dan Fun Walk. Pilih rute dan jenis donasi yang sesuai dengan keinginanmu — yang terpenting adalah kehadiranmu.
         </p>
 
         {/* Cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {categories.map((cat) => (
             <div
-              key={cat.name}
+              key={cat.id}
               style={{
                 background: '#fff',
                 border: '2px solid var(--border)',
@@ -105,7 +141,6 @@ export default function KategoriPage() {
                 transition: 'all 0.3s',
               }}
               className="hover:border-[var(--blue)] hover:shadow-md md:grid"
-              // md:grid-cols-[200px_1fr]
             >
               <div className="flex flex-col md:grid" style={{ gridTemplateColumns: '200px 1fr' }}>
                 {/* Panel kiri — berwarna */}
@@ -119,8 +154,24 @@ export default function KategoriPage() {
                     padding: '28px',
                     color: '#fff',
                     minHeight: '140px',
+                    position: 'relative',
                   }}
                 >
+                  {/* Badge Slot di atas Ikon */}
+                  {cat.badge && (
+                    <span 
+                      style={{ 
+                        position: 'absolute', 
+                        top: '12px', 
+                        background: 'rgba(255,255,255,0.2)', 
+                        padding: '4px 10px', 
+                        borderRadius: '20px', 
+                        fontSize: '10px', 
+                        fontWeight: 'bold' 
+                      }}>
+                      {cat.badge}
+                    </span>
+                  )}
                   <div style={{ fontSize: '46px', marginBottom: '8px', animation: 'float2 5s ease-in-out infinite' }}>
                     {cat.icon}
                   </div>
@@ -162,17 +213,16 @@ export default function KategoriPage() {
                         {cat.name}
                       </h3>
                     </div>
-                    {/* TODO: env HARGA_FUN_RUN / HARGA_FUN_WALK */}
+                    {/* Tampilkan Harga dari array */}
                     <span
                       style={{
                         fontFamily: "'Bebas Neue', sans-serif",
-                        fontSize: '22px',
+                        fontSize: '26px',
                         color: cat.priceColor,
                         letterSpacing: '1px',
-                        fontStyle: 'italic',
                       }}
                     >
-                      Segera Diumumkan
+                      {cat.harga}
                     </span>
                   </div>
 
@@ -189,7 +239,6 @@ export default function KategoriPage() {
                   </p>
 
                   {/* Race pack badges */}
-                  {/* TODO: isi race pack dari panitia */}
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '18px' }}>
                     {cat.packs.map((pack) => (
                       <span
@@ -208,9 +257,9 @@ export default function KategoriPage() {
                     ))}
                   </div>
 
-                  {/* CTA */}
+                  {/* CTA: Melempar parameter ID ke halaman daftar */}
                   <Link
-                    href="/daftar"
+                    href={`/daftar?kategori=${cat.id}`}
                     style={{
                       display: 'inline-block',
                       ...cat.btnStyle,
@@ -221,6 +270,7 @@ export default function KategoriPage() {
                       textDecoration: 'none',
                       transition: 'opacity 0.2s',
                     }}
+                    className="hover:opacity-90"
                   >
                     Pilih & Daftar
                   </Link>

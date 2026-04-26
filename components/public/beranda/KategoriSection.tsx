@@ -54,7 +54,7 @@ const kategoriList: KategoriItem[] = [
     harga: "Rp 120.000",
     ikon: "🚶",
     bannerClass: "cb-medal", // Hijau
-    slotLabel: "♾ Unlimited Slot",
+    slotLabel: "🔥 Slot Terbatas",
     slotClass: "slot-unlimited",
     benefits: [
       "Race Pack Lengkap (Jersey + Medali)",
@@ -340,7 +340,7 @@ export default function KategoriSection() {
           <span className="sec-label blue">Pilih Paketmu</span>
           <h2 className="sec-title">Kategori Event</h2>
           <p className="sec-sub">
-            Fun Run 5K dengan berbagai pilihan race pack sesuai kebutuhan dan kemampuanmu.
+            Event lar dengan berbagai kategori sesuai kebutuhan dan kemampuanmu.
           </p>
 
           {/* Cards grid */}

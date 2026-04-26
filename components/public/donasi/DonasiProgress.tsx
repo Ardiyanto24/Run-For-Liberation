@@ -23,34 +23,36 @@ export function DonasiProgress({
       {/* ── 4 Stat Cards (grid 2×2) ── */}
       <div
         style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '12px', // Jarak antar card sedikit dilebarkan
         }}
-        >
+      >
         {/* Terkumpul */}
         <div
           style={{
-            background: 'var(--blue-xlight)',
-            border: '1px solid var(--border)',
-            borderRadius: '10px',
-            padding: '16px',
+            background: '#ffffff',
+            border: '1.5px solid #E2E8F0', // Border tegas
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', // Bayangan agar card timbul
+            borderRadius: '12px',
+            padding: '20px 16px',
             textAlign: 'center',
           }}
         >
           <span
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: '28px',
+              fontSize: '32px',
               display: 'block',
               lineHeight: 1,
-              marginBottom: '3px',
-              color: 'var(--green)',
+              marginBottom: '6px',
+              color: '#16A34A', // Hijau solid
+              letterSpacing: '1px',
             }}
           >
             {formatRupiah(totalTerkumpul)}
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--gray)' }}>
+          <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Terkumpul
           </span>
         </div>
@@ -58,26 +60,28 @@ export function DonasiProgress({
         {/* Total Donatur */}
         <div
           style={{
-            background: 'var(--blue-xlight)',
-            border: '1px solid var(--border)',
-            borderRadius: '10px',
-            padding: '16px',
+            background: '#ffffff',
+            border: '1.5px solid #E2E8F0',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            borderRadius: '12px',
+            padding: '20px 16px',
             textAlign: 'center',
           }}
         >
           <span
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: '28px',
+              fontSize: '32px',
               display: 'block',
               lineHeight: 1,
-              marginBottom: '3px',
-              color: 'var(--red)',
+              marginBottom: '6px',
+              color: '#DC2626', // Merah solid
+              letterSpacing: '1px',
             }}
           >
             {jumlahDonatur.toLocaleString('id-ID')}
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--gray)' }}>
+          <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Total Donatur
           </span>
         </div>
@@ -85,26 +89,28 @@ export function DonasiProgress({
         {/* Target */}
         <div
           style={{
-            background: 'var(--blue-xlight)',
-            border: '1px solid var(--border)',
-            borderRadius: '10px',
-            padding: '16px',
+            background: '#ffffff',
+            border: '1.5px solid #E2E8F0',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            borderRadius: '12px',
+            padding: '20px 16px',
             textAlign: 'center',
           }}
         >
           <span
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: '28px',
+              fontSize: '32px',
               display: 'block',
               lineHeight: 1,
-              marginBottom: '3px',
-              color: 'var(--blue)',
+              marginBottom: '6px',
+              color: '#2563EB', // Biru solid
+              letterSpacing: '1px',
             }}
           >
             {formatRupiah(targetDonasi)}
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--gray)' }}>
+          <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Target
           </span>
         </div>
@@ -112,26 +118,28 @@ export function DonasiProgress({
         {/* Tercapai % */}
         <div
           style={{
-            background: 'var(--blue-xlight)',
-            border: '1px solid var(--border)',
-            borderRadius: '10px',
-            padding: '16px',
+            background: '#ffffff',
+            border: '1.5px solid #E2E8F0',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            borderRadius: '12px',
+            padding: '20px 16px',
             textAlign: 'center',
           }}
         >
           <span
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: '28px',
+              fontSize: '32px',
               display: 'block',
               lineHeight: 1,
-              marginBottom: '3px',
-              color: 'var(--blue-darker)',
+              marginBottom: '6px',
+              color: '#0F172A', // Hitam/Navy gelap agar kontras
+              letterSpacing: '1px',
             }}
           >
             {pct}%
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--gray)' }}>
+          <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Tercapai
           </span>
         </div>
@@ -140,12 +148,13 @@ export function DonasiProgress({
       {/* ── Progress Bar Box ── */}
       <div
         style={{
-          background: 'var(--blue-xlight)',
-          borderRadius: '14px',
-          padding: '26px',
-          marginTop: '22px',
-          marginBottom: '16px',
-          border: '1.5px solid var(--border)',
+          background: '#F8FAFC', // Abu-abu sangat muda
+          borderRadius: '16px',
+          padding: '28px',
+          marginTop: '24px',
+          marginBottom: '20px',
+          border: '1.5px solid #CBD5E1', // Border lebih tebal sedikit untuk membedakan dari grid
+          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)', // Inner shadow agar terasa seperti "wadah"
         }}
       >
         {/* Top: nominal terkumpul + label target */}
@@ -153,15 +162,15 @@ export function DonasiProgress({
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            marginBottom: '10px',
+            marginBottom: '14px',
             alignItems: 'flex-end',
           }}
         >
           <span
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: '34px',
-              color: 'var(--green)',
+              fontSize: '38px', // Diperbesar sedikit
+              color: '#16A34A',
               letterSpacing: '1px',
               lineHeight: 1,
             }}
@@ -170,9 +179,10 @@ export function DonasiProgress({
           </span>
           <span
             style={{
-              fontSize: '13.5px',
-              color: 'var(--gray)',
-              paddingBottom: '3px',
+              fontSize: '14px',
+              color: '#64748B',
+              fontWeight: 500,
+              paddingBottom: '4px',
             }}
           >
             Target: {formatRupiah(targetDonasi)}
@@ -182,19 +192,19 @@ export function DonasiProgress({
         {/* Progress Track */}
         <div
           style={{
-            height: '10px',
-            background: 'var(--gray-light)',
+            height: '14px', // Dibuat lebih tebal agar lebih memuaskan dilihat
+            background: '#E2E8F0',
             borderRadius: '999px',
             overflow: 'hidden',
-            marginBottom: '8px',
+            marginBottom: '12px',
           }}
         >
-          {/* Progress Fill — animasi dari v5: progressBar keyframe */}
+          {/* Progress Fill */}
           <div
             style={{
               height: '100%',
               width: `${pct}%`,
-              background: 'linear-gradient(90deg, var(--green), #00c55c)',
+              background: 'linear-gradient(90deg, #16A34A, #4ADE80)', // Gradien hijau cantik
               borderRadius: '999px',
               transition: 'width 1.8s ease',
             }}
@@ -202,8 +212,8 @@ export function DonasiProgress({
         </div>
 
         {/* Meta text */}
-        <p style={{ fontSize: '13px', color: 'var(--gray)', margin: 0 }}>
-          <span style={{ color: 'var(--green)', fontWeight: 700 }}>
+        <p style={{ fontSize: '14px', color: '#64748B', margin: 0, fontWeight: 500 }}>
+          <span style={{ color: '#16A34A', fontWeight: 800 }}>
             {pct}%
           </span>{' '}
           dari target &bull; Real-time
@@ -216,26 +226,26 @@ export function DonasiProgress({
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          background: 'var(--green-light)',
-          border: '1px solid rgba(0, 122, 61, 0.2)',
-          borderRadius: '6px',
-          padding: '8px 14px',
+          background: '#DCFCE7', // Hijau sangat muda
+          border: '1px solid #BBF7D0',
+          borderRadius: '8px', // Sedikit disesuaikan agar cocok dengan style modern
+          padding: '10px 16px',
           fontSize: '13px',
-          color: 'var(--green)',
+          color: '#16A34A',
           fontWeight: 700,
-          marginTop: '4px',
         }}
       >
-        {/* Animated dot — pulse animation dari globals.css */}
+        {/* Animated dot */}
         <span
           className="animate-pulse"
           style={{
-            width: '7px',
-            height: '7px',
-            background: 'var(--green)',
+            width: '8px',
+            height: '8px',
+            background: '#16A34A',
             borderRadius: '50%',
             display: 'inline-block',
             flexShrink: 0,
+            boxShadow: '0 0 8px rgba(22, 163, 74, 0.6)', // Memberi efek menyala/glowing
           }}
         />
         Live update · Donasi terus mengalir
