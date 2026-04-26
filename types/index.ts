@@ -1,7 +1,7 @@
 // ==========================================
 // 1. ENUMS (Union Type Strings)
 // ==========================================
-export type TipePendaftaran = "INDIVIDU" | "KELOMPOK";
+export type TipePendaftaran = "INDIVIDU" | "KELUARGA";
 export type KategoriLomba =
   | "FUN_RUN_GAZA"
   | "FUN_RUN_RAFAH"

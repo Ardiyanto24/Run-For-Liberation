@@ -16,7 +16,7 @@ datasource db {
 
 enum TipePendaftaran {
   INDIVIDU
-  KELOMPOK
+  KELUARGA
 }
 
 enum KategoriLomba {

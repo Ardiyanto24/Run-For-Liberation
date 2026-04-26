@@ -1,9 +1,11 @@
 import { z } from "zod";
 
-// ─── Enum Definitions ────────────────────────────────────────
+// ============================================================
+// ENUM DEFINITIONS
 // Didefinisikan ulang di sini agar validations.ts tidak
-// bergantung pada Prisma Client (yang hanya tersedia di server).
-// Nilai harus selalu sinkron dengan schema.prisma.
+// bergantung pada Prisma Client di sisi client.
+// Nilai HARUS selalu sinkron dengan prisma/schema.prisma.
+// ============================================================
 
 const TipePendaftaran = z.enum(["INDIVIDU", "KELUARGA"]);
 
@@ -18,7 +20,7 @@ const JenisKelamin = z.enum(["LAKI_LAKI", "PEREMPUAN"]);
 
 const UkuranJersey = z.enum(["S", "M", "L", "XL", "XXL"]);
 
-const LenganJersey = z.enum(["PANJANG", "PENDEK"]);
+const UkuranLengan = z.enum(["PENDEK", "PANJANG"]);
 
 const MetodePembayaran = z.enum([
   "QRIS",
@@ -30,7 +32,9 @@ const MetodePembayaran = z.enum([
   "DANA",
 ]);
 
-// ─── Helper: Validasi String Tanggal ─────────────────────────
+// ============================================================
+// HELPER: Validasi String Tanggal
+// ============================================================
 
 const tanggalLahirSchema = z
   .string()
@@ -40,96 +44,106 @@ const tanggalLahirSchema = z
     return !isNaN(date.getTime());
   }, "Format tanggal tidak valid.");
 
-// ════════════════════════════════════════════════════════════
-// 2.1.1 — Schema Anggota Keluarga
-// ════════════════════════════════════════════════════════════
+// ============================================================
+// SCHEMA: Anggota Keluarga
+// ukuranJersey dan ukuranLengan opsional di level schema —
+// kewajiban diatur via refinement di pendaftaranSchema
+// berdasarkan kategori yang dipilih.
+// ============================================================
 
 export const anggotaSchema = z.object({
-  namaLengkap: z
-    .string()
-    .min(2, "Nama anggota minimal 2 karakter."),
-
+  namaLengkap:  z.string().min(2, "Nama anggota minimal 2 karakter."),
   tanggalLahir: tanggalLahirSchema,
-
-  jenisKelamin: JenisKelamin.refine(
-    (val) => val !== undefined,
-    "Jenis kelamin anggota wajib dipilih."
-  ),
-
-  ukuranJersey: UkuranJersey.refine(
-    (val) => val !== undefined,
-    "Ukuran jersey anggota wajib dipilih."
-  ),
-
-  lenganJersey: LenganJersey.refine(
-    (val) => val !== undefined,
-    "Pilihan lengan jersey anggota wajib dipilih."
-  ),
+  jenisKelamin: JenisKelamin,
+  ukuranJersey: UkuranJersey.optional(),
+  ukuranLengan: UkuranLengan.optional(),
 });
 
 export type AnggotaInput = z.infer<typeof anggotaSchema>;
 
-// ════════════════════════════════════════════════════════════
-// 2.1.2 — Schema Pendaftaran (Full Form)
-// ════════════════════════════════════════════════════════════
+// ============================================================
+// SCHEMA: Pendaftaran (Full Form)
+// ============================================================
 
 export const pendaftaranSchema = z
   .object({
     // Identitas pendaftaran
-    tipe: TipePendaftaran,
-    kategori: KategoriLomba,
+    tipe:         TipePendaftaran,
+    kategori:     KategoriLomba,
     namaKelompok: z.string().optional(),
 
     // Data ketua / peserta individu
-    namaLengkap: z
-      .string()
-      .min(2, "Nama lengkap minimal 2 karakter."),
-
-    email: z
-      .string()
-      .email("Format email tidak valid."),
-
-    noWhatsapp: z
-      .string()
-      .min(10, "Nomor WhatsApp minimal 10 digit."),
-
+    namaLengkap:  z.string().min(2, "Nama lengkap minimal 2 karakter."),
+    email:        z.string().email("Format email tidak valid."),
+    noWhatsapp:   z.string().min(10, "Nomor WhatsApp minimal 10 digit."),
     tanggalLahir: tanggalLahirSchema,
-
     jenisKelamin: JenisKelamin,
 
-    ukuranJersey: UkuranJersey,
-
-    lenganJersey: LenganJersey,
+    // Jersey — opsional di level object, wajib untuk Gaza via refinement
+    ukuranJersey: UkuranJersey.optional(),
+    ukuranLengan: UkuranLengan.optional(),
 
     // Kontak darurat
-    namaKontak: z
-      .string()
-      .min(2, "Nama kontak darurat minimal 2 karakter."),
-
-    noKontak: z
-      .string()
-      .min(10, "Nomor kontak darurat minimal 10 digit."),
+    namaKontak: z.string().min(2, "Nama kontak darurat minimal 2 karakter."),
+    noKontak:   z.string().min(10, "Nomor kontak darurat minimal 10 digit."),
 
     // Donasi & pembayaran
-    donasiTambahan: z
-      .number()
-      .min(0, "Nominal donasi tidak boleh negatif.")
-      .default(0),
-
+    donasiTambahan:   z.number().min(0, "Nominal donasi tidak boleh negatif.").default(0),
     metodePembayaran: MetodePembayaran,
 
-    // Anggota keluarga (opsional di level object — divalidasi via refinement)
+    // Anggota keluarga — opsional di level object, divalidasi via refinement
     anggota: z.array(anggotaSchema).optional(),
   })
   .superRefine((data, ctx) => {
-    // Refinement: jika tipe KELUARGA, anggota wajib ada minimal 1, maksimal 5
+    const isGaza =
+      data.kategori === "FUN_RUN_GAZA" ||
+      data.kategori === "FUN_WALK_GAZA";
+
+    // ── Refinement 1: Jersey wajib untuk paket Gaza ──────────
+    if (isGaza) {
+      if (!data.ukuranJersey) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["ukuranJersey"],
+          message: "Ukuran jersey wajib dipilih untuk paket Gaza.",
+        });
+      }
+      if (!data.ukuranLengan) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["ukuranLengan"],
+          message: "Model lengan jersey wajib dipilih untuk paket Gaza.",
+        });
+      }
+
+      // Jersey anggota juga wajib jika Gaza
+      if (data.anggota && data.anggota.length > 0) {
+        data.anggota.forEach((anggota, idx) => {
+          if (!anggota.ukuranJersey) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["anggota", idx, "ukuranJersey"],
+              message: `Ukuran jersey anggota ${idx + 1} wajib dipilih.`,
+            });
+          }
+          if (!anggota.ukuranLengan) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["anggota", idx, "ukuranLengan"],
+              message: `Model lengan anggota ${idx + 1} wajib dipilih.`,
+            });
+          }
+        });
+      }
+    }
+
+    // ── Refinement 2: Anggota wajib jika tipe KELUARGA ───────
     if (data.tipe === "KELUARGA") {
       if (!data.anggota || data.anggota.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["anggota"],
-          message:
-            "Pendaftaran keluarga harus memiliki minimal 1 anggota.",
+          message: "Pendaftaran keluarga harus memiliki minimal 1 anggota.",
         });
       }
 
@@ -137,8 +151,7 @@ export const pendaftaranSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["anggota"],
-          message:
-            "Pendaftaran keluarga maksimal 5 anggota.",
+          message: "Pendaftaran keluarga maksimal 5 anggota.",
         });
       }
     }
@@ -146,24 +159,20 @@ export const pendaftaranSchema = z
 
 export type PendaftaranInput = z.infer<typeof pendaftaranSchema>;
 
-// ════════════════════════════════════════════════════════════
-// 2.2.1 — Schema Donasi
-// ════════════════════════════════════════════════════════════
+// ============================================================
+// SCHEMA: Donasi
+// ============================================================
 
 export const donasiSchema = z.object({
   nominal: z
     .number()
     .min(10_000, "Nominal donasi minimal Rp 10.000."),
 
-  namaDonatur: z
-    .string()
-    .optional(),
+  namaDonatur: z.string().optional(),
 
-  sembunyikanNama: z
-    .boolean()
-    .default(false),
+  sembunyikanNama: z.boolean().default(false),
 
-  // Email opsional — boleh tidak diisi, boleh string kosong
+  // Email opsional — boleh tidak diisi atau string kosong
   emailDonatur: z
     .union([
       z.string().email("Format email tidak valid."),
@@ -172,9 +181,7 @@ export const donasiSchema = z.object({
     ])
     .optional(),
 
-  pesan: z
-    .string()
-    .optional(),
+  pesan: z.string().optional(),
 
   metodePembayaran: MetodePembayaran,
 });
