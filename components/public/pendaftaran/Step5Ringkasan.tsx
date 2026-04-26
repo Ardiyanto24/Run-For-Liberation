@@ -1,12 +1,13 @@
-// components/public/pendaftaran/Step5Ringkasan.tsx
-
 "use client";
 
+import { useState, useEffect } from "react";
 import { FormDataPendaftaran } from "@/types";
+import { getHargaKategori, type HargaMap } from "@/actions/pendaftaran";
 
 // ============================================================
-// HELPER
+// HELPERS
 // ============================================================
+
 function formatRupiah(angka: number): string {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -16,8 +17,8 @@ function formatRupiah(angka: number): string {
 }
 
 function labelKategori(kategori: string | null): string {
-  if (kategori === "FUN_RUN_GAZA")  return "Fun Run – Paket Gaza";
-  if (kategori === "FUN_RUN_RAFAH") return "Fun Run – Paket Rafah";
+  if (kategori === "FUN_RUN_GAZA")   return "Fun Run – Paket Gaza";
+  if (kategori === "FUN_RUN_RAFAH")  return "Fun Run – Paket Rafah";
   if (kategori === "FUN_WALK_GAZA")  return "Fun Walk – Paket Gaza";
   if (kategori === "FUN_WALK_RAFAH") return "Fun Walk – Paket Rafah";
   return "—";
@@ -25,7 +26,7 @@ function labelKategori(kategori: string | null): string {
 
 function labelTipe(tipe: string | null): string {
   if (tipe === "INDIVIDU") return "Individu";
-  if (tipe === "KELUARGA") return "Keluarga";  // update dari KELOMPOK
+  if (tipe === "KELUARGA") return "Keluarga";
   return "—";
 }
 
@@ -35,9 +36,25 @@ function labelLengan(lengan: string): string {
   return "—";
 }
 
+// Resolve harga satuan dari hargaMap berdasarkan kategori + ukuranLengan
+function resolveHargaSatuan(
+  hargaMap: HargaMap,
+  kategori: string | null,
+  ukuranLengan: string
+): number {
+  if (!kategori) return 0;
+  if (kategori === "FUN_RUN_RAFAH")  return hargaMap["FUN_RUN_RAFAH"]  ?? 0;
+  if (kategori === "FUN_WALK_RAFAH") return hargaMap["FUN_WALK_RAFAH"] ?? 0;
+
+  // Gaza — bergantung ukuranLengan, default PANJANG jika belum dipilih
+  const key = `${kategori}__${ukuranLengan || "PANJANG"}`;
+  return hargaMap[key] ?? 0;
+}
+
 // ============================================================
 // SUB-KOMPONEN: Baris tabel ringkasan
 // ============================================================
+
 interface RingkasanRowProps {
   label: string;
   value: string;
@@ -69,27 +86,43 @@ function RingkasanRow({ label, value, highlight = false }: RingkasanRowProps) {
 // ============================================================
 // PROPS
 // ============================================================
+
 interface Step5RingkasanProps {
   formData: FormDataPendaftaran;
-  hitungBiayaPendaftaran: () => number;
-  hitungTotal: () => number;
 }
 
 // ============================================================
 // KOMPONEN
 // ============================================================
-export default function Step5Ringkasan({
-  formData,
-  hitungBiayaPendaftaran,
-  hitungTotal,
-}: Step5RingkasanProps) {
-  const isKeluarga = formData.tipe === "KELOMPOK";
-  const isGaza =
-    formData.kategori === "FUN_RUN_GAZA" ||
-    formData.kategori === "FUN_WALK_GAZA";
-  const jumlahPeserta = 1 + formData.anggota.length;
-  const biayaPendaftaran = hitungBiayaPendaftaran();
-  const total = hitungTotal();
+
+export default function Step5Ringkasan({ formData }: Step5RingkasanProps) {
+  // Harga dari server — default value sebagai fallback jika fetch gagal
+  const [hargaMap, setHargaMap] = useState<HargaMap>({
+    "FUN_RUN_GAZA__PANJANG":  120_000,
+    "FUN_RUN_GAZA__PENDEK":   110_000,
+    "FUN_WALK_GAZA__PANJANG": 120_000,
+    "FUN_WALK_GAZA__PENDEK":  110_000,
+    "FUN_RUN_RAFAH":           30_000,
+    "FUN_WALK_RAFAH":          30_000,
+  });
+
+  useEffect(() => {
+    getHargaKategori()
+      .then(setHargaMap)
+      .catch(() => {
+        // Gagal fetch — gunakan nilai default di useState
+      });
+  }, []);
+
+  // Kalkulasi harga
+  const isKeluarga  = formData.tipe === "KELUARGA"; // fix: sebelumnya "KELOMPOK"
+  const isGaza      = formData.kategori === "FUN_RUN_GAZA" || formData.kategori === "FUN_WALK_GAZA";
+  const ukuranLengan = formData.peserta.ukuranLengan ?? "";
+
+  const jumlahPeserta   = isKeluarga ? 1 + formData.anggota.length : 1; // fix: aware INDIVIDU
+  const hargaSatuan     = resolveHargaSatuan(hargaMap, formData.kategori, ukuranLengan);
+  const biayaPendaftaran = hargaSatuan * jumlahPeserta;
+  const total           = biayaPendaftaran + (formData.donasiTambahan ?? 0);
 
   return (
     <div>
@@ -144,7 +177,7 @@ export default function Step5Ringkasan({
             <>
               <RingkasanRow
                 label="Tipe Lengan Jersey"
-                value={labelLengan(formData.peserta.ukuranLengan)}
+                value={labelLengan(ukuranLengan)}
               />
               <RingkasanRow
                 label="Ukuran Jersey"
@@ -185,7 +218,7 @@ export default function Step5Ringkasan({
                 {isGaza && (
                   <div className="ml-9 flex gap-3">
                     <span className="text-xs text-[#6B7A99]">
-                      {labelLengan(anggota.ukuranLengan) || "—"}
+                      {labelLengan(anggota.ukuranLengan ?? "")}
                     </span>
                     <span className="text-xs text-[#6B7A99]">·</span>
                     <span className="text-xs text-[#6B7A99]">
@@ -214,9 +247,8 @@ export default function Step5Ringkasan({
               <span className="text-xs font-semibold text-[#6B7A99]">
                 Biaya Pendaftaran
               </span>
-              {/* TODO: kalkulasi harga per orang dari env variable saat DEV-10 */}
               <p className="text-[10px] text-[#6B7A99] mt-0.5">
-                {formatRupiah(biayaPendaftaran / jumlahPeserta)} × {jumlahPeserta} orang
+                {formatRupiah(hargaSatuan)} × {jumlahPeserta} orang
               </p>
             </div>
             <span className="text-sm font-bold text-[#0A1628]">
