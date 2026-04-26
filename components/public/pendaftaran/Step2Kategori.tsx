@@ -1,6 +1,6 @@
 "use client";
 
-import { KategoriLomba } from "@/types";
+import { KategoriLomba, UkuranLengan } from "@/types";
 import FieldError from "./FieldError";
 
 // ============================================================
@@ -8,81 +8,63 @@ import FieldError from "./FieldError";
 // ============================================================
 interface KategoriCard {
   value: KategoriLomba;
+  icon: string;
   label: string;
-  // TODO: ganti dengan harga dari env variable saat DEV-10
-  harga: string;
-  hargaAngka: number;
-  badge: { text: string; icon: string; color: string };
-  headerColor: string; // gradient/warna header card
-  runnerEmoji: string;
-  benefits: string[];
-  slotInfo?: string; // misal "Slot Terbatas"
+  paket: string;
+  harga: string;           // untuk Rafah: satu harga langsung
+  hargaPendek?: string;    // untuk Gaza: harga lengan pendek
+  hargaPanjang?: string;   // untuk Gaza: harga lengan panjang
+  isGaza: boolean;
+  racepack: string[];
+  accentColor: string;
 }
+
+const RACEPACK_DASAR = ["Ganci", "BIB", "Pin", "Refreshment"];
 
 const KATEGORI_CARDS: KategoriCard[] = [
   {
     value: "FUN_RUN_GAZA",
-    label: "Fun Run - Gaza",
-    harga: "Rp 120.000",
-    hargaAngka: 120000,
-    badge: { text: "Populer", icon: "⚡", color: "bg-yellow-400 text-yellow-900" },
-    headerColor: "from-blue-500 to-blue-700",
-    runnerEmoji: "🏃",
-    benefits: [
-      "Race Pack Lengkap (Jersey + Medali)",
-      "E-Certificate",
-      "Akses Rute Lari",
-      "Donasi Solidaritas Gaza",
-    ],
-    slotInfo: "Slot Terbatas",
+    icon: "🏃",
+    label: "Fun Run",
+    paket: "Paket Gaza",
+    harga: "",
+    hargaPendek: "Rp 110.000",
+    hargaPanjang: "Rp 120.000",
+    isGaza: true,
+    racepack: [...RACEPACK_DASAR, "Jersey (pilih tipe lengan)"],
+    accentColor: "#1A54C8",
   },
   {
     value: "FUN_RUN_RAFAH",
-    label: "Fun Run - Rafah",
+    icon: "🏃",
+    label: "Fun Run",
+    paket: "Paket Rafah",
     harga: "Rp 30.000",
-    hargaAngka: 30000,
-    badge: { text: "Fast Selling", icon: "⚡", color: "bg-blue-100 text-blue-700" },
-    headerColor: "from-blue-700 to-blue-900",
-    runnerEmoji: "🏃",
-    benefits: [
-      "E-Certificate",
-      "Akses Rute Lari",
-      "Refreshment",
-      "Donasi Rafah",
-    ],
-    slotInfo: undefined,
+    isGaza: false,
+    racepack: RACEPACK_DASAR,
+    accentColor: "#0E3A8C",
   },
   {
     value: "FUN_WALK_GAZA",
-    label: "Fun Walk - Gaza",
-    harga: "Rp 120.000",
-    hargaAngka: 120000,
-    badge: { text: "Unlimited Slot", icon: "♾️", color: "bg-green-100 text-green-700" },
-    headerColor: "from-green-500 to-green-700",
-    runnerEmoji: "🚶",
-    benefits: [
-      "Race Pack Lengkap (Jersey + Medali)",
-      "E-Certificate",
-      "Akses Area Event",
-      "Donasi Solidaritas Gaza",
-    ],
-    slotInfo: undefined,
+    icon: "🚶",
+    label: "Fun Walk",
+    paket: "Paket Gaza",
+    harga: "",
+    hargaPendek: "Rp 110.000",
+    hargaPanjang: "Rp 120.000",
+    isGaza: true,
+    racepack: [...RACEPACK_DASAR, "Jersey (pilih tipe lengan)"],
+    accentColor: "#007A3D",
   },
   {
     value: "FUN_WALK_RAFAH",
-    label: "Fun Walk - Rafah",
+    icon: "🚶",
+    label: "Fun Walk",
+    paket: "Paket Rafah",
     harga: "Rp 30.000",
-    hargaAngka: 30000,
-    badge: { text: "Unlimited Slot", icon: "♾️", color: "bg-red-100 text-red-700" },
-    headerColor: "from-red-500 to-red-700",
-    runnerEmoji: "🚶",
-    benefits: [
-      "E-Certificate",
-      "Akses Area Event",
-      "Ikut Kegiatan Komunitas",
-      "Donasi Rafah",
-    ],
-    slotInfo: undefined,
+    isGaza: false,
+    racepack: RACEPACK_DASAR,
+    accentColor: "#CE1126",
   },
 ];
 
@@ -91,8 +73,11 @@ const KATEGORI_CARDS: KategoriCard[] = [
 // ============================================================
 interface Step2KategoriProps {
   value: KategoriLomba | null;
+  ukuranLengan: UkuranLengan | "";
   onChange: (kategori: KategoriLomba) => void;
+  onChangeLengan: (lengan: UkuranLengan) => void;
   error?: string;
+  errorLengan?: string;
 }
 
 // ============================================================
@@ -100,87 +85,141 @@ interface Step2KategoriProps {
 // ============================================================
 export default function Step2Kategori({
   value,
+  ukuranLengan,
   onChange,
+  onChangeLengan,
   error,
+  errorLengan,
 }: Step2KategoriProps) {
+  const selectedCard = KATEGORI_CARDS.find((c) => c.value === value);
+  const showPilihLengan = selectedCard?.isGaza === true;
+
   return (
     <div>
-      {/* Judul Step */}
       <h2 className="font-['Bebas_Neue'] text-3xl text-[#0A1628] tracking-wide mb-1">
         Pilih Kategori
       </h2>
       <p className="text-sm text-[#6B7A99] mb-7 leading-relaxed">
-        Pilih kategori yang sesuai dengan kemampuan dan keinginan kamu.
+        Pilih kategori yang sesuai. Paket Gaza mendapatkan jersey, Paket Rafah tanpa jersey.
       </p>
 
-      {/* Grid 2x2 */}
+      {/* Grid Card */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
         {KATEGORI_CARDS.map((card) => {
           const isSelected = value === card.value;
-
           return (
             <button
               key={card.value}
               type="button"
               onClick={() => onChange(card.value)}
               className={[
-                "relative text-left rounded-xl border-2 overflow-hidden cursor-pointer transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A54C8]/50",
+                "relative text-left rounded-xl border-2 p-5 cursor-pointer transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A54C8]/50",
                 isSelected
-                  ? "border-[#1A54C8] shadow-[0_0_0_3px_rgba(26,84,200,0.12)]"
-                  : "border-[rgba(26,84,200,0.13)] hover:border-[#4A7CE8] hover:shadow-[0_2px_12px_rgba(26,84,200,0.08)]",
+                  ? "border-[#1A54C8] bg-[#EEF3FF] shadow-[0_0_0_3px_rgba(26,84,200,0.10)]"
+                  : "border-[rgba(26,84,200,0.13)] bg-[#F5F8FF] hover:border-[#4A7CE8] hover:shadow-[0_2px_12px_rgba(26,84,200,0.08)]",
               ].join(" ")}
             >
-              {/* Header berwarna */}
-              <div className={`bg-gradient-to-br ${card.headerColor} h-28 flex items-center justify-center relative`}>
-                {/* Badge Populer (hanya FUN_RUN_GAZA) */}
-                {card.value === "FUN_RUN_GAZA" && (
-                  <span className="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    ⚡ POPULER
-                  </span>
-                )}
-                {/* Centang sudut kanan atas jika dipilih */}
-                {isSelected && (
-                  <span className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white/80 flex items-center justify-center">
-                    <svg className="w-3 h-3 text-[#1A54C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
-                )}
-                <span className="text-5xl">{card.runnerEmoji}</span>
+              {/* Centang */}
+              {isSelected && (
+                <span className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#1A54C8] flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+              )}
+
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-3xl leading-none">{card.icon}</span>
+                <div>
+                  <div className="text-xs font-semibold text-[#6B7A99] uppercase tracking-wider">
+                    {card.label}
+                  </div>
+                  <div className="text-sm font-bold" style={{ color: card.accentColor }}>
+                    {card.paket}
+                  </div>
+                </div>
               </div>
 
-              {/* Body */}
-              <div className="p-4 bg-white">
-                {/* Nama & Harga */}
-                <div className="font-bold text-[#0A1628] text-sm mb-0.5">{card.label}</div>
-                <div className="font-['Bebas_Neue'] text-2xl text-[#1A54C8] tracking-wide mb-2">
+              {/* Harga */}
+              {card.isGaza ? (
+                <div className="mb-3">
+                  <div className="flex gap-3 items-end">
+                    <div>
+                      <div className="text-[10px] text-[#6B7A99] mb-0.5">Lengan Pendek</div>
+                      <div className="font-['Bebas_Neue'] text-xl tracking-wide"
+                        style={{ color: isSelected ? "#1340A0" : card.accentColor }}>
+                        {card.hargaPendek}
+                      </div>
+                    </div>
+                    <div className="text-[#6B7A99] text-xs mb-1">/</div>
+                    <div>
+                      <div className="text-[10px] text-[#6B7A99] mb-0.5">Lengan Panjang</div>
+                      <div className="font-['Bebas_Neue'] text-xl tracking-wide"
+                        style={{ color: isSelected ? "#1340A0" : card.accentColor }}>
+                        {card.hargaPanjang}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="font-['Bebas_Neue'] text-2xl tracking-wide mb-3"
+                  style={{ color: isSelected ? "#1340A0" : card.accentColor }}>
                   {card.harga}
                 </div>
+              )}
 
-                {/* Badge status slot */}
-                <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full mb-3 ${card.badge.color}`}>
-                  {card.badge.icon} {card.badge.text}
-                </span>
-
-                {/* Benefits */}
-                <ul className="space-y-1">
-                  {card.benefits.map((b) => (
-                    <li key={b} className="flex items-start gap-1.5 text-xs text-[#374151]">
-                      <svg className="w-3.5 h-3.5 text-[#1A54C8] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
+              {/* Racepack */}
+              <div className="text-[10px] font-bold text-[#6B7A99] uppercase tracking-wider mb-1.5">
+                Racepack
               </div>
+              <ul className="space-y-1">
+                {card.racepack.map((item) => (
+                  <li key={item} className="flex items-center gap-1.5 text-xs text-[#0A1628]">
+                    <span className="text-[#007A3D] font-bold">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </button>
           );
         })}
       </div>
 
-      {/* Error */}
       <FieldError message={error} />
+
+      {/* Pilih Tipe Lengan — muncul hanya jika kategori Gaza dipilih */}
+      {showPilihLengan && (
+        <div className="mt-5 p-4 rounded-xl border-2 border-[#1A54C8]/20 bg-[#F5F8FF]">
+          <h3 className="text-sm font-bold text-[#0A1628] mb-1">
+            Pilih Tipe Lengan Jersey
+          </h3>
+          <p className="text-xs text-[#6B7A99] mb-4">
+            Lengan pendek Rp 110.000 · Lengan panjang Rp 120.000
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {(["PENDEK", "PANJANG"] as UkuranLengan[]).map((tipe) => (
+              <button
+                key={tipe}
+                type="button"
+                onClick={() => onChangeLengan(tipe)}
+                className={[
+                  "py-3 px-4 rounded-xl border-2 text-sm font-semibold transition-all duration-200 text-center",
+                  ukuranLengan === tipe
+                    ? "border-[#1A54C8] bg-[#EEF3FF] text-[#1A54C8]"
+                    : "border-[rgba(26,84,200,0.13)] bg-white text-[#0A1628] hover:border-[#4A7CE8]",
+                ].join(" ")}
+              >
+                {tipe === "PENDEK" ? "👕 Lengan Pendek" : "🥋 Lengan Panjang"}
+                <div className="text-xs font-normal mt-0.5 opacity-75">
+                  {tipe === "PENDEK" ? "Rp 110.000" : "Rp 120.000"}
+                </div>
+              </button>
+            ))}
+          </div>
+          <FieldError message={errorLengan} />
+        </div>
+      )}
     </div>
   );
 }

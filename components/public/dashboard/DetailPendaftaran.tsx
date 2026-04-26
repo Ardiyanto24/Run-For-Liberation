@@ -35,10 +35,20 @@ function DetailRow({
   );
 }
 
+// ── Helper lengan ──
+function labelLengan(lengan: string | null | undefined): string {
+  if (lengan === "PENDEK") return "Lengan Pendek";
+  if (lengan === "PANJANG") return "Lengan Panjang";
+  return "—";
+}
+
 export default function DetailPendaftaran({ peserta }: DetailPendaftaranProps) {
   const pembayaran = peserta.pembayaran;
   const isDitolak = peserta.status === "DITOLAK";
-  const isKelompok = peserta.tipe === "KELOMPOK";
+  const isKeluarga = peserta.tipe === "KELOMPOK";
+  const isGaza =
+    peserta.kategori === "FUN_RUN_GAZA" ||
+    peserta.kategori === "FUN_WALK_GAZA";
 
   return (
     <div className="flex flex-col gap-4">
@@ -59,15 +69,42 @@ export default function DetailPendaftaran({ peserta }: DetailPendaftaranProps) {
 
         {/* Rows */}
         <div>
-          <DetailRow label="Kategori" value={labelKategori(peserta.kategori)} />
-          <DetailRow label="Tipe Pendaftaran" value={labelTipe(peserta.tipe)} />
-          {isKelompok && peserta.namaKelompok && (
-            <DetailRow label="Nama Kelompok" value={peserta.namaKelompok} />
+          <DetailRow
+            label="Kategori"
+            value={labelKategori(peserta.kategori)}
+          />
+          <DetailRow
+            label="Tipe Pendaftaran"
+            value={labelTipe(peserta.tipe)}
+          />
+
+          {/* Nama Kelompok — hanya jika KELUARGA dan diisi */}
+          {isKeluarga && peserta.namaKelompok && (
+            <DetailRow
+              label="Nama Kelompok"
+              value={peserta.namaKelompok}
+            />
           )}
+
+          {/* Info jersey — hanya jika paket Gaza */}
+          {isGaza && (
+            <>
+              <DetailRow
+                label="Tipe Lengan Jersey"
+                value={labelLengan(peserta.ukuranLengan)}
+              />
+              <DetailRow
+                label="Ukuran Jersey"
+                value={peserta.ukuranJersey ?? "—"}
+              />
+            </>
+          )}
+
           <DetailRow
             label="Tanggal Daftar"
             value={formatTanggal(peserta.createdAt)}
           />
+
           {pembayaran && (
             <>
               <DetailRow
@@ -99,12 +136,10 @@ export default function DetailPendaftaran({ peserta }: DetailPendaftaranProps) {
             Catatan Penolakan
           </div>
 
-          {/* Isi catatan */}
           <p className="text-[13.5px] text-[#8B0000] leading-relaxed">
             {pembayaran.catatanAdmin}
           </p>
 
-          {/* CTA minta link baru */}
           <div className="mt-4 pt-4 border-t border-[rgba(206,17,38,0.15)]">
             <p className="text-[12.5px] text-[#CE1126]">
               Silakan upload ulang bukti pembayaran melalui link pendaftaran baru.
@@ -114,8 +149,8 @@ export default function DetailPendaftaran({ peserta }: DetailPendaftaranProps) {
         </div>
       )}
 
-      {/* ── Card: Anggota Kelompok (hanya jika KELOMPOK) ── */}
-      {isKelompok && peserta.anggota.length > 0 && (
+      {/* ── Card: Anggota Keluarga (hanya jika KELUARGA) ── */}
+      {isKeluarga && peserta.anggota.length > 0 && (
         <div className="bg-white border border-[rgba(26,84,200,0.13)] rounded-[14px] px-7 py-6 shadow-[0_2px_16px_rgba(10,22,40,0.07)]">
 
           {/* Header */}
@@ -126,7 +161,7 @@ export default function DetailPendaftaran({ peserta }: DetailPendaftaranProps) {
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Anggota Kelompok
+            Anggota Keluarga
             <span className="ml-auto text-[#1A54C8] normal-case font-bold">
               {peserta.anggota.length} anggota
             </span>
@@ -159,12 +194,13 @@ export default function DetailPendaftaran({ peserta }: DetailPendaftaranProps) {
                     </p>
                     <p className="text-[12px] text-[#6B7A99] mt-0.5">
                       {labelJenisKelamin(anggota.jenisKelamin)}
+                      {/* Info jersey anggota — hanya jika Gaza */}
+                      {isGaza && anggota.ukuranJersey && (
+                        <span className="ml-2 text-[#1A54C8] font-medium">
+                          · {labelLengan(anggota.ukuranLengan)} · {anggota.ukuranJersey}
+                        </span>
+                      )}
                     </p>
-                  </div>
-
-                  {/* Badge jersey */}
-                  <div className="flex-shrink-0 bg-[#EEF3FF] border border-[rgba(26,84,200,0.20)] rounded-full px-2.5 py-1 text-[11px] font-bold text-[#1A54C8]">
-                    {anggota.ukuranJersey}
                   </div>
                 </div>
               ))}

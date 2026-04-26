@@ -7,7 +7,8 @@ interface Anggota {
   id: string;
   namaLengkap: string;
   jenisKelamin: "LAKI_LAKI" | "PEREMPUAN";
-  ukuranJersey: string;
+  ukuranJersey: string | null;
+  ukuranLengan: string | null;
   urutan: number;
 }
 
@@ -27,12 +28,14 @@ interface PesertaLengkap {
   namaLengkap: string;
   email: string;
   noWhatsapp: string;
-  kategori: "FUN_RUN" | "FUN_WALK";
-  tipe: "INDIVIDU" | "KELOMPOK";
+  kategori: "FUN_RUN_GAZA" | "FUN_RUN_RAFAH" | "FUN_WALK_GAZA" | "FUN_WALK_RAFAH";
+  tipe: "INDIVIDU" | "KELUARGA";
   namaKelompok: string | null;
   status: "PENDING" | "VERIFIED" | "DITOLAK";
   createdAt: Date;
   nomorBib: string | null;
+  ukuranJersey: string | null;
+  ukuranLengan: string | null;
   anggota: Anggota[];
   pembayaran: Pembayaran;
 }
@@ -63,14 +66,34 @@ function isPdfUrl(url: string) {
   return /\.pdf$/i.test(url);
 }
 
+// Label helpers
+function labelKategori(kategori: PesertaLengkap["kategori"]): string {
+  switch (kategori) {
+    case "FUN_RUN_GAZA":  return "Fun Run – Paket Gaza";
+    case "FUN_RUN_RAFAH": return "Fun Run – Paket Rafah";
+    case "FUN_WALK_GAZA":  return "Fun Walk – Paket Gaza";
+    case "FUN_WALK_RAFAH": return "Fun Walk – Paket Rafah";
+  }
+}
+
+function labelLengan(lengan: string | null): string {
+  if (lengan === "PENDEK") return "Lengan Pendek";
+  if (lengan === "PANJANG") return "Lengan Panjang";
+  return "—";
+}
+
+function isGazaKategori(kategori: PesertaLengkap["kategori"]): boolean {
+  return kategori === "FUN_RUN_GAZA" || kategori === "FUN_WALK_GAZA";
+}
+
+function kategoriBadgeClass(kategori: PesertaLengkap["kategori"]): string {
+  return kategori.startsWith("FUN_RUN")
+    ? "bg-[#EEF3FF] text-[#1A54C8]"
+    : "bg-[rgba(0,122,61,0.09)] text-[#007A3D]";
+}
+
 // ── Komponen preview bukti bayar ──
-function BuktiBayarPreview({
-  url,
-  nama,
-}: {
-  url: string | null;
-  nama: string | null;
-}) {
+function BuktiBayarPreview({ url, nama }: { url: string | null; nama: string | null }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   if (!url) {
@@ -96,7 +119,6 @@ function BuktiBayarPreview({
             alt="Bukti pembayaran"
             className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
             onError={(e) => {
-              // Fallback jika path dummy tidak ditemukan
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
@@ -107,7 +129,6 @@ function BuktiBayarPreview({
           </div>
         </div>
 
-        {/* Lightbox */}
         {lightboxOpen && (
           <div
             className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
@@ -148,12 +169,7 @@ function BuktiBayarPreview({
           <p className="text-sm font-medium text-[#0A1628] truncate" style={{ fontFamily: "'Barlow', sans-serif" }}>
             {nama ?? "bukti-bayar.pdf"}
           </p>
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-[#1A54C8] hover:underline"
-          >
+          <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#1A54C8] hover:underline">
             Buka di tab baru →
           </a>
         </div>
@@ -178,10 +194,7 @@ function DataRow({ label, value }: { label: string; value: React.ReactNode }) {
       >
         {label}
       </span>
-      <span
-        className="flex-1 text-sm text-[#0A1628]"
-        style={{ fontFamily: "'Barlow', sans-serif" }}
-      >
+      <span className="flex-1 text-sm text-[#0A1628]" style={{ fontFamily: "'Barlow', sans-serif" }}>
         {value}
       </span>
     </div>
@@ -195,13 +208,11 @@ export default function ModalDetailPeserta({
   onVerify,
   onTolak,
 }: ModalDetailPesertaProps) {
-  // State alur aksi
   type AksiMode = "idle" | "confirmVerify" | "inputTolak" | "confirmTolak";
   const [aksiMode, setAksiMode] = useState<AksiMode>("idle");
   const [catatanTolak, setCatatanTolak] = useState("");
   const [errorCatatan, setErrorCatatan] = useState<string | null>(null);
 
-  // Reset state saat modal dibuka/ditutup
   useEffect(() => {
     if (!peserta) {
       setAksiMode("idle");
@@ -210,7 +221,6 @@ export default function ModalDetailPeserta({
     }
   }, [peserta]);
 
-  // Tutup modal dengan Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -222,9 +232,19 @@ export default function ModalDetailPeserta({
   if (!peserta) return null;
 
   const { pembayaran, anggota } = peserta;
-  const totalAnggota = anggota.length + 1; // +1 ketua
+  const totalAnggota = anggota.length + 1;
+  const isGaza = isGazaKategori(peserta.kategori);
 
-  // ── Handler aksi ──
+  const metodeLabel: Record<string, string> = {
+    QRIS: "QRIS",
+    TRANSFER_BRI: "Transfer BRI",
+    TRANSFER_BSI: "Transfer BSI",
+    TRANSFER_MANDIRI: "Transfer Mandiri",
+    GOPAY: "GoPay",
+    OVO: "OVO",
+    DANA: "DANA",
+  };
+
   const handleVerifyConfirm = () => {
     onVerify(peserta.id);
     setAksiMode("idle");
@@ -243,22 +263,6 @@ export default function ModalDetailPeserta({
     onTolak(peserta.id, catatanTolak);
     setAksiMode("idle");
     setCatatanTolak("");
-  };
-
-  // ── Badge helpers ──
-  const kategoriBadge =
-    peserta.kategori === "FUN_RUN"
-      ? "bg-[#EEF3FF] text-[#1A54C8]"
-      : "bg-[rgba(0,122,61,0.09)] text-[#007A3D]";
-
-  const metodeLabel: Record<string, string> = {
-    QRIS: "QRIS",
-    TRANSFER_BRI: "Transfer BRI",
-    TRANSFER_BSI: "Transfer BSI",
-    TRANSFER_MANDIRI: "Transfer Mandiri",
-    GOPAY: "GoPay",
-    OVO: "OVO",
-    DANA: "DANA",
   };
 
   return (
@@ -290,12 +294,15 @@ export default function ModalDetailPeserta({
                     {peserta.email}
                   </span>
                   <span className="text-[#6B7A99]">·</span>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${kategoriBadge}`}
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                    {peserta.kategori === "FUN_RUN" ? "Fun Run" : "Fun Walk"}
+                  {/* Badge kategori — update label */}
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-md ${kategoriBadgeClass(peserta.kategori)}`}
+                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                  >
+                    {labelKategori(peserta.kategori)}
                   </span>
-                  <span className="text-xs text-[#6B7A99]">
-                    {peserta.tipe === "INDIVIDU" ? "Individu" : "Kelompok"}
+                  <span className="text-xs text-[#6B7A99]" style={{ fontFamily: "'Barlow', sans-serif" }}>
+                    {peserta.tipe === "INDIVIDU" ? "Individu" : "Keluarga"}
                   </span>
                   {peserta.nomorBib && (
                     <span className="text-xs font-bold text-[#1A54C8] bg-[#EEF3FF] px-2 py-0.5 rounded-md">
@@ -304,7 +311,6 @@ export default function ModalDetailPeserta({
                   )}
                 </div>
               </div>
-              {/* Tombol close */}
               <button
                 onClick={onClose}
                 className="flex-shrink-0 p-2 rounded-lg text-[#6B7A99] hover:text-[#0A1628] hover:bg-[#F0F4FF] transition-colors"
@@ -318,10 +324,13 @@ export default function ModalDetailPeserta({
           </div>
 
           <div className="px-6 py-5 space-y-6">
+
             {/* ── SECTION: Bukti Pembayaran ── */}
             <div>
-              <h3 className="text-xs font-bold text-[#6B7A99] uppercase tracking-[0.1em] mb-3"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              <h3
+                className="text-xs font-bold text-[#6B7A99] uppercase tracking-[0.1em] mb-3"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              >
                 Bukti Pembayaran
               </h3>
               <div className="mb-2">
@@ -332,31 +341,46 @@ export default function ModalDetailPeserta({
                   </span>
                 </span>
               </div>
-              <BuktiBayarPreview
-                url={pembayaran.buktiBayarUrl}
-                nama={pembayaran.buktiBayarNama}
-              />
+              <BuktiBayarPreview url={pembayaran.buktiBayarUrl} nama={pembayaran.buktiBayarNama} />
             </div>
 
             {/* ── SECTION: Data Peserta ── */}
             <div>
-              <h3 className="text-xs font-bold text-[#6B7A99] uppercase tracking-[0.1em] mb-3"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              <h3
+                className="text-xs font-bold text-[#6B7A99] uppercase tracking-[0.1em] mb-3"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              >
                 Data Peserta
               </h3>
               <div className="bg-[#F5F8FF] rounded-xl px-4 py-2">
                 <DataRow label="Nama Lengkap" value={peserta.namaLengkap} />
                 <DataRow label="Email" value={peserta.email} />
                 <DataRow label="WhatsApp" value={peserta.noWhatsapp} />
-                <DataRow
-                  label="Kategori"
-                  value={peserta.kategori === "FUN_RUN" ? "Fun Run" : "Fun Walk"}
-                />
+                <DataRow label="Kategori" value={labelKategori(peserta.kategori)} />
                 <DataRow
                   label="Tipe"
-                  value={peserta.tipe === "INDIVIDU" ? "Individu" : `Kelompok${peserta.namaKelompok ? ` — ${peserta.namaKelompok}` : ""}`}
+                  value={
+                    peserta.tipe === "INDIVIDU"
+                      ? "Individu"
+                      : `Keluarga${peserta.namaKelompok ? ` — ${peserta.namaKelompok}` : ""}`
+                  }
                 />
                 <DataRow label="Jumlah Peserta" value={`${totalAnggota} orang`} />
+
+                {/* Jersey — hanya jika paket Gaza */}
+                {isGaza && (
+                  <>
+                    <DataRow
+                      label="Tipe Lengan"
+                      value={labelLengan(peserta.ukuranLengan)}
+                    />
+                    <DataRow
+                      label="Ukuran Jersey"
+                      value={peserta.ukuranJersey ?? "—"}
+                    />
+                  </>
+                )}
+
                 <DataRow label="Biaya Pendaftaran" value={formatRupiah(pembayaran.biayaPendaftaran)} />
                 <DataRow
                   label="Donasi Tambahan"
@@ -374,12 +398,14 @@ export default function ModalDetailPeserta({
               </div>
             </div>
 
-            {/* ── SECTION: Daftar Anggota (hanya jika KELOMPOK) ── */}
-            {peserta.tipe === "KELOMPOK" && anggota.length > 0 && (
+            {/* ── SECTION: Daftar Anggota — hanya jika KELUARGA ── */}
+            {peserta.tipe === "KELUARGA" && anggota.length > 0 && (
               <div>
-                <h3 className="text-xs font-bold text-[#6B7A99] uppercase tracking-[0.1em] mb-3"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                  Daftar Anggota
+                <h3
+                  className="text-xs font-bold text-[#6B7A99] uppercase tracking-[0.1em] mb-3"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                >
+                  Daftar Anggota Keluarga
                 </h3>
                 <div className="space-y-2">
                   {anggota.map((a) => (
@@ -391,13 +417,20 @@ export default function ModalDetailPeserta({
                         <span className="text-white text-xs font-bold">{a.urutan}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#0A1628] truncate"
-                          style={{ fontFamily: "'Barlow', sans-serif" }}>
+                        <p
+                          className="text-sm font-medium text-[#0A1628] truncate"
+                          style={{ fontFamily: "'Barlow', sans-serif" }}
+                        >
                           {a.namaLengkap}
                         </p>
-                        <p className="text-xs text-[#6B7A99]"
-                          style={{ fontFamily: "'Barlow', sans-serif" }}>
-                          {a.jenisKelamin === "LAKI_LAKI" ? "Laki-laki" : "Perempuan"} · Jersey {a.ukuranJersey}
+                        <p className="text-xs text-[#6B7A99]" style={{ fontFamily: "'Barlow', sans-serif" }}>
+                          {a.jenisKelamin === "LAKI_LAKI" ? "Laki-laki" : "Perempuan"}
+                          {/* Info jersey anggota — hanya jika Gaza */}
+                          {isGaza && a.ukuranJersey && (
+                            <span className="ml-2 text-[#1A54C8] font-medium">
+                              · {labelLengan(a.ukuranLengan)} · {a.ukuranJersey}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -406,7 +439,7 @@ export default function ModalDetailPeserta({
               </div>
             )}
 
-            {/* ── SECTION: Catatan Penolakan (hanya jika DITOLAK) ── */}
+            {/* ── SECTION: Catatan Penolakan — hanya jika DITOLAK ── */}
             {peserta.status === "DITOLAK" && pembayaran.catatanAdmin && (
               <div className="p-4 rounded-xl bg-[rgba(206,17,38,0.06)] border border-[rgba(206,17,38,0.2)]">
                 <div className="flex items-center gap-2 mb-2">
@@ -415,8 +448,10 @@ export default function ModalDetailPeserta({
                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <h3 className="text-xs font-bold text-[#CE1126] uppercase tracking-[0.1em]"
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <h3
+                    className="text-xs font-bold text-[#CE1126] uppercase tracking-[0.1em]"
+                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                  >
                     Catatan Penolakan
                   </h3>
                 </div>
@@ -480,11 +515,9 @@ export default function ModalDetailPeserta({
             )}
           </div>
 
-          {/* ── FOOTER — Tombol aksi ── */}
+          {/* ── FOOTER ── */}
           <div className="sticky bottom-0 bg-white border-t border-[rgba(26,84,200,0.1)] px-6 py-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
-
-              {/* Tombol Tutup / Batal */}
               <button
                 onClick={() => {
                   if (aksiMode !== "idle") {
@@ -501,10 +534,7 @@ export default function ModalDetailPeserta({
                 {aksiMode !== "idle" ? "Batal" : "Tutup"}
               </button>
 
-              {/* Tombol aksi kanan */}
               <div className="flex items-center gap-2">
-
-                {/* PENDING: Tolak */}
                 {peserta.status === "PENDING" && aksiMode === "idle" && (
                   <button
                     onClick={() => setAksiMode("inputTolak")}
@@ -518,7 +548,6 @@ export default function ModalDetailPeserta({
                   </button>
                 )}
 
-                {/* PENDING: Verify */}
                 {peserta.status === "PENDING" && aksiMode === "idle" && (
                   <button
                     onClick={() => setAksiMode("confirmVerify")}
@@ -532,7 +561,6 @@ export default function ModalDetailPeserta({
                   </button>
                 )}
 
-                {/* DITOLAK: Verify Ulang */}
                 {peserta.status === "DITOLAK" && aksiMode === "idle" && (
                   <button
                     onClick={() => setAksiMode("confirmVerify")}
@@ -546,7 +574,6 @@ export default function ModalDetailPeserta({
                   </button>
                 )}
 
-                {/* Mode inputTolak: submit alasan */}
                 {aksiMode === "inputTolak" && (
                   <button
                     onClick={handleTolakSubmit}
@@ -557,7 +584,6 @@ export default function ModalDetailPeserta({
                   </button>
                 )}
 
-                {/* Mode confirmTolak: konfirmasi final */}
                 {aksiMode === "confirmTolak" && (
                   <button
                     onClick={handleTolakConfirm}
@@ -568,7 +594,6 @@ export default function ModalDetailPeserta({
                   </button>
                 )}
 
-                {/* Mode confirmVerify: konfirmasi verify */}
                 {aksiMode === "confirmVerify" && (
                   <button
                     onClick={handleVerifyConfirm}

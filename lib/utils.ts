@@ -50,16 +50,10 @@ export function formatTanggalWaktu(date: Date): string {
  */
 export function labelKategori(kategori: KategoriLomba): string {
   switch (kategori) {
-    case "FUN_RUN_GAZA":
-      return "Fun Run - Gaza";
-    case "FUN_RUN_RAFAH":
-      return "Fun Run - Rafah";
-    case "FUN_WALK_GAZA":
-      return "Fun Walk - Gaza";
-    case "FUN_WALK_RAFAH":
-      return "Fun Walk - Rafah";
-    default:
-      return kategori;
+    case "FUN_RUN_GAZA":  return "Fun Run – Paket Gaza";
+    case "FUN_RUN_RAFAH": return "Fun Run – Paket Rafah";
+    case "FUN_WALK_GAZA":  return "Fun Walk – Paket Gaza";
+    case "FUN_WALK_RAFAH": return "Fun Walk – Paket Rafah";
   }
 }
 

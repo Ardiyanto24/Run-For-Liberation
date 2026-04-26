@@ -8,7 +8,7 @@ import { dummyPeserta, dummyDonasi } from "@/lib/placeholder-data";
 // ── Tipe filter ──
 type FilterStatusPeserta = "SEMUA" | "VERIFIED" | "PENDING" | "DITOLAK";
 type FilterKategori = "SEMUA" | "FUN_RUN" | "FUN_WALK";
-type FilterTipe = "SEMUA" | "INDIVIDU" | "KELOMPOK";
+type FilterTipe = "SEMUA" | "INDIVIDU" | "KELUARGA";
 type FilterStatusDonasi = "SEMUA" | "VERIFIED" | "PENDING";
 
 // ── Helper komponen: Select filter ──
@@ -75,7 +75,7 @@ export default function ExportPage() {
       const matchStatus =
         statusPeserta === "SEMUA" || p.status === statusPeserta;
       const matchKategori =
-        kategori === "SEMUA" || p.kategori === kategori;
+        kategori === "SEMUA" || p.kategori.startsWith(kategori);
       const matchTipe =
         tipe === "SEMUA" || p.tipe === tipe;
       return matchStatus && matchKategori && matchTipe;
@@ -179,7 +179,7 @@ export default function ExportPage() {
               options={[
                 { value: "SEMUA",     label: "Semua Tipe" },
                 { value: "INDIVIDU",  label: "Individu" },
-                { value: "KELOMPOK",  label: "Kelompok" },
+                { value: "KELUARGA",  label: "Keluarga" },
               ]}
             />
           </div>

@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 // Type lokal — sesuaikan dengan type PesertaLengkap di project jika berbeda
 interface PesertaForChart {
-  kategori: "FUN_RUN" | "FUN_WALK";
-  tipe: "INDIVIDU" | "KELOMPOK";
+  kategori: string;
+  tipe: string;
 }
 
 interface DistribusiChartProps {
@@ -32,8 +32,8 @@ export default function DistribusiChart({ peserta }: DistribusiChartProps) {
   const total = peserta.length || 1; // hindari division by zero
 
   // ── Chart 1: Distribusi Kategori
-  const funRunCount = peserta.filter((p) => p.kategori === "FUN_RUN").length;
-  const funWalkCount = peserta.filter((p) => p.kategori === "FUN_WALK").length;
+  const funRunCount = peserta.filter((p) => p.kategori.startsWith("FUN_RUN")).length;
+  const funWalkCount = peserta.filter((p) => p.kategori.startsWith("FUN_WALK")).length;
 
   const kategoriData: BarItem[] = [
     {
@@ -54,7 +54,7 @@ export default function DistribusiChart({ peserta }: DistribusiChartProps) {
 
   // ── Chart 2: Distribusi Tipe
   const individuCount = peserta.filter((p) => p.tipe === "INDIVIDU").length;
-  const kelompokCount = peserta.filter((p) => p.tipe === "KELOMPOK").length;
+  const keluargaCount = peserta.filter((p) => p.tipe === "KELUARGA").length;
 
   const tipeData: BarItem[] = [
     {
@@ -65,9 +65,9 @@ export default function DistribusiChart({ peserta }: DistribusiChartProps) {
       bgColor: "#EEF3FF",
     },
     {
-      label: "Kelompok",
-      count: kelompokCount,
-      percentage: Math.round((kelompokCount / total) * 100),
+      label: "Keluarga",
+      count: keluargaCount,
+      percentage: Math.round((keluargaCount / total) * 100),
       color: "#CE1126",
       bgColor: "rgba(206,17,38,0.08)",
     },

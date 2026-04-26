@@ -1,10 +1,14 @@
+// app/(public)/pendaftaran/components/Step3DataDiri.tsx
+
 "use client";
 
 import {
   FormDataAnggota,
   FormDataPeserta,
   JenisKelamin,
+  KategoriLomba,
   TipePendaftaran,
+  UkuranJersey,
 } from "@/types";
 import FieldError from "./FieldError";
 
@@ -16,9 +20,16 @@ const JENIS_KELAMIN_OPTIONS: { value: JenisKelamin; label: string }[] = [
   { value: "PEREMPUAN", label: "Perempuan" },
 ];
 
+const UKURAN_JERSEY_OPTIONS: { value: UkuranJersey; label: string }[] = [
+  { value: "S", label: "S" },
+  { value: "M", label: "M" },
+  { value: "L", label: "L" },
+  { value: "XL", label: "XL" },
+  { value: "XXL", label: "XXL" },
+];
 
 // ============================================================
-// SUB-KOMPONEN: FormField (input text/email/tel/date)
+// SUB-KOMPONEN: FormField
 // ============================================================
 interface FormFieldProps {
   label: string;
@@ -90,16 +101,17 @@ function StyledSelect({ hasError, className = "", children, ...props }: StyledSe
 }
 
 // ============================================================
-// SUB-KOMPONEN: FormPeserta (form data individu / ketua)
+// SUB-KOMPONEN: FormPeserta
 // ============================================================
 interface FormPesertaProps {
   data: FormDataPeserta;
   errors: Record<string, string>;
+  isGaza: boolean;
   onUpdate: (field: keyof FormDataPeserta, value: string) => void;
   isKetua?: boolean;
 }
 
-function FormPeserta({ data, errors, onUpdate, isKetua = false }: FormPesertaProps) {
+function FormPeserta({ data, errors, isGaza, onUpdate, isKetua = false }: FormPesertaProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {/* Nama Lengkap */}
@@ -161,6 +173,39 @@ function FormPeserta({ data, errors, onUpdate, isKetua = false }: FormPesertaPro
         </StyledSelect>
       </FormField>
 
+      {/* Tipe Lengan Jersey — hanya jika paket Gaza */}
+      {isGaza && (
+        <FormField label="Tipe Lengan Jersey" error={errors.ukuranLengan}>
+          <StyledSelect
+            value={data.ukuranLengan}
+            onChange={(e) => onUpdate("ukuranLengan", e.target.value)}
+            hasError={!!errors.ukuranLengan}
+          >
+            <option value="">-- Pilih Tipe Lengan --</option>
+            <option value="PENDEK">Lengan Pendek — Rp 110.000</option>
+            <option value="PANJANG">Lengan Panjang — Rp 120.000</option>
+          </StyledSelect>
+        </FormField>
+      )}
+
+      {/* Ukuran Jersey — hanya jika paket Gaza */}
+      {isGaza && (
+        <FormField label="Ukuran Jersey" error={errors.ukuranJersey}>
+          <StyledSelect
+            value={data.ukuranJersey}
+            onChange={(e) => onUpdate("ukuranJersey", e.target.value)}
+            hasError={!!errors.ukuranJersey}
+          >
+            <option value="">-- Pilih Ukuran --</option>
+            {UKURAN_JERSEY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </StyledSelect>
+        </FormField>
+      )}
+
       {/* Nama Kontak Darurat */}
       <FormField label="Nama Kontak Darurat" error={errors.namaKontak}>
         <StyledInput
@@ -193,19 +238,18 @@ interface CardAnggotaProps {
   anggota: FormDataAnggota;
   index: number;
   errors: Record<string, string>;
+  isGaza: boolean;
   canDelete: boolean;
   onUpdate: (index: number, field: keyof FormDataAnggota, value: string) => void;
   onRemove: (index: number) => void;
 }
 
-function CardAnggota({ anggota, index, errors, canDelete, onUpdate, onRemove }: CardAnggotaProps) {
+function CardAnggota({ anggota, index, errors, isGaza, canDelete, onUpdate, onRemove }: CardAnggotaProps) {
   return (
     <div className="border-[1.5px] border-[rgba(26,84,200,0.13)] rounded-xl p-4 bg-[#F5F8FF]">
       {/* Header card */}
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-bold text-[#1A54C8]">
-          Anggota {index + 1}
-        </h4>
+        <h4 className="text-sm font-bold text-[#1A54C8]">Anggota {index + 1}</h4>
         <button
           type="button"
           onClick={() => onRemove(index)}
@@ -227,10 +271,7 @@ function CardAnggota({ anggota, index, errors, canDelete, onUpdate, onRemove }: 
       {/* Fields anggota */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Nama Lengkap */}
-        <FormField
-          label="Nama Lengkap"
-          error={errors[`anggota_${index}_namaLengkap`]}
-        >
+        <FormField label="Nama Lengkap" error={errors[`anggota_${index}_namaLengkap`]}>
           <StyledInput
             type="text"
             placeholder="Nama lengkap anggota"
@@ -241,10 +282,7 @@ function CardAnggota({ anggota, index, errors, canDelete, onUpdate, onRemove }: 
         </FormField>
 
         {/* Tanggal Lahir */}
-        <FormField
-          label="Tanggal Lahir"
-          error={errors[`anggota_${index}_tanggalLahir`]}
-        >
+        <FormField label="Tanggal Lahir" error={errors[`anggota_${index}_tanggalLahir`]}>
           <StyledInput
             type="date"
             value={anggota.tanggalLahir}
@@ -254,10 +292,7 @@ function CardAnggota({ anggota, index, errors, canDelete, onUpdate, onRemove }: 
         </FormField>
 
         {/* Jenis Kelamin */}
-        <FormField
-          label="Jenis Kelamin"
-          error={errors[`anggota_${index}_jenisKelamin`]}
-        >
+        <FormField label="Jenis Kelamin" error={errors[`anggota_${index}_jenisKelamin`]}>
           <StyledSelect
             value={anggota.jenisKelamin}
             onChange={(e) => onUpdate(index, "jenisKelamin", e.target.value)}
@@ -271,6 +306,39 @@ function CardAnggota({ anggota, index, errors, canDelete, onUpdate, onRemove }: 
             ))}
           </StyledSelect>
         </FormField>
+
+        {/* Tipe Lengan Jersey — hanya jika paket Gaza */}
+        {isGaza && (
+          <FormField label="Tipe Lengan Jersey" error={errors[`anggota_${index}_ukuranLengan`]}>
+            <StyledSelect
+              value={anggota.ukuranLengan}
+              onChange={(e) => onUpdate(index, "ukuranLengan", e.target.value)}
+              hasError={!!errors[`anggota_${index}_ukuranLengan`]}
+            >
+              <option value="">-- Pilih Tipe Lengan --</option>
+              <option value="PENDEK">Lengan Pendek — Rp 110.000</option>
+              <option value="PANJANG">Lengan Panjang — Rp 120.000</option>
+            </StyledSelect>
+          </FormField>
+        )}
+
+        {/* Ukuran Jersey — hanya jika paket Gaza */}
+        {isGaza && (
+          <FormField label="Ukuran Jersey" error={errors[`anggota_${index}_ukuranJersey`]}>
+            <StyledSelect
+              value={anggota.ukuranJersey}
+              onChange={(e) => onUpdate(index, "ukuranJersey", e.target.value)}
+              hasError={!!errors[`anggota_${index}_ukuranJersey`]}
+            >
+              <option value="">-- Pilih Ukuran --</option>
+              {UKURAN_JERSEY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </StyledSelect>
+          </FormField>
+        )}
       </div>
     </div>
   );
@@ -281,6 +349,7 @@ function CardAnggota({ anggota, index, errors, canDelete, onUpdate, onRemove }: 
 // ============================================================
 interface Step3DataDiriProps {
   tipe: TipePendaftaran;
+  kategori: KategoriLomba | null;
   peserta: FormDataPeserta;
   anggota: FormDataAnggota[];
   errors: Record<string, string>;
@@ -295,6 +364,7 @@ interface Step3DataDiriProps {
 // ============================================================
 export default function Step3DataDiri({
   tipe,
+  kategori,
   peserta,
   anggota,
   errors,
@@ -303,30 +373,47 @@ export default function Step3DataDiri({
   onAddAnggota,
   onRemoveAnggota,
 }: Step3DataDiriProps) {
-  const isKelompok = tipe === "KELOMPOK";
+  const isKeluarga = tipe === "KELOMPOK";
+  const isGaza =
+    kategori === "FUN_RUN_GAZA" || kategori === "FUN_WALK_GAZA";
 
   return (
     <div>
       {/* Judul Step */}
       <h2 className="font-['Bebas_Neue'] text-3xl text-[#0A1628] tracking-wide mb-1">
-        {isKelompok ? "Data Ketua Kelompok" : "Data Diri"}
+        {isKeluarga ? "Data Ketua Keluarga" : "Data Diri"}
       </h2>
       <p className="text-sm text-[#6B7A99] mb-7 leading-relaxed">
-        {isKelompok
-          ? "Isi data ketua kelompok. Data anggota diisi di bagian bawah."
+        {isKeluarga
+          ? "Isi data ketua keluarga. Data anggota diisi di bagian bawah."
           : "Pastikan data sesuai identitas resmi Anda."}
       </p>
+
+      {/* Banner info jersey — tampil jika Gaza */}
+      {isGaza && (
+        <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-[#EEF3FF] border border-[#1A54C8]/20">
+          <span className="text-lg flex-shrink-0">👕</span>
+          <div>
+            <p className="text-xs font-bold text-[#1A54C8] mb-0.5">Paket Gaza — Dapat Jersey</p>
+            <p className="text-xs text-[#6B7A99] leading-relaxed">
+              Pilih tipe lengan dan ukuran jersey untuk setiap peserta.
+              Lengan pendek Rp 110.000 · Lengan panjang Rp 120.000.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Form data peserta / ketua */}
       <FormPeserta
         data={peserta}
         errors={errors}
+        isGaza={isGaza}
         onUpdate={onUpdatePeserta}
-        isKetua={isKelompok}
+        isKetua={isKeluarga}
       />
 
-      {/* Section khusus KELOMPOK */}
-      {isKelompok && (
+      {/* Section khusus KELUARGA */}
+      {isKeluarga && (
         <div className="mt-8">
           {/* Nama Kelompok (opsional) */}
           <div className="mb-6">
@@ -343,7 +430,7 @@ export default function Step3DataDiri({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-['Bebas_Neue'] text-xl text-[#0A1628] tracking-wide">
-                Anggota Kelompok
+                Anggota Keluarga
               </h3>
               <p className="text-xs text-[#6B7A99] mt-0.5">
                 {anggota.length} dari maksimal 5 anggota (tidak termasuk ketua)
@@ -366,6 +453,7 @@ export default function Step3DataDiri({
                 anggota={item}
                 index={idx}
                 errors={errors}
+                isGaza={isGaza}
                 canDelete={anggota.length > 1}
                 onUpdate={onUpdateAnggota}
                 onRemove={onRemoveAnggota}

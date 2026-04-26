@@ -6,7 +6,8 @@ interface Anggota {
   id: string;
   namaLengkap: string;
   jenisKelamin: "LAKI_LAKI" | "PEREMPUAN";
-  ukuranJersey: string;
+  ukuranJersey: string | null;
+  ukuranLengan: string | null;
   urutan: number;
 }
 
@@ -26,12 +27,14 @@ interface PesertaLengkap {
   namaLengkap: string;
   email: string;
   noWhatsapp: string;
-  kategori: "FUN_RUN" | "FUN_WALK";
-  tipe: "INDIVIDU" | "KELOMPOK";
+  kategori: "FUN_RUN_GAZA" | "FUN_RUN_RAFAH" | "FUN_WALK_GAZA" | "FUN_WALK_RAFAH";
+  tipe: "INDIVIDU" | "KELUARGA";
   namaKelompok: string | null;
   status: StatusPeserta;
   createdAt: Date;
   nomorBib: string | null;
+  ukuranJersey: string | null;
+  ukuranLengan: string | null;
   anggota: Anggota[];
   pembayaran: Pembayaran;
 }
@@ -182,26 +185,27 @@ export default function TabelPeserta({
                   </td>
 
                   {/* Kategori */}
+                  {/* Kategori — ganti logic lama */}
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold ${
-                        p.kategori === "FUN_RUN"
+                        p.kategori.startsWith("FUN_RUN")
                           ? "bg-[#EEF3FF] text-[#1A54C8]"
                           : "bg-[rgba(0,122,61,0.09)] text-[#007A3D]"
                       }`}
                       style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                     >
-                      {p.kategori === "FUN_RUN" ? "Fun Run" : "Fun Walk"}
+                      {p.kategori === "FUN_RUN_GAZA"  ? "Fun Run – Gaza"  :
+                      p.kategori === "FUN_RUN_RAFAH" ? "Fun Run – Rafah" :
+                      p.kategori === "FUN_WALK_GAZA" ? "Fun Walk – Gaza" :
+                                                        "Fun Walk – Rafah"}
                     </span>
                   </td>
 
-                  {/* Tipe */}
+                  {/* Tipe — update KELOMPOK → KELUARGA */}
                   <td className="px-4 py-3">
-                    <span
-                      className="text-sm text-[#0A1628]"
-                      style={{ fontFamily: "'Barlow', sans-serif" }}
-                    >
-                      {p.tipe === "INDIVIDU" ? "Individu" : "Kelompok"}
+                    <span className="text-sm text-[#0A1628]" style={{ fontFamily: "'Barlow', sans-serif" }}>
+                      {p.tipe === "INDIVIDU" ? "Individu" : "Keluarga"}
                     </span>
                   </td>
 

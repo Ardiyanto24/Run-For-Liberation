@@ -5,8 +5,12 @@ interface ETiketProps {
 }
 
 export default function ETiket({ peserta }: ETiketProps) {
-  const kategoriLabel =
-    peserta.kategori === "FUN_RUN" ? "FUN RUN" : "FUN WALK";
+  const kategoriLabel = {
+    FUN_RUN_GAZA: "FUN RUN - Gaza",
+    FUN_RUN_RAFAH: "FUN RUN - Rafah",
+    FUN_WALK_GAZA: "FUN WALK - Gaza",
+    FUN_WALK_RAFAH: "FUN WALK - Rafah",
+  }[peserta.kategori] ?? peserta.kategori;
 
   const namaDisplay = peserta.namaLengkap.toUpperCase();
 

@@ -18,8 +18,10 @@ interface Anggota {
   id: string;
   namaLengkap: string;
   jenisKelamin: "LAKI_LAKI" | "PEREMPUAN";
-  ukuranJersey: string;
+  ukuranJersey: string | null;   // tambah
+  ukuranLengan: string | null;   // tambah
   urutan: number;
+  
 }
 
 interface Pembayaran {
@@ -38,12 +40,14 @@ interface PesertaLengkap {
   namaLengkap: string;
   email: string;
   noWhatsapp: string;
-  kategori: "FUN_RUN" | "FUN_WALK";
-  tipe: "INDIVIDU" | "KELOMPOK";
+  kategori: "FUN_RUN_GAZA" | "FUN_RUN_RAFAH" | "FUN_WALK_GAZA" | "FUN_WALK_RAFAH";
+  tipe: "INDIVIDU" | "KELUARGA";
   namaKelompok: string | null;
   status: StatusPeserta;
   createdAt: Date;
   nomorBib: string | null;
+  ukuranJersey: string | null;     // tambah
+  ukuranLengan: string | null;     // tambah
   anggota: Anggota[];
   pembayaran: Pembayaran;
 }

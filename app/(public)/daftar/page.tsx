@@ -12,11 +12,7 @@ import Step4Donasi from "@/components/public/pendaftaran/Step4Donasi";
 import Step5Ringkasan from "@/components/public/pendaftaran/Step5Ringkasan";
 import Step6Bayar from "@/components/public/pendaftaran/Step6Bayar";
 import Step7Selesai from "@/components/public/pendaftaran/Step7Selesai";
-import { KategoriLomba, MetodePembayaran, TipePendaftaran } from "@/types";
-
-// Metadata tidak bisa diekspor dari Client Component —
-// pindahkan ke layout.tsx jika diperlukan di DEV-10
-// export const metadata: Metadata = { title: "Daftar Sekarang" };
+import { KategoriLomba, MetodePembayaran, TipePendaftaran, UkuranLengan } from "@/types";
 
 export default function DaftarPage() {
   const {
@@ -53,10 +49,19 @@ export default function DaftarPage() {
         return (
           <Step2Kategori
             value={formData.kategori}
-            onChange={(kategori: KategoriLomba) =>
-              updateFormData("kategori", kategori)
+            ukuranLengan={formData.peserta.ukuranLengan as UkuranLengan | ""}
+            onChange={(kategori: KategoriLomba) => {
+              updateFormData("kategori", kategori);
+              // Reset pilihan lengan & jersey saat kategori berubah
+              // agar tidak ada data stale jika user ganti dari Gaza ke Rafah
+              updatePeserta("ukuranLengan", "");
+              updatePeserta("ukuranJersey", "");
+            }}
+            onChangeLengan={(lengan: UkuranLengan) =>
+              updatePeserta("ukuranLengan", lengan)
             }
             error={errors.kategori}
+            errorLengan={errors.ukuranLengan}
           />
         );
 
@@ -64,6 +69,7 @@ export default function DaftarPage() {
         return (
           <Step3DataDiri
             tipe={formData.tipe ?? "INDIVIDU"}
+            kategori={formData.kategori}
             peserta={formData.peserta}
             anggota={formData.anggota}
             errors={errors}
@@ -141,7 +147,7 @@ export default function DaftarPage() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Card form */}
         <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(26,84,200,0.08)] border border-[rgba(26,84,200,0.08)] overflow-hidden">
-          {/* Stepper — selalu tampil kecuali step 7 */}
+          {/* Stepper */}
           {!isStep7 && (
             <div className="px-6 pt-6 pb-2">
               <StepperIndicator currentStep={currentStep} totalSteps={7} />
@@ -151,10 +157,9 @@ export default function DaftarPage() {
           {/* Konten step */}
           <div className="px-6 pb-6 pt-4">{renderStep()}</div>
 
-          {/* Tombol navigasi — tidak tampil di step 6 (sudah ada di dalam Step6Bayar) dan step 7 */}
+          {/* Tombol navigasi */}
           {!isStep6 && !isStep7 && (
             <div className="px-6 pb-6 pt-2 border-t border-[rgba(26,84,200,0.08)] flex items-center justify-between gap-3">
-              {/* Tombol Kembali — disembunyikan di step 1 */}
               {currentStep > 1 ? (
                 <button
                   type="button"
@@ -164,10 +169,9 @@ export default function DaftarPage() {
                   ← Kembali
                 </button>
               ) : (
-                <div /> /* Spacer agar tombol Lanjut tetap di kanan */
+                <div />
               )}
 
-              {/* Tombol Lanjut */}
               <button
                 type="button"
                 onClick={goToNextStep}
@@ -179,7 +183,6 @@ export default function DaftarPage() {
           )}
         </div>
 
-        {/* Info tambahan di bawah card */}
         {!isStep7 && (
           <p className="text-center text-xs text-[#6B7A99] mt-4">
             Step {currentStep} dari 7 · Run For Liberation 2026

@@ -5,6 +5,7 @@ import {
   FormDataAnggota,
   FormDataPendaftaran,
   FormDataPeserta,
+  KategoriLomba,
 } from "@/types";
 import { validateFileBuktiBayar } from "@/lib/utils";
 
@@ -12,8 +13,8 @@ import { validateFileBuktiBayar } from "@/lib/utils";
 // KONSTANTA HARGA
 // TODO: ganti dengan nilai dari env variable HARGA_FUN_RUN / HARGA_FUN_WALK saat DEV-10
 // ============================================================
-const HARGA_FUN_RUN = 75_000;
-const HARGA_FUN_WALK = 50_000;
+const _HARGA_FUN_RUN = 75_000;
+const _HARGA_FUN_WALK = 50_000;
 
 // ============================================================
 // INITIAL STATE
@@ -24,6 +25,8 @@ const initialPeserta: FormDataPeserta = {
   noWhatsapp: "",
   tanggalLahir: "",
   jenisKelamin: "",
+  ukuranJersey: "",   // kembali
+  ukuranLengan: "",   // baru
   namaKontak: "",
   noKontak: "",
 };
@@ -32,6 +35,8 @@ const initialAnggota: FormDataAnggota = {
   namaLengkap: "",
   tanggalLahir: "",
   jenisKelamin: "",
+  ukuranJersey: "",   // kembali
+  ukuranLengan: "",   // baru
 };
 
 const initialFormData: FormDataPendaftaran = {
@@ -57,24 +62,24 @@ export function usePendaftaranForm() {
   // ----------------------------------------------------------
   // KALKULASI HARGA
   // ----------------------------------------------------------
-    // TODO: ganti dengan nilai dari env variable saat DEV-10
-    const HARGA: Record<KategoriLomba, number> = {
+  // TODO: ganti dengan nilai dari env variable saat DEV-10
+  const HARGA: Record<KategoriLomba, number> = {
     FUN_RUN_GAZA: 120_000,
     FUN_RUN_RAFAH: 30_000,
     FUN_WALK_GAZA: 120_000,
     FUN_WALK_RAFAH: 30_000,
-    };
+  };
 
-    function hitungBiayaPendaftaran(): number {
-        if (!formData.kategori) return 0;
-        const hargaPerOrang = HARGA[formData.kategori];
-        const jumlahPeserta = 1 + formData.anggota.length;
-        return hargaPerOrang * jumlahPeserta;
-        }
+  function hitungBiayaPendaftaran(): number {
+    if (!formData.kategori) return 0;
+    const hargaPerOrang = HARGA[formData.kategori];
+    const jumlahPeserta = 1 + formData.anggota.length;
+    return hargaPerOrang * jumlahPeserta;
+  }
 
-    function hitungTotal(): number {
-        return hitungBiayaPendaftaran() + formData.donasiTambahan;
-        }
+  function hitungTotal(): number {
+    return hitungBiayaPendaftaran() + formData.donasiTambahan;
+  }
 
   // ----------------------------------------------------------
   // VALIDASI PER STEP
@@ -99,6 +104,11 @@ export function usePendaftaranForm() {
 
       case 3: {
         const p = formData.peserta;
+        const isGaza =
+          formData.kategori === "FUN_RUN_GAZA" ||
+          formData.kategori === "FUN_WALK_GAZA";
+
+        // ── Validasi peserta / ketua ──────────────────────────────
 
         if (!p.namaLengkap.trim())
           newErrors.namaLengkap = "Nama lengkap wajib diisi.";
@@ -118,13 +128,21 @@ export function usePendaftaranForm() {
         if (!p.jenisKelamin)
           newErrors.jenisKelamin = "Jenis kelamin wajib dipilih.";
 
+        // Jersey — hanya wajib jika paket Gaza
+        if (isGaza && !p.ukuranLengan)
+          newErrors.ukuranLengan = "Tipe lengan jersey wajib dipilih.";
+
+        if (isGaza && !p.ukuranJersey)
+          newErrors.ukuranJersey = "Ukuran jersey wajib dipilih.";
+
         if (!p.namaKontak.trim())
           newErrors.namaKontak = "Nama kontak darurat wajib diisi.";
 
         if (!p.noKontak.trim())
           newErrors.noKontak = "Nomor kontak darurat wajib diisi.";
 
-        // Validasi anggota jika KELOMPOK
+        // ── Validasi anggota jika KELUARGA ───────────────────────
+
         if (formData.tipe === "KELOMPOK") {
           if (formData.anggota.length === 0) {
             newErrors.anggota =
@@ -134,12 +152,23 @@ export function usePendaftaranForm() {
               if (!anggota.namaLengkap.trim())
                 newErrors[`anggota_${idx}_namaLengkap`] =
                   `Nama lengkap anggota ${idx + 1} wajib diisi.`;
+
               if (!anggota.tanggalLahir)
                 newErrors[`anggota_${idx}_tanggalLahir`] =
                   `Tanggal lahir anggota ${idx + 1} wajib diisi.`;
+
               if (!anggota.jenisKelamin)
                 newErrors[`anggota_${idx}_jenisKelamin`] =
                   `Jenis kelamin anggota ${idx + 1} wajib dipilih.`;
+
+              // Jersey anggota — hanya wajib jika paket Gaza
+              if (isGaza && !anggota.ukuranLengan)
+                newErrors[`anggota_${idx}_ukuranLengan`] =
+                  `Tipe lengan anggota ${idx + 1} wajib dipilih.`;
+
+              if (isGaza && !anggota.ukuranJersey)
+                newErrors[`anggota_${idx}_ukuranJersey`] =
+                  `Ukuran jersey anggota ${idx + 1} wajib dipilih.`;
             });
           }
         }

@@ -7,8 +7,8 @@ export type KategoriLomba =
   | "FUN_RUN_RAFAH"
   | "FUN_WALK_GAZA"
   | "FUN_WALK_RAFAH";
+export type UkuranLengan = "PENDEK" | "PANJANG";
 export type JenisKelamin = "LAKI_LAKI" | "PEREMPUAN";
-export type UkuranJersey = "S" | "M" | "L" | "XL" | "XXL";
 export type StatusPeserta = "PENDING" | "VERIFIED" | "DITOLAK";
 export type StatusPembayaran = "PENDING" | "VERIFIED" | "DITOLAK";
 export type StatusDonasi = "PENDING" | "VERIFIED" | "DITOLAK";
@@ -20,6 +20,7 @@ export type MetodePembayaran =
   | "GOPAY" 
   | "OVO" 
   | "DANA";
+export type UkuranJersey = "S" | "M" | "L" | "XL" | "XXL";
 
 // ==========================================
 // 2. INTERFACE TABEL DATABASE
@@ -42,7 +43,8 @@ export interface Peserta {
   noWhatsapp: string;
   tanggalLahir: Date;
   jenisKelamin: JenisKelamin;
-  ukuranJersey: UkuranJersey;
+  ukuranJersey?: string | null;
+  ukuranLengan?: string | null;
   namaKontak: string;
   noKontak: string;
   nomorBib?: string | null;
@@ -58,7 +60,8 @@ export interface Anggota {
   namaLengkap: string;
   tanggalLahir: Date;
   jenisKelamin: JenisKelamin;
-  ukuranJersey: UkuranJersey;
+  ukuranJersey?: string | null;
+  ukuranLengan?: string | null;
   urutan: number;
   createdAt: Date;
   updatedAt: Date;
@@ -149,7 +152,8 @@ export interface FormDataAnggota {
   namaLengkap: string;
   tanggalLahir: string; // format: "YYYY-MM-DD"
   jenisKelamin: JenisKelamin | "";
-  ukuranJersey: UkuranJersey | "";
+  ukuranJersey: string;      // kembali ada
+  ukuranLengan: string;      // baru
 }
 
 /** Data peserta individu atau ketua kelompok */
@@ -159,7 +163,8 @@ export interface FormDataPeserta {
   noWhatsapp: string;
   tanggalLahir: string; // format: "YYYY-MM-DD"
   jenisKelamin: JenisKelamin | "";
-  ukuranJersey: UkuranJersey | "";
+  ukuranJersey: string;      // kembali ada — wajib jika Gaza
+  ukuranLengan: string;      // baru — wajib jika Gaza
   namaKontak: string;
   noKontak: string;
 }

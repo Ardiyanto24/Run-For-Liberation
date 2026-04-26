@@ -1,3 +1,5 @@
+// components/public/pendaftaran/Step5Ringkasan.tsx
+
 "use client";
 
 import { FormDataPendaftaran } from "@/types";
@@ -14,16 +16,22 @@ function formatRupiah(angka: number): string {
 }
 
 function labelKategori(kategori: string | null): string {
-  if (kategori === "FUN_RUN_GAZA") return "Fun Run - Gaza";
-  if (kategori === "FUN_RUN_RAFAH") return "Fun Run - Rafah";
-  if (kategori === "FUN_WALK_GAZA") return "Fun Walk - Gaza";
-  if (kategori === "FUN_WALK_RAFAH") return "Fun Walk - Rafah";
+  if (kategori === "FUN_RUN_GAZA")  return "Fun Run – Paket Gaza";
+  if (kategori === "FUN_RUN_RAFAH") return "Fun Run – Paket Rafah";
+  if (kategori === "FUN_WALK_GAZA")  return "Fun Walk – Paket Gaza";
+  if (kategori === "FUN_WALK_RAFAH") return "Fun Walk – Paket Rafah";
   return "—";
 }
 
 function labelTipe(tipe: string | null): string {
   if (tipe === "INDIVIDU") return "Individu";
-  if (tipe === "KELOMPOK") return "Kelompok";
+  if (tipe === "KELUARGA") return "Keluarga";  // update dari KELOMPOK
+  return "—";
+}
+
+function labelLengan(lengan: string): string {
+  if (lengan === "PENDEK") return "Lengan Pendek";
+  if (lengan === "PANJANG") return "Lengan Panjang";
   return "—";
 }
 
@@ -75,7 +83,10 @@ export default function Step5Ringkasan({
   hitungBiayaPendaftaran,
   hitungTotal,
 }: Step5RingkasanProps) {
-  const isKelompok = formData.tipe === "KELOMPOK";
+  const isKeluarga = formData.tipe === "KELOMPOK";
+  const isGaza =
+    formData.kategori === "FUN_RUN_GAZA" ||
+    formData.kategori === "FUN_WALK_GAZA";
   const jumlahPeserta = 1 + formData.anggota.length;
   const biayaPendaftaran = hitungBiayaPendaftaran();
   const total = hitungTotal();
@@ -92,14 +103,12 @@ export default function Step5Ringkasan({
 
       {/* Card Info Event & Peserta */}
       <div className="rounded-xl border border-[rgba(26,84,200,0.13)] bg-white shadow-[0_2px_12px_rgba(26,84,200,0.06)] overflow-hidden mb-4">
-        {/* Header card */}
         <div className="px-4 py-3 bg-[#F5F8FF] border-b border-[rgba(26,84,200,0.10)]">
           <h3 className="text-xs font-bold text-[#1A54C8] tracking-widest uppercase">
             Detail Pendaftaran
           </h3>
         </div>
 
-        {/* Rows */}
         <div className="px-4 py-3">
           <RingkasanRow
             label="Kategori"
@@ -118,38 +127,72 @@ export default function Step5Ringkasan({
             value="Solo · 24 Mei 2026"
           />
           <RingkasanRow
-            label={isKelompok ? "Nama Ketua" : "Nama Peserta"}
+            label={isKeluarga ? "Nama Ketua" : "Nama Peserta"}
             value={formData.peserta.namaLengkap || "—"}
           />
-          {isKelompok && formData.namaKelompok && (
+
+          {/* Nama Kelompok — hanya jika KELUARGA dan diisi */}
+          {isKeluarga && formData.namaKelompok && (
             <RingkasanRow
               label="Nama Kelompok"
               value={formData.namaKelompok}
             />
           )}
+
+          {/* Info jersey — hanya jika paket Gaza */}
+          {isGaza && (
+            <>
+              <RingkasanRow
+                label="Tipe Lengan Jersey"
+                value={labelLengan(formData.peserta.ukuranLengan)}
+              />
+              <RingkasanRow
+                label="Ukuran Jersey"
+                value={formData.peserta.ukuranJersey || "—"}
+              />
+            </>
+          )}
         </div>
       </div>
 
-      {/* Daftar Anggota — hanya jika KELOMPOK dan ada anggota */}
-      {isKelompok && formData.anggota.length > 0 && (
+      {/* Daftar Anggota — hanya jika KELUARGA dan ada anggota */}
+      {isKeluarga && formData.anggota.length > 0 && (
         <div className="rounded-xl border border-[rgba(26,84,200,0.13)] bg-white shadow-[0_2px_12px_rgba(26,84,200,0.06)] overflow-hidden mb-4">
           <div className="px-4 py-3 bg-[#F5F8FF] border-b border-[rgba(26,84,200,0.10)]">
             <h3 className="text-xs font-bold text-[#1A54C8] tracking-widest uppercase">
-              Daftar Anggota
+              Daftar Anggota Keluarga
             </h3>
           </div>
           <div className="px-4 py-3 flex flex-col gap-2">
             {formData.anggota.map((anggota, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-3 py-2 border-b border-[rgba(26,84,200,0.08)] last:border-0"
+                className="py-2 border-b border-[rgba(26,84,200,0.08)] last:border-0"
               >
-                <span className="w-6 h-6 rounded-full bg-[#EEF3FF] text-[#1A54C8] text-xs font-bold flex items-center justify-center flex-shrink-0">
-                  {idx + 1}
-                </span>
-                <span className="text-sm font-semibold text-[#0A1628]">
-                  {anggota.namaLengkap || <span className="text-[#6B7A99] italic">Nama belum diisi</span>}
-                </span>
+                {/* Nama anggota */}
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="w-6 h-6 rounded-full bg-[#EEF3FF] text-[#1A54C8] text-xs font-bold flex items-center justify-center flex-shrink-0">
+                    {idx + 1}
+                  </span>
+                  <span className="text-sm font-semibold text-[#0A1628]">
+                    {anggota.namaLengkap || (
+                      <span className="text-[#6B7A99] italic">Nama belum diisi</span>
+                    )}
+                  </span>
+                </div>
+
+                {/* Info jersey anggota — hanya jika Gaza */}
+                {isGaza && (
+                  <div className="ml-9 flex gap-3">
+                    <span className="text-xs text-[#6B7A99]">
+                      {labelLengan(anggota.ukuranLengan) || "—"}
+                    </span>
+                    <span className="text-xs text-[#6B7A99]">·</span>
+                    <span className="text-xs text-[#6B7A99]">
+                      Ukuran {anggota.ukuranJersey || "—"}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -158,7 +201,6 @@ export default function Step5Ringkasan({
 
       {/* Card Pembayaran */}
       <div className="rounded-xl border border-[rgba(26,84,200,0.13)] bg-white shadow-[0_2px_12px_rgba(26,84,200,0.06)] overflow-hidden">
-        {/* Header card */}
         <div className="px-4 py-3 bg-[#F5F8FF] border-b border-[rgba(26,84,200,0.10)]">
           <h3 className="text-xs font-bold text-[#1A54C8] tracking-widest uppercase">
             Rincian Pembayaran
@@ -172,7 +214,7 @@ export default function Step5Ringkasan({
               <span className="text-xs font-semibold text-[#6B7A99]">
                 Biaya Pendaftaran
               </span>
-              {/* TODO: ganti dengan env variable HARGA_FUN_RUN / HARGA_FUN_WALK saat DEV-10 */}
+              {/* TODO: kalkulasi harga per orang dari env variable saat DEV-10 */}
               <p className="text-[10px] text-[#6B7A99] mt-0.5">
                 {formatRupiah(biayaPendaftaran / jumlahPeserta)} × {jumlahPeserta} orang
               </p>

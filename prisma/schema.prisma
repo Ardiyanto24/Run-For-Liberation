@@ -1,0 +1,206 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// ENUM DEFINITIONS
+// ============================================================
+
+enum TipePendaftaran {
+  INDIVIDU
+  KELOMPOK
+}
+
+enum KategoriLomba {
+  FUN_RUN_GAZA
+  FUN_RUN_RAFAH
+  FUN_WALK_GAZA
+  FUN_WALK_RAFAH
+
+  @@map("kategori_lomba")
+}
+
+enum UkuranJersey {
+  S
+  M
+  L
+  XL
+  XXL
+
+  @@map("ukuran_jersey")
+}
+
+enum UkuranLengan {
+  PENDEK
+  PANJANG
+
+  @@map("ukuran_lengan")
+}
+
+enum JenisKelamin {
+  LAKI_LAKI
+  PEREMPUAN
+}
+
+enum StatusPeserta {
+  PENDING
+  VERIFIED
+  DITOLAK
+}
+
+enum StatusPembayaran {
+  PENDING
+  VERIFIED
+  DITOLAK
+}
+
+enum MetodePembayaran {
+  QRIS
+  TRANSFER_BRI
+  TRANSFER_BSI
+  TRANSFER_MANDIRI
+  GOPAY
+  OVO
+  DANA
+}
+
+// ============================================================
+// MODEL DEFINITIONS
+// ============================================================
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admins")
+}
+
+model Peserta {
+  id             String          @id @default(cuid())
+  tipe           TipePendaftaran @map("tipe")
+  namaKelompok   String?         @map("nama_kelompok")
+  kategori       KategoriLomba   @map("kategori")
+  namaLengkap    String          @map("nama_lengkap")
+  email          String          @map("email")
+  noWhatsapp     String          @map("no_whatsapp")
+  tanggalLahir   DateTime        @map("tanggal_lahir")
+  jenisKelamin   JenisKelamin    @map("jenis_kelamin")
+  ukuranJersey  UkuranJersey?    @map("ukuran_jersey") 
+  ukuranLengan  UkuranLengan?    @map("ukuran_lengan") 
+  namaKontak     String          @map("nama_kontak")
+  noKontak       String          @map("no_kontak")
+  nomorBib       String?         @unique @map("nomor_bib")
+  qrToken        String?         @unique @map("qr_token")
+  status         StatusPeserta   @default(PENDING) @map("status")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  anggota        Anggota[]
+  pembayaran     Pembayaran?
+  magicLinkTokens MagicLinkToken[]
+  checkIn        CheckIn?
+
+  @@index([email])
+  @@index([status])
+  @@index([kategori])
+  @@index([tipe])
+  @@index([createdAt])
+  @@map("peserta")
+}
+
+model Anggota {
+  id           String       @id @default(cuid())
+  pesertaId    String       @map("peserta_id")
+  namaLengkap  String       @map("nama_lengkap")
+  tanggalLahir DateTime     @map("tanggal_lahir")
+  jenisKelamin JenisKelamin @map("jenis_kelamin")
+  ukuranJersey UkuranJersey? @map("ukuran_jersey")  // opsional — hanya jika paket Gaza
+  ukuranLengan UkuranLengan? @map("ukuran_lengan")  // opsional — hanya jika paket Gaza
+  urutan       Int
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  peserta      Peserta      @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
+
+  @@map("anggota")
+}
+
+model Pembayaran {
+  id                String           @id @default(cuid())
+  pesertaId         String           @unique @map("peserta_id")
+  biayaPendaftaran  Int              @map("biaya_pendaftaran")
+  donasiTambahan    Int              @default(0) @map("donasi_tambahan")
+  totalPembayaran   Int              @map("total_pembayaran")
+  metodePembayaran  MetodePembayaran @map("metode_pembayaran")
+  buktiBayarUrl     String?          @map("bukti_bayar_url")
+  buktiBayarNama    String?          @map("bukti_bayar_nama")
+  status            StatusPembayaran @default(PENDING) @map("status")
+  catatanAdmin      String?          @map("catatan_admin")
+  verifikasiAt      DateTime?        @map("verifikasi_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  peserta           Peserta          @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
+
+  @@map("pembayaran")
+}
+
+model MagicLinkToken {
+  id          String    @id @default(cuid())
+  pesertaId   String    @map("peserta_id")
+  token       String    @unique
+  sudahDipakai Boolean  @default(false) @map("sudah_dipakai")
+  expiredAt   DateTime  @map("expired_at")
+  dipakaiAt   DateTime? @map("dipakai_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  peserta     Peserta   @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([pesertaId])
+  @@map("magic_link_tokens")
+}
+
+model CheckIn {
+  id         String   @id @default(cuid())
+  pesertaId  String   @unique @map("peserta_id")
+  checkinAt  DateTime @map("checkin_at")
+  catatan    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  peserta    Peserta  @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
+
+  @@map("check_ins")
+}
+
+model Donasi {
+  id               String           @id @default(cuid())
+  namaDonatur      String?          @map("nama_donatur")
+  sembunyikanNama  Boolean          @default(false) @map("sembunyikan_nama")
+  emailDonatur     String?          @map("email_donatur")
+  pesan            String?
+  nominal          Int
+  metodePembayaran MetodePembayaran @map("metode_pembayaran")
+  buktiBayarUrl    String?          @map("bukti_bayar_url")
+  buktiBayarNama   String?          @map("bukti_bayar_nama")
+  status           StatusPembayaran @default(PENDING) @map("status")
+  catatanAdmin     String?          @map("catatan_admin")
+  verifikasiAt     DateTime?        @map("verifikasi_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("donasi")
+}

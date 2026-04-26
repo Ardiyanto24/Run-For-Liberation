@@ -15,15 +15,15 @@ export type PesertaStatus =
   | "TERVERIFIKASI"
   | "DITOLAK";
 
-export type KategoriPeserta =
-  | "FUN_RUN_TANPA_RACE_PACK"
-  | "FUN_RUN_MEDAL_ONLY"
-  | "FUN_RUN_JERSEY_ONLY"
-  | "FUN_RUN_FULLPACK";
+// Update: 4 kategori final
+export type KategoriLomba =
+  | "FUN_RUN_GAZA"
+  | "FUN_RUN_RAFAH"
+  | "FUN_WALK_GAZA"
+  | "FUN_WALK_RAFAH";
 
 // ------------------------------------------------------------
 // DATA DONASI DUMMY
-// Referensi angka dari v5: Rp 62.4jt dari target Rp 100jt
 // ------------------------------------------------------------
 
 export const donasiDummy = {
@@ -35,7 +35,6 @@ export const donasiDummy = {
 
 // ------------------------------------------------------------
 // DATA TIMELINE
-// 5 milestone sesuai spec DEV-02 Step 1.2.1
 // ------------------------------------------------------------
 
 export interface TimelineMilestone {
@@ -48,25 +47,25 @@ export interface TimelineMilestone {
 export const timelineDummy: TimelineMilestone[] = [
   {
     label: "Pendaftaran Dibuka",
-    tanggal: "[TBD]", // TODO: isi dari panitia
+    tanggal: "[TBD]",
     status: "done",
     highlight: false,
   },
   {
     label: "Early Bird Berakhir",
-    tanggal: "[TBD]", // TODO: isi dari panitia
+    tanggal: "[TBD]",
     status: "done",
     highlight: false,
   },
   {
     label: "Pendaftaran Ditutup",
-    tanggal: "[TBD]", // TODO: isi dari panitia
+    tanggal: "[TBD]",
     status: "upcoming",
     highlight: false,
   },
   {
     label: "Pengambilan Race Pack",
-    tanggal: "[TBD]", // TODO: isi dari panitia
+    tanggal: "[TBD]",
     status: "upcoming",
     highlight: false,
   },
@@ -79,9 +78,7 @@ export const timelineDummy: TimelineMilestone[] = [
 ];
 
 // ------------------------------------------------------------
-// DATA PESERTA DUMMY
-// Digunakan di Admin Panel (DEV-07). Didefinisikan di sini
-// agar bisa dipakai lintas phase.
+// DATA PESERTA DUMMY (legacy — dipakai di beberapa widget lama)
 // ------------------------------------------------------------
 
 export interface PesertaDummy {
@@ -89,7 +86,7 @@ export interface PesertaDummy {
   nama: string;
   email: string;
   telepon: string;
-  kategori: KategoriPesertaLabel;
+  kategori: string;
   status: PesertaStatus;
   waktuDaftar: string;
   nominalBayar: number;
@@ -97,22 +94,16 @@ export interface PesertaDummy {
   bibNumber: string | null;
 }
 
-export type KategoriPesertaLabel =
-  | "Fun Run 5K (Tanpa Race Pack)"
-  | "Fun Run 5K (Medal Only)"
-  | "Fun Run 5K (Jersey Only)"
-  | "Fun Run 5K (Fullpack)";
-
 export const pesertaDummy: PesertaDummy[] = [
   {
     id: "PST-001",
     nama: "Ahmad Fauzi",
     email: "ahmad.fauzi@email.com",
     telepon: "08123456789",
-    kategori: "Fun Run 5K (Fullpack)",
+    kategori: "Fun Run – Paket Gaza",
     status: "TERVERIFIKASI",
     waktuDaftar: "2026-04-10T08:30:00",
-    nominalBayar: 215_000,
+    nominalBayar: 120_000,
     buktiPembayaran: "/images/dummy/bukti-1.jpg",
     bibNumber: "RFL-001",
   },
@@ -121,10 +112,10 @@ export const pesertaDummy: PesertaDummy[] = [
     nama: "Siti Rahayu",
     email: "siti.rahayu@email.com",
     telepon: "08234567890",
-    kategori: "Fun Run 5K (Medal Only)",
+    kategori: "Fun Run – Paket Rafah",
     status: "MENUNGGU_VERIFIKASI",
     waktuDaftar: "2026-04-12T10:15:00",
-    nominalBayar: 120_000,
+    nominalBayar: 30_000,
     buktiPembayaran: "/images/dummy/bukti-2.jpg",
     bibNumber: null,
   },
@@ -133,10 +124,10 @@ export const pesertaDummy: PesertaDummy[] = [
     nama: "Budi Santoso",
     email: "budi.santoso@email.com",
     telepon: "08345678901",
-    kategori: "Fun Run 5K (Jersey Only)",
+    kategori: "Fun Walk – Paket Gaza",
     status: "MENUNGGU_VERIFIKASI",
     waktuDaftar: "2026-04-13T14:22:00",
-    nominalBayar: 165_000,
+    nominalBayar: 110_000,
     buktiPembayaran: "/images/dummy/bukti-3.jpg",
     bibNumber: null,
   },
@@ -145,10 +136,10 @@ export const pesertaDummy: PesertaDummy[] = [
     nama: "Dewi Kusuma",
     email: "dewi.kusuma@email.com",
     telepon: "08456789012",
-    kategori: "Fun Run 5K (Tanpa Race Pack)",
+    kategori: "Fun Walk – Paket Rafah",
     status: "TERVERIFIKASI",
     waktuDaftar: "2026-04-14T09:05:00",
-    nominalBayar: 50_000,
+    nominalBayar: 30_000,
     buktiPembayaran: "/images/dummy/bukti-4.jpg",
     bibNumber: "RFL-002",
   },
@@ -157,10 +148,10 @@ export const pesertaDummy: PesertaDummy[] = [
     nama: "Rizky Pratama",
     email: "rizky.pratama@email.com",
     telepon: "08567890123",
-    kategori: "Fun Run 5K (Fullpack)",
+    kategori: "Fun Run – Paket Gaza",
     status: "DITOLAK",
     waktuDaftar: "2026-04-15T16:40:00",
-    nominalBayar: 215_000,
+    nominalBayar: 120_000,
     buktiPembayaran: "/images/dummy/bukti-5.jpg",
     bibNumber: null,
   },
@@ -169,10 +160,10 @@ export const pesertaDummy: PesertaDummy[] = [
     nama: "Nurul Hidayah",
     email: "nurul.hidayah@email.com",
     telepon: "08678901234",
-    kategori: "Fun Run 5K (Medal Only)",
+    kategori: "Fun Walk – Paket Gaza",
     status: "TERVERIFIKASI",
     waktuDaftar: "2026-04-16T11:50:00",
-    nominalBayar: 120_000,
+    nominalBayar: 110_000,
     buktiPembayaran: "/images/dummy/bukti-6.jpg",
     bibNumber: "RFL-003",
   },
@@ -180,14 +171,13 @@ export const pesertaDummy: PesertaDummy[] = [
 
 // ------------------------------------------------------------
 // STATISTIK KATEGORI DUMMY
-// Digunakan di hero stats band dan admin dashboard
 // ------------------------------------------------------------
 
 export const kategoriStatsDummy = [
-  { label: "Fun Run 5K (Tanpa Race Pack)", jumlah: 312, warna: "#1A54C8" },
-  { label: "Fun Run 5K (Medal Only)", jumlah: 198, warna: "#007A3D" },
-  { label: "Fun Run 5K (Jersey Only)", jumlah: 187, warna: "#CE1126" },
-  { label: "Fun Run 5K (Fullpack)", jumlah: 150, warna: "#0E2D7A" },
+  { label: "Fun Run – Paket Gaza", jumlah: 312, warna: "#1A54C8" },
+  { label: "Fun Run – Paket Rafah", jumlah: 198, warna: "#0E3A8C" },
+  { label: "Fun Walk – Paket Gaza", jumlah: 187, warna: "#007A3D" },
+  { label: "Fun Walk – Paket Rafah", jumlah: 150, warna: "#CE1126" },
 ];
 
 export const totalPesertaDummy = kategoriStatsDummy.reduce(
@@ -197,40 +187,36 @@ export const totalPesertaDummy = kategoriStatsDummy.reduce(
 
 // ------------------------------------------------------------
 // STATS BAND DUMMY — Hero section
-// Akan diganti data real dari database di DEV-10
 // ------------------------------------------------------------
 
 export const statsBandDummy = {
   pesertaSolo: 500,
   kotaSerentak: 15,
-  persentaseDonasi: 62, // akan mengikuti donasiDummy.persentase
+  persentaseDonasi: 62,
   untukGaza: 100,
 };
 
 // ============================================================
 // DUMMY DATA — DEV-06: Participant Dashboard
-// Digunakan untuk demo dan development dashboard peserta.
-// Tiga objek merepresentasikan tiga kondisi status peserta.
 // ============================================================
 
-import type {
-  PesertaLengkap,
-} from "@/types";
+import type { PesertaLengkap } from "@/types";
 
 // ----------------------------------------------------------
-// Dummy Peserta 1: PENDING (Individu, Fun Run)
+// Dummy Peserta 1: PENDING (Individu, Fun Run Rafah — tanpa jersey)
 // ----------------------------------------------------------
 export const dummyPesertaPending: PesertaLengkap = {
   id: "dummy-peserta-pending-001",
   tipe: "INDIVIDU",
   namaKelompok: null,
-  kategori: "FUN_RUN",
+  kategori: "FUN_RUN_RAFAH",
   namaLengkap: "Ahmad Fauzi Rahmadani",
   email: "ahmad.fauzi@example.com",
   noWhatsapp: "081234567890",
   tanggalLahir: new Date("1998-03-15"),
   jenisKelamin: "LAKI_LAKI",
-  ukuranJersey: "L",
+  ukuranJersey: null,   // Rafah — tidak dapat jersey
+  ukuranLengan: null,   // Rafah — tidak dapat jersey
   namaKontak: "Siti Rahmawati",
   noKontak: "081298765432",
   nomorBib: null,
@@ -242,9 +228,9 @@ export const dummyPesertaPending: PesertaLengkap = {
   pembayaran: {
     id: "dummy-pembayaran-pending-001",
     pesertaId: "dummy-peserta-pending-001",
-    biayaPendaftaran: 120000,
+    biayaPendaftaran: 30000,
     donasiTambahan: 0,
-    totalPembayaran: 120000,
+    totalPembayaran: 30000,
     metodePembayaran: "TRANSFER_BRI",
     buktiBayarUrl: null,
     buktiBayarNama: null,
@@ -258,24 +244,24 @@ export const dummyPesertaPending: PesertaLengkap = {
 };
 
 // ----------------------------------------------------------
-// Dummy Peserta 2: VERIFIED (Kelompok, Fun Run, 2 anggota)
+// Dummy Peserta 2: VERIFIED (Keluarga, Fun Run Gaza — dapat jersey)
 // ----------------------------------------------------------
 export const dummyPesertaVerified: PesertaLengkap = {
   id: "dummy-peserta-verified-002",
   tipe: "KELOMPOK",
   namaKelompok: "Tim Solidarity Runners",
-  kategori: "FUN_RUN",
+  kategori: "FUN_RUN_GAZA",
   namaLengkap: "Bagas Prasetyo Wibowo",
   email: "bagas.prasetyo@example.com",
   noWhatsapp: "082345678901",
   tanggalLahir: new Date("1995-07-22"),
   jenisKelamin: "LAKI_LAKI",
-  ukuranJersey: "M",
+  ukuranJersey: "L",      // Gaza — dapat jersey
+  ukuranLengan: "PANJANG", // Gaza — pilih lengan panjang
   namaKontak: "Dewi Lestari",
   noKontak: "082311223344",
   nomorBib: "0042",
-  qrToken:
-    "a3f8c2e1d94b7056f1a2b3c4d5e6f7890123456789abcdef0123456789abcdef",
+  qrToken: "a3f8c2e1d94b7056f1a2b3c4d5e6f7890123456789abcdef0123456789abcdef",
   status: "VERIFIED",
   createdAt: new Date("2026-04-18T10:15:00Z"),
   updatedAt: new Date("2026-04-19T14:22:00Z"),
@@ -286,7 +272,8 @@ export const dummyPesertaVerified: PesertaLengkap = {
       namaLengkap: "Rizki Amalia Putri",
       tanggalLahir: new Date("2000-11-08"),
       jenisKelamin: "PEREMPUAN",
-      ukuranJersey: "S",
+      ukuranJersey: "S",      // Gaza — dapat jersey
+      ukuranLengan: "PENDEK", // pilih lengan pendek
       urutan: 1,
       createdAt: new Date("2026-04-18T10:15:00Z"),
       updatedAt: new Date("2026-04-18T10:15:00Z"),
@@ -297,7 +284,8 @@ export const dummyPesertaVerified: PesertaLengkap = {
       namaLengkap: "Dimas Kurniawan Santoso",
       tanggalLahir: new Date("1997-05-14"),
       jenisKelamin: "LAKI_LAKI",
-      ukuranJersey: "XL",
+      ukuranJersey: "M",
+      ukuranLengan: "PANJANG",
       urutan: 2,
       createdAt: new Date("2026-04-18T10:15:00Z"),
       updatedAt: new Date("2026-04-18T10:15:00Z"),
@@ -306,7 +294,7 @@ export const dummyPesertaVerified: PesertaLengkap = {
   pembayaran: {
     id: "dummy-pembayaran-verified-002",
     pesertaId: "dummy-peserta-verified-002",
-    biayaPendaftaran: 360000, // 3 orang × 120.000
+    biayaPendaftaran: 360000, // 3 orang × 120.000 (Gaza lengan panjang)
     donasiTambahan: 50000,
     totalPembayaran: 410000,
     metodePembayaran: "QRIS",
@@ -322,19 +310,20 @@ export const dummyPesertaVerified: PesertaLengkap = {
 };
 
 // ----------------------------------------------------------
-// Dummy Peserta 3: DITOLAK (Individu, Fun Walk)
+// Dummy Peserta 3: DITOLAK (Individu, Fun Walk Rafah)
 // ----------------------------------------------------------
 export const dummyPesertaDitolak: PesertaLengkap = {
   id: "dummy-peserta-ditolak-003",
   tipe: "INDIVIDU",
   namaKelompok: null,
-  kategori: "FUN_WALK",
+  kategori: "FUN_WALK_RAFAH",
   namaLengkap: "Nurul Hidayah Susanti",
   email: "nurul.hidayah@example.com",
   noWhatsapp: "083456789012",
   tanggalLahir: new Date("2002-01-30"),
   jenisKelamin: "PEREMPUAN",
-  ukuranJersey: "S",
+  ukuranJersey: null,  // Rafah — tidak dapat jersey
+  ukuranLengan: null,
   namaKontak: "Budi Susanto",
   noKontak: "083400112233",
   nomorBib: null,
@@ -346,9 +335,9 @@ export const dummyPesertaDitolak: PesertaLengkap = {
   pembayaran: {
     id: "dummy-pembayaran-ditolak-003",
     pesertaId: "dummy-peserta-ditolak-003",
-    biayaPendaftaran: 120000,
+    biayaPendaftaran: 30000,
     donasiTambahan: 0,
-    totalPembayaran: 120000,
+    totalPembayaran: 30000,
     metodePembayaran: "TRANSFER_BRI",
     buktiBayarUrl: null,
     buktiBayarNama: null,
@@ -362,7 +351,6 @@ export const dummyPesertaDitolak: PesertaLengkap = {
   checkIn: null,
 };
 
-// Map untuk kemudahan lookup berdasarkan status
 export const dummyDashboardData = {
   PENDING: dummyPesertaPending,
   VERIFIED: dummyPesertaVerified,
@@ -373,24 +361,20 @@ export const dummyDashboardData = {
 // DEV-07 — Data Dummy Admin Panel
 // ============================================================
 
-// Type helper — sesuaikan dengan types/index.ts yang sudah ada di DEV-01
-// Jika sudah ada type PesertaLengkap, Donasi, dll — import dari sana, bukan redefine
-
-// ----- DUMMY PESERTA (10 item) -----
-
 export const dummyPeserta = [
-  // 1 — Individu, Fun Run, PENDING, QRIS
+  // 1 — Individu, Fun Run Gaza (jersey L panjang), PENDING, QRIS
   {
     id: "peserta-001",
     tipe: "INDIVIDU" as const,
     namaKelompok: null,
-    kategori: "FUN_RUN" as const,
+    kategori: "FUN_RUN_GAZA" as const,
     namaLengkap: "Ahmad Fauzan Hidayat",
     email: "ahmad.fauzan@gmail.com",
     noWhatsapp: "081234567890",
     tanggalLahir: new Date("1995-03-15"),
     jenisKelamin: "LAKI_LAKI" as const,
     ukuranJersey: "L" as const,
+    ukuranLengan: "PANJANG" as const,
     namaKontak: "Siti Hidayat",
     noKontak: "081234567891",
     nomorBib: null,
@@ -417,18 +401,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 2 — Individu, Fun Walk, VERIFIED, Transfer BRI
+  // 2 — Individu, Fun Walk Rafah (tanpa jersey), VERIFIED, Transfer BRI
   {
     id: "peserta-002",
     tipe: "INDIVIDU" as const,
     namaKelompok: null,
-    kategori: "FUN_WALK" as const,
+    kategori: "FUN_WALK_RAFAH" as const,
     namaLengkap: "Nur Aini Rahmawati",
     email: "nuraini.r@yahoo.com",
     noWhatsapp: "082345678901",
     tanggalLahir: new Date("1998-07-22"),
     jenisKelamin: "PEREMPUAN" as const,
-    ukuranJersey: "M" as const,
+    ukuranJersey: null,
+    ukuranLengan: null,
     namaKontak: "Budi Rahmawati",
     noKontak: "082345678902",
     nomorBib: "0001",
@@ -440,9 +425,9 @@ export const dummyPeserta = [
     pembayaran: {
       id: "bayar-002",
       pesertaId: "peserta-002",
-      biayaPendaftaran: 50000,
+      biayaPendaftaran: 30000,
       donasiTambahan: 50000,
-      totalPembayaran: 100000,
+      totalPembayaran: 80000,
       metodePembayaran: "TRANSFER_BRI" as const,
       buktiBayarUrl: "dummy/bukti-002.jpg",
       buktiBayarNama: "bukti-002.jpg",
@@ -455,18 +440,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 3 — Kelompok, Fun Run, VERIFIED, Transfer BSI
+  // 3 — Keluarga, Fun Run Gaza (jersey M panjang), VERIFIED, Transfer BSI
   {
     id: "peserta-003",
-    tipe: "KELOMPOK" as const,
+    tipe: "KELUARGA" as const,
     namaKelompok: "Tim Masjid Runners Solo",
-    kategori: "FUN_RUN" as const,
+    kategori: "FUN_RUN_GAZA" as const,
     namaLengkap: "Rizky Aditya Pratama",
     email: "rizky.aditya@gmail.com",
     noWhatsapp: "083456789012",
     tanggalLahir: new Date("1993-11-05"),
     jenisKelamin: "LAKI_LAKI" as const,
-    ukuranJersey: "XL" as const,
+    ukuranJersey: "M" as const,
+    ukuranLengan: "PANJANG" as const,
     namaKontak: "Dewi Pratama",
     noKontak: "083456789013",
     nomorBib: "0002",
@@ -482,6 +468,7 @@ export const dummyPeserta = [
         tanggalLahir: new Date("1995-04-20"),
         jenisKelamin: "LAKI_LAKI" as const,
         ukuranJersey: "L" as const,
+        ukuranLengan: "PANJANG" as const,
         urutan: 1,
         createdAt: new Date("2026-04-18T10:00:00"),
         updatedAt: new Date("2026-04-18T10:00:00"),
@@ -492,7 +479,8 @@ export const dummyPeserta = [
         namaLengkap: "Hendra Kusuma",
         tanggalLahir: new Date("1997-08-14"),
         jenisKelamin: "LAKI_LAKI" as const,
-        ukuranJersey: "M" as const,
+        ukuranJersey: "S" as const,
+        ukuranLengan: "PENDEK" as const,
         urutan: 2,
         createdAt: new Date("2026-04-18T10:00:00"),
         updatedAt: new Date("2026-04-18T10:00:00"),
@@ -501,9 +489,9 @@ export const dummyPeserta = [
     pembayaran: {
       id: "bayar-003",
       pesertaId: "peserta-003",
-      biayaPendaftaran: 360000, // 120000 × 3 orang
+      biayaPendaftaran: 350000, // 120k + 120k + 110k (1 panjang + 1 panjang + 1 pendek)
       donasiTambahan: 100000,
-      totalPembayaran: 460000,
+      totalPembayaran: 450000,
       metodePembayaran: "TRANSFER_BSI" as const,
       buktiBayarUrl: "dummy/bukti-003.jpg",
       buktiBayarNama: "bukti-003.jpg",
@@ -516,18 +504,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 4 — Individu, Fun Run, DITOLAK, GoPay
+  // 4 — Individu, Fun Run Gaza (jersey XL pendek), DITOLAK, GoPay
   {
     id: "peserta-004",
     tipe: "INDIVIDU" as const,
     namaKelompok: null,
-    kategori: "FUN_RUN" as const,
+    kategori: "FUN_RUN_GAZA" as const,
     namaLengkap: "Bagas Wicaksono",
     email: "bagas.wicaksono@gmail.com",
     noWhatsapp: "084567890123",
     tanggalLahir: new Date("2000-01-30"),
     jenisKelamin: "LAKI_LAKI" as const,
-    ukuranJersey: "S" as const,
+    ukuranJersey: "XL" as const,
+    ukuranLengan: "PENDEK" as const,
     namaKontak: "Sri Wicaksono",
     noKontak: "084567890124",
     nomorBib: null,
@@ -539,9 +528,9 @@ export const dummyPeserta = [
     pembayaran: {
       id: "bayar-004",
       pesertaId: "peserta-004",
-      biayaPendaftaran: 120000,
+      biayaPendaftaran: 110000,
       donasiTambahan: 0,
-      totalPembayaran: 120000,
+      totalPembayaran: 110000,
       metodePembayaran: "GOPAY" as const,
       buktiBayarUrl: "dummy/bukti-004.jpg",
       buktiBayarNama: "bukti-004.jpg",
@@ -554,18 +543,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 5 — Individu, Fun Walk, PENDING, Transfer Mandiri
+  // 5 — Individu, Fun Walk Rafah (tanpa jersey), PENDING, Transfer Mandiri
   {
     id: "peserta-005",
     tipe: "INDIVIDU" as const,
     namaKelompok: null,
-    kategori: "FUN_WALK" as const,
+    kategori: "FUN_WALK_RAFAH" as const,
     namaLengkap: "Siti Fatimah Azzahra",
     email: "siti.fatimah@gmail.com",
     noWhatsapp: "085678901234",
     tanggalLahir: new Date("1990-06-12"),
     jenisKelamin: "PEREMPUAN" as const,
-    ukuranJersey: "S" as const,
+    ukuranJersey: null,
+    ukuranLengan: null,
     namaKontak: "Umar Azzahra",
     noKontak: "085678901235",
     nomorBib: null,
@@ -577,9 +567,9 @@ export const dummyPeserta = [
     pembayaran: {
       id: "bayar-005",
       pesertaId: "peserta-005",
-      biayaPendaftaran: 50000,
+      biayaPendaftaran: 30000,
       donasiTambahan: 25000,
-      totalPembayaran: 75000,
+      totalPembayaran: 55000,
       metodePembayaran: "TRANSFER_MANDIRI" as const,
       buktiBayarUrl: "dummy/bukti-005.jpg",
       buktiBayarNama: "bukti-005.jpg",
@@ -592,18 +582,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 6 — Kelompok, Fun Walk, PENDING, QRIS
+  // 6 — Keluarga, Fun Walk Gaza (jersey M pendek), PENDING, QRIS
   {
     id: "peserta-006",
-    tipe: "KELOMPOK" as const,
+    tipe: "KELUARGA" as const,
     namaKelompok: "Keluarga Santri Ngalah",
-    kategori: "FUN_WALK" as const,
+    kategori: "FUN_WALK_GAZA" as const,
     namaLengkap: "Yusuf Habibi",
     email: "yusuf.habibi@outlook.com",
     noWhatsapp: "086789012345",
     tanggalLahir: new Date("1985-09-03"),
     jenisKelamin: "LAKI_LAKI" as const,
-    ukuranJersey: "XXL" as const,
+    ukuranJersey: "M" as const,
+    ukuranLengan: "PENDEK" as const,
     namaKontak: "Khadijah Habibi",
     noKontak: "086789012346",
     nomorBib: null,
@@ -618,7 +609,8 @@ export const dummyPeserta = [
         namaLengkap: "Maryam Habibi",
         tanggalLahir: new Date("1988-02-17"),
         jenisKelamin: "PEREMPUAN" as const,
-        ukuranJersey: "M" as const,
+        ukuranJersey: "S" as const,
+        ukuranLengan: "PENDEK" as const,
         urutan: 1,
         createdAt: new Date("2026-04-21T11:00:00"),
         updatedAt: new Date("2026-04-21T11:00:00"),
@@ -629,7 +621,8 @@ export const dummyPeserta = [
         namaLengkap: "Ibrahim Habibi",
         tanggalLahir: new Date("2010-05-22"),
         jenisKelamin: "LAKI_LAKI" as const,
-        ukuranJersey: "S" as const,
+        ukuranJersey: "M" as const,
+        ukuranLengan: "PENDEK" as const,
         urutan: 2,
         createdAt: new Date("2026-04-21T11:00:00"),
         updatedAt: new Date("2026-04-21T11:00:00"),
@@ -638,9 +631,9 @@ export const dummyPeserta = [
     pembayaran: {
       id: "bayar-006",
       pesertaId: "peserta-006",
-      biayaPendaftaran: 150000, // 50000 × 3 orang
+      biayaPendaftaran: 330000, // 3 × 110k (Gaza lengan pendek)
       donasiTambahan: 0,
-      totalPembayaran: 150000,
+      totalPembayaran: 330000,
       metodePembayaran: "QRIS" as const,
       buktiBayarUrl: "dummy/bukti-006.jpg",
       buktiBayarNama: "bukti-006.jpg",
@@ -653,18 +646,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 7 — Individu, Fun Run, VERIFIED, OVO
+  // 7 — Individu, Fun Run Gaza (jersey L panjang), VERIFIED, OVO
   {
     id: "peserta-007",
     tipe: "INDIVIDU" as const,
     namaKelompok: null,
-    kategori: "FUN_RUN" as const,
+    kategori: "FUN_RUN_GAZA" as const,
     namaLengkap: "Dinda Permatasari",
     email: "dinda.permata@gmail.com",
     noWhatsapp: "087890123456",
     tanggalLahir: new Date("1999-12-08"),
     jenisKelamin: "PEREMPUAN" as const,
-    ukuranJersey: "M" as const,
+    ukuranJersey: "L" as const,
+    ukuranLengan: "PANJANG" as const,
     namaKontak: "Eko Permatasari",
     noKontak: "087890123457",
     nomorBib: "0003",
@@ -691,18 +685,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 8 — Individu, Fun Walk, VERIFIED, DANA
+  // 8 — Individu, Fun Walk Rafah (tanpa jersey), VERIFIED, DANA
   {
     id: "peserta-008",
     tipe: "INDIVIDU" as const,
     namaKelompok: null,
-    kategori: "FUN_WALK" as const,
+    kategori: "FUN_WALK_RAFAH" as const,
     namaLengkap: "Hendra Saputra",
     email: "hendra.saputra@gmail.com",
     noWhatsapp: "088901234567",
     tanggalLahir: new Date("1988-04-25"),
     jenisKelamin: "LAKI_LAKI" as const,
-    ukuranJersey: "L" as const,
+    ukuranJersey: null,
+    ukuranLengan: null,
     namaKontak: "Rina Saputra",
     noKontak: "088901234568",
     nomorBib: "0004",
@@ -714,9 +709,9 @@ export const dummyPeserta = [
     pembayaran: {
       id: "bayar-008",
       pesertaId: "peserta-008",
-      biayaPendaftaran: 50000,
+      biayaPendaftaran: 30000,
       donasiTambahan: 0,
-      totalPembayaran: 50000,
+      totalPembayaran: 30000,
       metodePembayaran: "DANA" as const,
       buktiBayarUrl: "dummy/bukti-008.jpg",
       buktiBayarNama: "bukti-008.jpg",
@@ -729,18 +724,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 9 — Individu, Fun Run, PENDING, Transfer BRI
+  // 9 — Individu, Fun Run Rafah (tanpa jersey), PENDING, Transfer BRI
   {
     id: "peserta-009",
     tipe: "INDIVIDU" as const,
     namaKelompok: null,
-    kategori: "FUN_RUN" as const,
+    kategori: "FUN_RUN_RAFAH" as const,
     namaLengkap: "Muhammad Ilham Ramadhan",
     email: "ilham.ramadhan@gmail.com",
     noWhatsapp: "089012345678",
     tanggalLahir: new Date("2001-02-14"),
     jenisKelamin: "LAKI_LAKI" as const,
-    ukuranJersey: "L" as const,
+    ukuranJersey: null,
+    ukuranLengan: null,
     namaKontak: "Nurul Ramadhan",
     noKontak: "089012345679",
     nomorBib: null,
@@ -752,9 +748,9 @@ export const dummyPeserta = [
     pembayaran: {
       id: "bayar-009",
       pesertaId: "peserta-009",
-      biayaPendaftaran: 120000,
+      biayaPendaftaran: 30000,
       donasiTambahan: 0,
-      totalPembayaran: 120000,
+      totalPembayaran: 30000,
       metodePembayaran: "TRANSFER_BRI" as const,
       buktiBayarUrl: "dummy/bukti-009.jpg",
       buktiBayarNama: "bukti-009.jpg",
@@ -767,18 +763,19 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 10 — Kelompok, Fun Run, DITOLAK, Transfer Mandiri
+  // 10 — Keluarga, Fun Walk Gaza (jersey XXL pendek), DITOLAK, Transfer Mandiri
   {
     id: "peserta-010",
-    tipe: "KELOMPOK" as const,
+    tipe: "KELUARGA" as const,
     namaKelompok: "SMART171 Running Club",
-    kategori: "FUN_RUN" as const,
+    kategori: "FUN_WALK_GAZA" as const,
     namaLengkap: "Taufiq Hidayatullah",
     email: "taufiq.hidayat@smart171.com",
     noWhatsapp: "080123456789",
     tanggalLahir: new Date("1992-07-19"),
     jenisKelamin: "LAKI_LAKI" as const,
-    ukuranJersey: "XL" as const,
+    ukuranJersey: "XXL" as const,
+    ukuranLengan: "PENDEK" as const,
     namaKontak: "Zahra Hidayatullah",
     noKontak: "080123456780",
     nomorBib: null,
@@ -794,6 +791,7 @@ export const dummyPeserta = [
         tanggalLahir: new Date("1994-10-10"),
         jenisKelamin: "LAKI_LAKI" as const,
         ukuranJersey: "L" as const,
+        ukuranLengan: "PENDEK" as const,
         urutan: 1,
         createdAt: new Date("2026-04-14T13:20:00"),
         updatedAt: new Date("2026-04-14T13:20:00"),
@@ -802,14 +800,14 @@ export const dummyPeserta = [
     pembayaran: {
       id: "bayar-010",
       pesertaId: "peserta-010",
-      biayaPendaftaran: 240000, // 120000 × 2 orang
+      biayaPendaftaran: 220000, // 2 × 110k (Gaza lengan pendek)
       donasiTambahan: 0,
-      totalPembayaran: 240000,
+      totalPembayaran: 220000,
       metodePembayaran: "TRANSFER_MANDIRI" as const,
       buktiBayarUrl: "dummy/bukti-010.jpg",
       buktiBayarNama: "bukti-010.jpg",
       status: "DITOLAK" as const,
-      catatanAdmin: "Nominal transfer tidak sesuai. Total yang ditransfer Rp 200.000, seharusnya Rp 240.000.",
+      catatanAdmin: "Nominal transfer tidak sesuai. Total yang ditransfer Rp 200.000, seharusnya Rp 220.000.",
       verifikasiAt: new Date("2026-04-16T14:00:00"),
       createdAt: new Date("2026-04-14T13:20:00"),
       updatedAt: new Date("2026-04-16T14:00:00"),
@@ -818,10 +816,9 @@ export const dummyPeserta = [
   },
 ];
 
-// ----- DUMMY DONASI (8 item) -----
+// ----- DUMMY DONASI (8 item) — tidak berubah -----
 
 export const dummyDonasi = [
-  // 1 — VERIFIED, nama publik, ada email
   {
     id: "donasi-001",
     namaDonatur: "Budi Santoso",
@@ -838,8 +835,6 @@ export const dummyDonasi = [
     createdAt: new Date("2026-04-20T09:45:00"),
     updatedAt: new Date("2026-04-20T10:00:00"),
   },
-
-  // 2 — PENDING, sembunyikan nama
   {
     id: "donasi-002",
     namaDonatur: null,
@@ -856,8 +851,6 @@ export const dummyDonasi = [
     createdAt: new Date("2026-04-21T07:30:00"),
     updatedAt: new Date("2026-04-21T07:30:00"),
   },
-
-  // 3 — VERIFIED, sembunyikan nama, tanpa email
   {
     id: "donasi-003",
     namaDonatur: null,
@@ -874,8 +867,6 @@ export const dummyDonasi = [
     createdAt: new Date("2026-04-19T14:30:00"),
     updatedAt: new Date("2026-04-19T15:00:00"),
   },
-
-  // 4 — DITOLAK, nama publik, ada email
   {
     id: "donasi-004",
     namaDonatur: "Rini Puspitasari",
@@ -892,8 +883,6 @@ export const dummyDonasi = [
     createdAt: new Date("2026-04-18T10:20:00"),
     updatedAt: new Date("2026-04-18T11:00:00"),
   },
-
-  // 5 — PENDING, nama publik, tanpa email
   {
     id: "donasi-005",
     namaDonatur: "Agus Triyono",
@@ -910,8 +899,6 @@ export const dummyDonasi = [
     createdAt: new Date("2026-04-22T08:10:00"),
     updatedAt: new Date("2026-04-22T08:10:00"),
   },
-
-  // 6 — VERIFIED, nama publik, ada email
   {
     id: "donasi-006",
     namaDonatur: "Fatimah Az-Zahra Lubis",
@@ -928,8 +915,6 @@ export const dummyDonasi = [
     createdAt: new Date("2026-04-17T15:30:00"),
     updatedAt: new Date("2026-04-17T16:00:00"),
   },
-
-  // 7 — PENDING, sembunyikan nama, ada email
   {
     id: "donasi-007",
     namaDonatur: null,
@@ -946,8 +931,6 @@ export const dummyDonasi = [
     createdAt: new Date("2026-04-22T12:00:00"),
     updatedAt: new Date("2026-04-22T12:00:00"),
   },
-
-  // 8 — VERIFIED, nama publik, ada email
   {
     id: "donasi-008",
     namaDonatur: "Pondok Pesantren Al-Amin",
@@ -967,37 +950,35 @@ export const dummyDonasi = [
 ];
 
 // ----- KPI DASHBOARD -----
-// Nilai dihitung manual sesuai data dummy di atas agar konsisten
 
 const _pesertaVerifiedList = dummyPeserta.filter((p) => p.status === "VERIFIED");
 const _donasiVerifiedList = dummyDonasi.filter((d) => d.status === "VERIFIED");
 
 export const kpiDashboard = {
-  totalPeserta: dummyPeserta.length, // 10
-  pesertaPending: dummyPeserta.filter((p) => p.status === "PENDING").length, // 4
-  pesertaVerified: _pesertaVerifiedList.length, // 5
-  pesertaDitolak: dummyPeserta.filter((p) => p.status === "DITOLAK").length, // 2 (peserta-004 & 010 dihitung sebagai individu, tapi ada dua record DITOLAK)
+  totalPeserta: dummyPeserta.length,
+  pesertaPending: dummyPeserta.filter((p) => p.status === "PENDING").length,
+  pesertaVerified: _pesertaVerifiedList.length,
+  pesertaDitolak: dummyPeserta.filter((p) => p.status === "DITOLAK").length,
 
   totalDanaDonasiVerified: _donasiVerifiedList.reduce(
     (sum, d) => sum + d.nominal,
     0
-  ), // 100k + 200k + 300k + 500k = 1.100.000
+  ),
 
   totalDanaPendaftaranVerified: _pesertaVerifiedList.reduce(
     (sum, p) => sum + p.pembayaran.biayaPendaftaran,
     0
-  ), // 50k + 360k + 120k + 50k = 580.000 (peserta-002, 003, 007, 008)
+  ),
 
   get totalDanaTerkumpul() {
     return this.totalDanaDonasiVerified + this.totalDanaPendaftaranVerified;
-    // 1.100.000 + 580.000 = 1.680.000
   },
 
   aktivitasTerbaru: [
     {
       nama: "Muhammad Ilham Ramadhan",
       jenis: "Pendaftaran" as const,
-      nominal: 120000,
+      nominal: 30000,
       waktu: new Date("2026-04-22T06:50:00"),
       status: "PENDING" as const,
     },
@@ -1011,14 +992,14 @@ export const kpiDashboard = {
     {
       nama: "Yusuf Habibi",
       jenis: "Pendaftaran" as const,
-      nominal: 150000,
+      nominal: 330000,
       waktu: new Date("2026-04-21T11:00:00"),
       status: "PENDING" as const,
     },
     {
       nama: "Siti Fatimah Azzahra",
       jenis: "Pendaftaran" as const,
-      nominal: 75000,
+      nominal: 55000,
       waktu: new Date("2026-04-21T09:20:00"),
       status: "PENDING" as const,
     },
