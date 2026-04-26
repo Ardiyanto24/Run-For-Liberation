@@ -1,5 +1,3 @@
-// app/(public)/daftar/page.tsx
-
 "use client";
 
 import { usePendaftaranForm } from "@/hooks/usePendaftaranForm";
@@ -27,8 +25,8 @@ export default function DaftarPage() {
     addAnggota,
     removeAnggota,
     updateAnggota,
-    hitungBiayaPendaftaran,
-    hitungTotal,
+    // fix: hapus hitungBiayaPendaftaran dan hitungTotal —
+    // Step5Ringkasan sudah hitung sendiri dari server
   } = usePendaftaranForm();
 
   // --------------------------------------------------------
@@ -91,13 +89,8 @@ export default function DaftarPage() {
         );
 
       case 5:
-        return (
-          <Step5Ringkasan
-            formData={formData}
-            hitungBiayaPendaftaran={hitungBiayaPendaftaran}
-            hitungTotal={hitungTotal}
-          />
-        );
+        // fix: hapus prop hitungBiayaPendaftaran dan hitungTotal
+        return <Step5Ringkasan formData={formData} />;
 
       case 6:
         return (
@@ -110,7 +103,6 @@ export default function DaftarPage() {
             onUpdateBukti={(file: File | null) =>
               updateFormData("buktiBayar", file)
             }
-            hitungTotal={hitungTotal}
             onSubmit={goToNextStep}
             isSubmitting={isSubmitting}
           />
@@ -157,6 +149,17 @@ export default function DaftarPage() {
           {/* Konten step */}
           <div className="px-6 pb-6 pt-4">{renderStep()}</div>
 
+          {/* Error global — muncul jika server action return error tanpa field spesifik */}
+          {errors._global && !isStep6 && !isStep7 && (
+            <div className="px-6 pb-2">
+              <div className="p-3 rounded-lg bg-red-50 border border-[#CE1126]/20">
+                <p className="text-xs text-[#CE1126] font-semibold">
+                  {errors._global}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Tombol navigasi */}
           {!isStep6 && !isStep7 && (
             <div className="px-6 pb-6 pt-2 border-t border-[rgba(26,84,200,0.08)] flex items-center justify-between gap-3">
@@ -175,7 +178,8 @@ export default function DaftarPage() {
               <button
                 type="button"
                 onClick={goToNextStep}
-                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#1A54C8] hover:bg-[#0E3EA0] text-white text-sm font-bold tracking-wide transition-all duration-200 shadow-[0_2px_12px_rgba(26,84,200,0.25)] hover:shadow-[0_4px_16px_rgba(26,84,200,0.35)] active:scale-[0.99]"
+                disabled={isSubmitting}
+                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#1A54C8] hover:bg-[#0E3EA0] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold tracking-wide transition-all duration-200 shadow-[0_2px_12px_rgba(26,84,200,0.25)] hover:shadow-[0_4px_16px_rgba(26,84,200,0.35)] active:scale-[0.99]"
               >
                 {labelTombolLanjut()}
               </button>

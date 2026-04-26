@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { FormDataPendaftaran, MetodePembayaran } from "@/types";
 import UploadBuktiBayar from "@/components/public/pendaftaran/UploadBuktiBayar";
 import MetodePembayaranSelector from "@/components/public/pendaftaran/MetodePembayaranSelector";
+import { getHargaKategori, type HargaMap } from "@/actions/pendaftaran";
 
 // ============================================================
 // HELPER
@@ -15,6 +17,18 @@ function formatRupiah(angka: number): string {
   }).format(angka);
 }
 
+function resolveHargaSatuan(
+  hargaMap: HargaMap,
+  kategori: string | null,
+  ukuranLengan: string
+): number {
+  if (!kategori) return 0;
+  if (kategori === "FUN_RUN_RAFAH")  return hargaMap["FUN_RUN_RAFAH"]  ?? 0;
+  if (kategori === "FUN_WALK_RAFAH") return hargaMap["FUN_WALK_RAFAH"] ?? 0;
+  const key = `${kategori}__${ukuranLengan || "PANJANG"}`;
+  return hargaMap[key] ?? 0;
+}
+
 // ============================================================
 // PROPS
 // ============================================================
@@ -23,7 +37,6 @@ interface Step6BayarProps {
   errors: Record<string, string>;
   onUpdateMetode: (metode: MetodePembayaran) => void;
   onUpdateBukti: (file: File | null) => void;
-  hitungTotal: () => number;
   onSubmit: () => void;
   isSubmitting: boolean;
 }
@@ -36,11 +49,32 @@ export default function Step6Bayar({
   errors,
   onUpdateMetode,
   onUpdateBukti,
-  hitungTotal,
   onSubmit,
   isSubmitting,
 }: Step6BayarProps) {
-  const total = hitungTotal();
+  const [hargaMap, setHargaMap] = useState<HargaMap>({
+    "FUN_RUN_GAZA__PANJANG":  120_000,
+    "FUN_RUN_GAZA__PENDEK":   110_000,
+    "FUN_WALK_GAZA__PANJANG": 120_000,
+    "FUN_WALK_GAZA__PENDEK":  110_000,
+    "FUN_RUN_RAFAH":           30_000,
+    "FUN_WALK_RAFAH":          30_000,
+  });
+
+  useEffect(() => {
+    getHargaKategori()
+      .then(setHargaMap)
+      .catch(() => {
+        // Gagal fetch — gunakan nilai default
+      });
+  }, []);
+
+  const isKeluarga    = formData.tipe === "KELUARGA";
+  const ukuranLengan  = formData.peserta.ukuranLengan ?? "";
+  const jumlahPeserta = isKeluarga ? 1 + formData.anggota.length : 1;
+  const hargaSatuan   = resolveHargaSatuan(hargaMap, formData.kategori, ukuranLengan);
+  const biaya         = hargaSatuan * jumlahPeserta;
+  const total         = biaya + (formData.donasiTambahan ?? 0);
 
   return (
     <div>
