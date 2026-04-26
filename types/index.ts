@@ -200,4 +200,5 @@ export type DonasiErrors = {
   emailDonatur?: string;
   metodePembayaran?: string;
   buktiBayar?: string;
+  _global?: string;
 };
