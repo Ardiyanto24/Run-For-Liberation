@@ -1,80 +1,104 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FormDataAnggota,
   FormDataPendaftaran,
   FormDataPeserta,
-  KategoriLomba,
 } from "@/types";
 import { validateFileBuktiBayar } from "@/lib/utils";
-
-// ============================================================
-// KONSTANTA HARGA
-// TODO: ganti dengan nilai dari env variable HARGA_FUN_RUN / HARGA_FUN_WALK saat DEV-10
-// ============================================================
-const _HARGA_FUN_RUN = 75_000;
-const _HARGA_FUN_WALK = 50_000;
+import { getHargaKategori, submitPendaftaran, type HargaMap } from "@/actions/pendaftaran";
 
 // ============================================================
 // INITIAL STATE
 // ============================================================
+
 const initialPeserta: FormDataPeserta = {
-  namaLengkap: "",
-  email: "",
-  noWhatsapp: "",
+  namaLengkap:  "",
+  email:        "",
+  noWhatsapp:   "",
   tanggalLahir: "",
   jenisKelamin: "",
-  ukuranJersey: "",   // kembali
-  ukuranLengan: "",   // baru
-  namaKontak: "",
-  noKontak: "",
+  ukuranJersey: "",
+  ukuranLengan: "",
+  namaKontak:   "",
+  noKontak:     "",
 };
 
 const initialAnggota: FormDataAnggota = {
-  namaLengkap: "",
+  namaLengkap:  "",
   tanggalLahir: "",
   jenisKelamin: "",
-  ukuranJersey: "",   // kembali
-  ukuranLengan: "",   // baru
+  ukuranJersey: "",
+  ukuranLengan: "",
 };
 
 const initialFormData: FormDataPendaftaran = {
-  tipe: null,
-  kategori: null,
-  namaKelompok: "",
-  peserta: initialPeserta,
-  anggota: [],
-  donasiTambahan: 0,
+  tipe:             null,
+  kategori:         null,
+  namaKelompok:     "",
+  peserta:          initialPeserta,
+  anggota:          [],
+  donasiTambahan:   0,
   metodePembayaran: null,
-  buktiBayar: null,
+  buktiBayar:       null,
 };
 
 // ============================================================
 // HOOK
 // ============================================================
+
 export function usePendaftaranForm() {
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [formData, setFormData] = useState<FormDataPendaftaran>(initialFormData);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, _setIsSubmitting] = useState<boolean>(false);
+  const [currentStep, setCurrentStep]   = useState<number>(1);
+  const [formData, setFormData]         = useState<FormDataPendaftaran>(initialFormData);
+  const [errors, setErrors]             = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // fix: hapus underscore
+
+  // ── Harga dari server ─────────────────────────────────────
+  // Default value adalah fallback jika fetch gagal.
+  // Kalkulasi final tetap dilakukan di server saat submit.
+  const [hargaMap, setHargaMap] = useState<HargaMap>({
+    "FUN_RUN_GAZA__PANJANG":  120_000,
+    "FUN_RUN_GAZA__PENDEK":   110_000,
+    "FUN_WALK_GAZA__PANJANG": 120_000,
+    "FUN_WALK_GAZA__PENDEK":  110_000,
+    "FUN_RUN_RAFAH":           30_000,
+    "FUN_WALK_RAFAH":          30_000,
+  });
+
+  useEffect(() => {
+    getHargaKategori()
+      .then(setHargaMap)
+      .catch(() => {
+        // Gagal fetch — gunakan nilai default di useState
+        console.error("[usePendaftaranForm] Gagal mengambil harga dari server.");
+      });
+  }, []);
 
   // ----------------------------------------------------------
   // KALKULASI HARGA
+  // Menggunakan hargaMap dari server + ukuranLengan untuk Gaza.
   // ----------------------------------------------------------
-  // TODO: ganti dengan nilai dari env variable saat DEV-10
-  const HARGA: Record<KategoriLomba, number> = {
-    FUN_RUN_GAZA: 120_000,
-    FUN_RUN_RAFAH: 30_000,
-    FUN_WALK_GAZA: 120_000,
-    FUN_WALK_RAFAH: 30_000,
-  };
+
+  function resolveHargaSatuan(): number {
+    const { kategori } = formData;
+    const lengan = formData.peserta.ukuranLengan;
+    if (!kategori) return 0;
+
+    if (kategori === "FUN_RUN_RAFAH")  return hargaMap["FUN_RUN_RAFAH"]  ?? 0;
+    if (kategori === "FUN_WALK_RAFAH") return hargaMap["FUN_WALK_RAFAH"] ?? 0;
+
+    // Gaza — bergantung ukuranLengan
+    const key = `${kategori}__${lengan || "PANJANG"}`;
+    return hargaMap[key] ?? 0;
+  }
 
   function hitungBiayaPendaftaran(): number {
-    if (!formData.kategori) return 0;
-    const hargaPerOrang = HARGA[formData.kategori];
-    const jumlahPeserta = 1 + formData.anggota.length;
-    return hargaPerOrang * jumlahPeserta;
+    const hargaSatuan  = resolveHargaSatuan();
+    const jumlahPeserta = formData.tipe === "KELUARGA"
+      ? 1 + formData.anggota.length
+      : 1;
+    return hargaSatuan * jumlahPeserta;
   }
 
   function hitungTotal(): number {
@@ -84,21 +108,20 @@ export function usePendaftaranForm() {
   // ----------------------------------------------------------
   // VALIDASI PER STEP
   // ----------------------------------------------------------
+
   function validateStep(step: number): boolean {
     const newErrors: Record<string, string> = {};
 
     switch (step) {
       case 1: {
-        if (!formData.tipe) {
+        if (!formData.tipe)
           newErrors.tipe = "Pilih tipe pendaftaran terlebih dahulu.";
-        }
         break;
       }
 
       case 2: {
-        if (!formData.kategori) {
+        if (!formData.kategori)
           newErrors.kategori = "Pilih kategori lomba terlebih dahulu.";
-        }
         break;
       }
 
@@ -108,8 +131,7 @@ export function usePendaftaranForm() {
           formData.kategori === "FUN_RUN_GAZA" ||
           formData.kategori === "FUN_WALK_GAZA";
 
-        // ── Validasi peserta / ketua ──────────────────────────────
-
+        // Validasi peserta / ketua
         if (!p.namaLengkap.trim())
           newErrors.namaLengkap = "Nama lengkap wajib diisi.";
 
@@ -141,12 +163,11 @@ export function usePendaftaranForm() {
         if (!p.noKontak.trim())
           newErrors.noKontak = "Nomor kontak darurat wajib diisi.";
 
-        // ── Validasi anggota jika KELUARGA ───────────────────────
-
-        if (formData.tipe === "KELOMPOK") {
+        // Validasi anggota jika KELUARGA — fix: sebelumnya "KELOMPOK"
+        if (formData.tipe === "KELUARGA") {
           if (formData.anggota.length === 0) {
             newErrors.anggota =
-              "Kelompok harus memiliki minimal 1 anggota selain ketua.";
+              "Keluarga harus memiliki minimal 1 anggota selain ketua.";
           } else {
             formData.anggota.forEach((anggota, idx) => {
               if (!anggota.namaLengkap.trim())
@@ -161,7 +182,7 @@ export function usePendaftaranForm() {
                 newErrors[`anggota_${idx}_jenisKelamin`] =
                   `Jenis kelamin anggota ${idx + 1} wajib dipilih.`;
 
-              // Jersey anggota — hanya wajib jika paket Gaza
+              // Jersey anggota — hanya wajib jika Gaza
               if (isGaza && !anggota.ukuranLengan)
                 newErrors[`anggota_${idx}_ukuranLengan`] =
                   `Tipe lengan anggota ${idx + 1} wajib dipilih.`;
@@ -177,8 +198,6 @@ export function usePendaftaranForm() {
 
       case 4: {
         // Donasi opsional — tidak ada validasi wajib
-        // Jika user memilih donasi (donasiTambahan > 0), nominal sudah pasti valid
-        // karena diset dari preset atau input yang sudah tervalidasi di komponen
         break;
       }
 
@@ -188,17 +207,14 @@ export function usePendaftaranForm() {
       }
 
       case 6: {
-        if (!formData.metodePembayaran) {
+        if (!formData.metodePembayaran)
           newErrors.metodePembayaran = "Pilih metode pembayaran terlebih dahulu.";
-        }
 
         if (!formData.buktiBayar) {
           newErrors.buktiBayar = "Upload bukti pembayaran wajib dilakukan.";
         } else {
           const fileError = validateFileBuktiBayar(formData.buktiBayar);
-          if (fileError) {
-            newErrors.buktiBayar = fileError;
-          }
+          if (fileError) newErrors.buktiBayar = fileError;
         }
         break;
       }
@@ -214,13 +230,74 @@ export function usePendaftaranForm() {
   }
 
   // ----------------------------------------------------------
+  // SUBMIT KE SERVER
+  // ----------------------------------------------------------
+
+  async function handleSubmit() {
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      const fd = new FormData();
+
+      // Field scalar
+      fd.append("tipe",             formData.tipe ?? "");
+      fd.append("kategori",         formData.kategori ?? "");
+      fd.append("namaKelompok",     formData.namaKelompok ?? "");
+      fd.append("namaLengkap",      formData.peserta.namaLengkap);
+      fd.append("email",            formData.peserta.email);
+      fd.append("noWhatsapp",       formData.peserta.noWhatsapp);
+      fd.append("tanggalLahir",     formData.peserta.tanggalLahir);
+      fd.append("jenisKelamin",     formData.peserta.jenisKelamin);
+      fd.append("ukuranJersey",     formData.peserta.ukuranJersey ?? "");
+      fd.append("ukuranLengan",     formData.peserta.ukuranLengan ?? "");
+      fd.append("namaKontak",       formData.peserta.namaKontak);
+      fd.append("noKontak",         formData.peserta.noKontak);
+      fd.append("donasiTambahan",   String(formData.donasiTambahan));
+      fd.append("metodePembayaran", formData.metodePembayaran ?? "");
+
+      // Anggota sebagai JSON string
+      fd.append("anggota", JSON.stringify(formData.anggota));
+
+      // File bukti bayar
+      if (formData.buktiBayar) {
+        fd.append("buktiBayar", formData.buktiBayar);
+      }
+
+      const result = await submitPendaftaran(fd);
+
+      if (result.success) {
+        setCurrentStep(7);
+      } else {
+        if (result.field) {
+          setErrors({ [result.field]: result.error });
+        } else {
+          setErrors({ _global: result.error });
+        }
+      }
+    } catch (err) {
+      console.error("[handleSubmit] Unexpected error:", err);
+      setErrors({ _global: "Terjadi kesalahan tak terduga. Silakan coba lagi." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  // ----------------------------------------------------------
   // NAVIGASI
   // ----------------------------------------------------------
-  function goToNextStep() {
+
+  async function goToNextStep() {
     const isValid = validateStep(currentStep);
-    if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 7));
+    if (!isValid) return;
+
+    // Step 6: submit ke server, bukan pindah step biasa
+    if (currentStep === 6) {
+      await handleSubmit();
+      return;
     }
+
+    setCurrentStep((prev) => Math.min(prev + 1, 7));
   }
 
   function goToPrevStep() {
@@ -231,13 +308,13 @@ export function usePendaftaranForm() {
   // ----------------------------------------------------------
   // UPDATE FORM DATA
   // ----------------------------------------------------------
+
   function updateFormData(
     field: keyof FormDataPendaftaran,
     value: FormDataPendaftaran[keyof FormDataPendaftaran]
   ) {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error field yang diupdate
-    if (errors[field]) {
+    if (errors[field as string]) {
       setErrors((prev) => {
         const next = { ...prev };
         delete next[field as string];
@@ -246,16 +323,12 @@ export function usePendaftaranForm() {
     }
   }
 
-  function updatePeserta(
-    field: keyof FormDataPeserta,
-    value: string
-  ) {
+  function updatePeserta(field: keyof FormDataPeserta, value: string) {
     setFormData((prev) => ({
       ...prev,
       peserta: { ...prev.peserta, [field]: value },
     }));
-    // Clear error field peserta yang diupdate
-    if (errors[field]) {
+    if (errors[field as string]) {
       setErrors((prev) => {
         const next = { ...prev };
         delete next[field as string];
@@ -267,6 +340,7 @@ export function usePendaftaranForm() {
   // ----------------------------------------------------------
   // MANAJEMEN ANGGOTA
   // ----------------------------------------------------------
+
   function addAnggota() {
     if (formData.anggota.length >= 5) return;
     setFormData((prev) => ({
@@ -292,7 +366,6 @@ export function usePendaftaranForm() {
       updated[index] = { ...updated[index], [field]: value };
       return { ...prev, anggota: updated };
     });
-    // Clear error anggota field yang diupdate
     const errorKey = `anggota_${index}_${field}`;
     if (errors[errorKey]) {
       setErrors((prev) => {
@@ -306,6 +379,7 @@ export function usePendaftaranForm() {
   // ----------------------------------------------------------
   // RETURN
   // ----------------------------------------------------------
+
   return {
     // State
     currentStep,
@@ -322,9 +396,7 @@ export function usePendaftaranForm() {
     addAnggota,
     removeAnggota,
     updateAnggota,
-    // Validasi
-    validateStep,
-    // Kalkulasi
+    // Kalkulasi (dipakai Step5 sebagai fallback)
     hitungBiayaPendaftaran,
     hitungTotal,
   };

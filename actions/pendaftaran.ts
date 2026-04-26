@@ -6,19 +6,23 @@ import prisma from "@/lib/prisma";
 import { uploadBuktiBayar } from "@/lib/supabase";
 import { pendaftaranSchema } from "@/lib/validation";
 import { hitungHargaPendaftaran } from "@/lib/utils";
-import type { KategoriLomba, UkuranLengan as LenganJersey } from "@/types";
+import type { KategoriLomba, UkuranLengan } from "@/types";
 
-// ─── Types ───────────────────────────────────────────────────
+// ============================================================
+// TYPES
+// ============================================================
 
 type SubmitResult =
   | { success: true; pesertaId: string }
   | { success: false; error: string; field?: string };
 
-// Struktur harga yang dikembalikan ke UI
-// Key: "KATEGORI__LENGAN" atau "KATEGORI" untuk Rafah (flat)
+// Key format untuk Gaza:  "FUN_RUN_GAZA__PANJANG", "FUN_RUN_GAZA__PENDEK"
+// Key format untuk Rafah: "FUN_RUN_RAFAH", "FUN_WALK_RAFAH"
 export type HargaMap = Record<string, number>;
 
-// ─── Helper: Baca Semua Harga dari Env ───────────────────────
+// ============================================================
+// HELPER: Baca Semua Harga dari Environment Variable
+// ============================================================
 
 function readHargaFromEnv(): HargaMap {
   const entries: [string, string][] = [
@@ -33,33 +37,33 @@ function readHargaFromEnv(): HargaMap {
   const result: HargaMap = {};
 
   for (const [key, envKey] of entries) {
-    const raw = process.env[envKey];
-    const parsed = parseInt(raw ?? "", 10);
+    const parsed = parseInt(process.env[envKey] ?? "", 10);
     result[key] = isNaN(parsed) ? 0 : parsed;
   }
 
   return result;
 }
 
-// ════════════════════════════════════════════════════════════
+// ============================================================
 // SERVER ACTION: getHargaKategori
-// Dipakai UI (Step5Ringkasan) untuk display kalkulasi.
+// Dipakai UI (Step5Ringkasan, usePendaftaranForm) untuk
+// kalkulasi display — bukan untuk kalkulasi final saat submit.
 // Harga tetap dihitung ulang penuh di server saat submit.
-// ════════════════════════════════════════════════════════════
+// ============================================================
 
 export async function getHargaKategori(): Promise<HargaMap> {
   return readHargaFromEnv();
 }
 
-// ════════════════════════════════════════════════════════════
+// ============================================================
 // SERVER ACTION: submitPendaftaran
-// ════════════════════════════════════════════════════════════
+// ============================================================
 
 export async function submitPendaftaran(
   formData: FormData
 ): Promise<SubmitResult> {
 
-  // ── 1. Ekstrak & Parse Input ────────────────────────────
+  // ── 1. Ekstrak & Parse Data Anggota ────────────────────────
   const rawAnggota = formData.get("anggota");
   let anggotaParsed: unknown[] = [];
 
@@ -69,6 +73,7 @@ export async function submitPendaftaran(
     return { success: false, error: "Data anggota tidak valid." };
   }
 
+  // ── 2. Susun Object untuk Validasi Zod ─────────────────────
   const raw = {
     tipe:             formData.get("tipe"),
     kategori:         formData.get("kategori"),
@@ -78,8 +83,8 @@ export async function submitPendaftaran(
     noWhatsapp:       formData.get("noWhatsapp"),
     tanggalLahir:     formData.get("tanggalLahir"),
     jenisKelamin:     formData.get("jenisKelamin"),
-    ukuranJersey:     formData.get("ukuranJersey"),
-    lenganJersey:     formData.get("lenganJersey"),
+    ukuranJersey:     formData.get("ukuranJersey") || undefined,
+    ukuranLengan:     formData.get("ukuranLengan") || undefined,
     namaKontak:       formData.get("namaKontak"),
     noKontak:         formData.get("noKontak"),
     donasiTambahan:   Number(formData.get("donasiTambahan") ?? 0),
@@ -87,22 +92,21 @@ export async function submitPendaftaran(
     anggota:          anggotaParsed,
   };
 
-  // ── 2. Validasi dengan Zod ──────────────────────────────
+  // ── 3. Validasi dengan Zod ──────────────────────────────────
   const parsed = pendaftaranSchema.safeParse(raw);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0];
-    const fieldPath = firstError.path.join("_") || undefined;
     return {
       success: false,
       error: firstError.message,
-      field: fieldPath,
+      field: firstError.path.join("_") || undefined,
     };
   }
 
   const data = parsed.data;
 
-  // ── 3. Validasi File Bukti Bayar ────────────────────────
+  // ── 4. Validasi File Bukti Bayar ────────────────────────────
   const buktiBayarFile = formData.get("buktiBayar");
 
   if (
@@ -117,12 +121,12 @@ export async function submitPendaftaran(
     };
   }
 
-  // ── 4. Hitung Biaya di Server ───────────────────────────
-  // Untuk anggota keluarga, setiap anggota mengikuti lengan jersey
-  // yang dipilih masing-masing — atau ikut ketua jika tidak ada pilihan
-  // per-anggota. Saat ini kalkulasi menggunakan lengan jersey ketua
-  // untuk seluruh kelompok karena harga per-orang belum dibedakan
-  // per-anggota di spesifikasi.
+  // ── 5. Hitung Biaya di Server ───────────────────────────────
+  // Kalkulasi dilakukan sepenuhnya di server — nilai dari client diabaikan.
+  const isGaza =
+    data.kategori === "FUN_RUN_GAZA" ||
+    data.kategori === "FUN_WALK_GAZA";
+
   const jumlahPeserta =
     data.tipe === "KELUARGA" ? 1 + (data.anggota?.length ?? 0) : 1;
 
@@ -131,22 +135,23 @@ export async function submitPendaftaran(
   try {
     biayaPendaftaran = hitungHargaPendaftaran(
       data.kategori as KategoriLomba,
-      data.lenganJersey as LenganJersey,
-      jumlahPeserta
+      jumlahPeserta,
+      isGaza ? (data.ukuranLengan as UkuranLengan) : undefined
     );
   } catch (err) {
-    const msg =
-      err instanceof Error
+    return {
+      success: false,
+      error: err instanceof Error
         ? err.message
-        : "Konfigurasi harga belum diset. Hubungi administrator.";
-    return { success: false, error: msg };
+        : "Konfigurasi harga belum diset. Hubungi administrator.",
+    };
   }
 
   const totalPembayaran = biayaPendaftaran + data.donasiTambahan;
 
-  // ── 5. Database + Storage ───────────────────────────────
+  // ── 6. Database + Storage ───────────────────────────────────
   try {
-    // 5a. Buat record Peserta
+    // 6a. Buat record Peserta
     const peserta = await prisma.peserta.create({
       data: {
         tipe:         data.tipe,
@@ -157,8 +162,9 @@ export async function submitPendaftaran(
         noWhatsapp:   data.noWhatsapp,
         tanggalLahir: new Date(data.tanggalLahir),
         jenisKelamin: data.jenisKelamin,
-        ukuranJersey: data.ukuranJersey,
-        lenganJersey: data.lenganJersey,
+        // Jersey hanya diisi jika paket Gaza
+        ukuranJersey: isGaza ? (data.ukuranJersey ?? null) : null,
+        ukuranLengan: isGaza ? (data.ukuranLengan ?? null) : null,
         namaKontak:   data.namaKontak,
         noKontak:     data.noKontak,
       },
@@ -166,14 +172,14 @@ export async function submitPendaftaran(
 
     const pesertaId = peserta.id;
 
-    // 5b. Upload bukti bayar ke Supabase Storage
+    // 6b. Upload bukti bayar ke Supabase Storage
     const buktiBayarPath = await uploadBuktiBayar(
       buktiBayarFile,
       "payment-proofs",
       pesertaId
     );
 
-    // 5c. Buat record Anggota jika KELUARGA
+    // 6c. Buat record Anggota jika KELUARGA
     if (data.tipe === "KELUARGA" && data.anggota && data.anggota.length > 0) {
       await prisma.anggota.createMany({
         data: data.anggota.map((anggota, idx) => ({
@@ -181,14 +187,15 @@ export async function submitPendaftaran(
           namaLengkap:  anggota.namaLengkap,
           tanggalLahir: new Date(anggota.tanggalLahir),
           jenisKelamin: anggota.jenisKelamin,
-          ukuranJersey: anggota.ukuranJersey,
-          lenganJersey: anggota.lenganJersey,
+          // Jersey anggota juga hanya diisi jika Gaza
+          ukuranJersey: isGaza ? (anggota.ukuranJersey ?? null) : null,
+          ukuranLengan: isGaza ? (anggota.ukuranLengan ?? null) : null,
           urutan:       idx + 1,
         })),
       });
     }
 
-    // 5d. Buat record Pembayaran
+    // 6d. Buat record Pembayaran
     await prisma.pembayaran.create({
       data: {
         pesertaId,
@@ -202,18 +209,19 @@ export async function submitPendaftaran(
       },
     });
 
-    // ── 6. Kirim Email Konfirmasi ─────────────────────────
+    // ── 7. Kirim Email Konfirmasi ───────────────────────────
     // TODO: Aktifkan setelah DEV-12 selesai
     // try {
     //   await kirimEmailKonfirmasiPendaftaran({
-    //     to: data.email,
+    //     to:          data.email,
     //     namaLengkap: data.namaLengkap,
-    //     kategori: data.kategori,
-    //     lenganJersey: data.lenganJersey,
+    //     kategori:    data.kategori,
+    //     ukuranLengan: data.ukuranLengan,
     //     pesertaId,
     //   });
     // } catch (emailErr) {
     //   console.error("[submitPendaftaran] Gagal kirim email:", emailErr);
+    //   // Email gagal tidak menggagalkan proses pendaftaran
     // }
 
     return { success: true, pesertaId };
