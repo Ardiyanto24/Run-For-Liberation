@@ -1,3 +1,5 @@
+// components/admin/peserta/ModalEmailBlast.tsx
+
 "use client";
 
 import { useState } from "react";

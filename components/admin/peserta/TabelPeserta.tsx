@@ -1,3 +1,5 @@
+// components/admin/peserta/TabelPeserta.tsx
+
 "use client";
 
 type StatusPeserta = "PENDING" | "VERIFIED" | "DITOLAK";

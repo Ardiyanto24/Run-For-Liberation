@@ -1,3 +1,5 @@
+// components/admin/dashboard/AktivitasTerbaru.tsx
+
 "use client";
 
 type StatusKey = "PENDING" | "VERIFIED" | "DITOLAK";

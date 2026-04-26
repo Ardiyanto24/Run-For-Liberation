@@ -1,3 +1,5 @@
+// components/public/galeri/GaleriGrid.tsx
+
 'use client'
 
 import { useState } from 'react'

@@ -1,3 +1,5 @@
+// components/public/beranda/TimelineSection.tsx
+
 import { timelineDummy, type TimelineMilestone } from "@/lib/placeholder-data";
 
 function DotIndicator({ status }: { status: TimelineMilestone["status"] }) {

@@ -1,3 +1,5 @@
+// components/public/pendaftaran/StepperIndicator.tsx
+
 "use client";
 
 interface Step {

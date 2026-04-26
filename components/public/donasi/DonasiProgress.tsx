@@ -1,3 +1,5 @@
+// components/public/donasi/DonasiProgress/tsx
+
 // Server Component — tidak perlu 'use client'
 
 import { formatRupiah } from '@/lib/utils';

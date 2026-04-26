@@ -1,3 +1,5 @@
+// components/admin/peserta/ModalDetailPeserta.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";

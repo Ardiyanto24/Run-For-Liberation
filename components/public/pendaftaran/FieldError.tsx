@@ -1,3 +1,5 @@
+// components/public/pendaftaran/FieldError.tsx
+
 interface FieldErrorProps {
   message?: string;
 }

@@ -1,3 +1,5 @@
+// components/public/dashboard/ETiket.tsx
+
 import type { PesertaLengkap } from "@/types";
 
 interface ETiketProps {

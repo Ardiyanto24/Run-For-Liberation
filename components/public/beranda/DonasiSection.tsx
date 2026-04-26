@@ -1,3 +1,5 @@
+// components/public/beranda/DonasiSection.tsx
+
 import Link from "next/link";
 import { donasiDummy } from "@/lib/placeholder-data";
 

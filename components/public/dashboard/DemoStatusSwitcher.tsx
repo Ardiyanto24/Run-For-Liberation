@@ -1,3 +1,5 @@
+// components/public/dashboard/DemoStatusSwitcher.tsx 
+
 // ⚠️ KOMPONEN INI HANYA UNTUK DEVELOPMENT DAN DEMO
 // HARUS DIHAPUS ATAU DIKONDISIKAN DENGAN process.env.NODE_ENV === 'development'
 // SEBELUM DEPLOYMENT KE PRODUCTION

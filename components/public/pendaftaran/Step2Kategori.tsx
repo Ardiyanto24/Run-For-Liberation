@@ -1,3 +1,5 @@
+// components/public/pendaftaran/Step2Kategori.tsx
+
 "use client";
 
 import { KategoriLomba, UkuranLengan } from "@/types";

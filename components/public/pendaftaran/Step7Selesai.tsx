@@ -1,3 +1,5 @@
+// components/public/pendaftaran/Step7Selesai.tsx
+
 "use client";
 
 import Link from "next/link";

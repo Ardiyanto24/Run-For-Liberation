@@ -1,3 +1,5 @@
+// components/public/beranda/KategoriSection.tsx
+
 import Link from "next/link";
 
 interface KategoriItem {

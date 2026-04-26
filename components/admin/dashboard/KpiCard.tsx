@@ -1,3 +1,5 @@
+// components/admin/dashboard/KpiCard.tsx
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";

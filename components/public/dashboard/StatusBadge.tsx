@@ -1,3 +1,5 @@
+// components/public/dashboard/StatusBadge.tsx
+
 import type { StatusPeserta } from "@/types";
 
 interface StatusBadgeProps {

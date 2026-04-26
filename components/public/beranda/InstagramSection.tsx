@@ -1,3 +1,5 @@
+// components/public/beranda/InstagramSection.tsx
+
 const igPosts = [
   { id: 1, emoji: "🏃", bg: "#EEF3FF" },
   { id: 2, emoji: "🇵🇸", bg: "#dce6ff" },

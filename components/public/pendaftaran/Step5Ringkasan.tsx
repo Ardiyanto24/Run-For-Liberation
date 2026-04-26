@@ -1,3 +1,5 @@
+// components/public/pendaftaran/Step5Ringkasan.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";

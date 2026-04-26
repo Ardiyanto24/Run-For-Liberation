@@ -1,4 +1,5 @@
 // components/public/SubHero.tsx
+
 import Link from 'next/link'
 
 interface SubHeroProps {

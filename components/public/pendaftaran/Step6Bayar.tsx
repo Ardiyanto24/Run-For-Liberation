@@ -1,3 +1,5 @@
+// components/public/pendaftaran/Step6Bayar.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";

@@ -1,3 +1,5 @@
+// components/admin/peserta/ToolbarPeserta.tsx
+
 "use client";
 
 type StatusFilter = "SEMUA" | "PENDING" | "VERIFIED" | "DITOLAK";

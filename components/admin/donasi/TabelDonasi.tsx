@@ -1,3 +1,5 @@
+// components/admin/donasi/TabelDonasi.tsx
+
 "use client";
 
 type StatusDonasi = "PENDING" | "VERIFIED" | "DITOLAK";

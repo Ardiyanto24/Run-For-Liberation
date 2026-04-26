@@ -1,3 +1,5 @@
+// components/public/pendaftaran/Step1Tipe.tsx
+
 "use client";
 
 import { TipePendaftaran } from "@/types";

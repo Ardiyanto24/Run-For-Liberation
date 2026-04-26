@@ -1,3 +1,5 @@
+// components/admin/dashboard/page.tsx
+
 "use client";
 
 import KpiCard from "@/components/admin/dashboard/KpiCard";

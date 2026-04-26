@@ -1,3 +1,5 @@
+// components/public/donasi/NominalSelector.tsx
+
 'use client';
 
 import FieldError from '@/components/public/pendaftaran/FieldError';

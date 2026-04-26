@@ -1,3 +1,5 @@
+// components/public/dashboard/DetailPendaftaran.tsx
+
 import type { PesertaLengkap } from "@/types";
 import {
   labelKategori,

@@ -1,3 +1,5 @@
+// components/public/pendaftaran/MetodePembayaranSelector.tsx
+
 "use client";
 
 import { MetodePembayaran } from "@/types";

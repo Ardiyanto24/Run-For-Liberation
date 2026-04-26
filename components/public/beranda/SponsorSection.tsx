@@ -1,3 +1,5 @@
+// components/public/beranda/SponsorSection.tsx
+
 import Image from "next/image";
 
 interface SponsorItem {

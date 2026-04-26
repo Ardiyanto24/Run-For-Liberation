@@ -1,4 +1,4 @@
-// app/(public)/pendaftaran/components/Step3DataDiri.tsx
+// components/pendaftaran/components/Step3DataDiri.tsx
 
 "use client";
 

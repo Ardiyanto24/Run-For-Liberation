@@ -1,3 +1,5 @@
+// components/public/beranda/HeroSection.tsx
+
 import Link from "next/link";
 import Image from "next/image";
 

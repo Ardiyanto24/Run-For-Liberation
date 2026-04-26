@@ -1,3 +1,5 @@
+// components/public/galeri/Lightbox.tsx
+
 'use client'
 
 import { useEffect, useCallback } from 'react'
