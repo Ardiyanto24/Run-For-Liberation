@@ -373,7 +373,7 @@ export default function Step3DataDiri({
   onAddAnggota,
   onRemoveAnggota,
 }: Step3DataDiriProps) {
-  const isKeluarga = tipe === "KELOMPOK";
+  const isKeluarga = tipe === "KELUARGA";
   const isGaza =
     kategori === "FUN_RUN_GAZA" || kategori === "FUN_WALK_GAZA";
 
