@@ -1,6 +1,7 @@
 // components/public/beranda/InstagramSection.tsx
 
-const igPosts = [
+// Sengaja dikomen sementara untuk menyembunyikan feed
+/* const igPosts = [
   { id: 1, emoji: "🏃", bg: "#EEF3FF" },
   { id: 2, emoji: "🇵🇸", bg: "#dce6ff" },
   { id: 3, emoji: "🥇", bg: "#d4edda" },
@@ -8,6 +9,7 @@ const igPosts = [
   { id: 5, emoji: "📍", bg: "#EEF3FF" },
   { id: 6, emoji: "💙", bg: "#c8d9ff" },
 ];
+*/
 
 export default function InstagramSection() {
   return (
@@ -23,17 +25,15 @@ export default function InstagramSection() {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes igGlow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(206,17,38,0.3); }
-          50% { box-shadow: 0 0 0 6px rgba(206,17,38,0); }
-        }
         .ig-inner { max-width: 1080px; margin: 0 auto; }
-        .ig-top {
-          display: flex; align-items: center; justify-content: space-between;
-          gap: 32px; flex-wrap: wrap; margin-bottom: 40px;
+        .ig-header-container {
+          text-align: center; /* Diubah ke tengah agar seimbang dengan card */
+          margin-bottom: 40px;
           animation: fadeUpIg 0.6s ease both;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
-        .ig-header { flex: 1; min-width: 240px; }
         .sec-label-ig {
           display: inline-block;
           font-family: 'Barlow Condensed', sans-serif;
@@ -46,94 +46,96 @@ export default function InstagramSection() {
           font-size: clamp(28px, 3.5vw, 44px);
           color: #0A1628; letter-spacing: 1px; margin-bottom: 6px;
         }
-        .ig-sub { font-size: 15px; color: #6B7A99; line-height: 1.6; }
-        .ig-profile {
-          display: flex; align-items: center; gap: 16px; background: #fff;
-          border: 1.5px solid rgba(26,84,200,0.13); border-radius: 14px;
-          padding: 16px 20px; box-shadow: 0 2px 16px rgba(10,22,40,0.07);
-          min-width: 240px; flex-shrink: 0;
+        .ig-sub { font-size: 15px; color: #6B7A99; line-height: 1.6; max-width: 600px; }
+        
+        /* Layout baru untuk Card Vertikal di Tengah */
+        .ig-cards-wrapper {
+          display: flex;
+          justify-content: center; /* Ini yang membuat card ke tengah */
+          gap: 24px;
+          flex-wrap: wrap;
+          animation: fadeUpIg 0.6s 0.15s ease both;
         }
-        .ig-avatar {
-          width: 52px; height: 52px; border-radius: 50%;
-          background: linear-gradient(135deg, #CE1126, #1A54C8, #007A3D);
+        .ig-card-vertical {
+          display: flex; flex-direction: column; align-items: center; text-align: center;
+          background: #fff; border: 1.5px solid rgba(26,84,200,0.13); border-radius: 16px;
+          padding: 32px 24px; width: 100%; max-width: 260px;
+          box-shadow: 0 4px 20px rgba(10,22,40,0.05); transition: transform 0.3s;
+        }
+        .ig-card-vertical:hover { 
+          transform: translateY(-5px); 
+          box-shadow: 0 8px 24px rgba(26,84,200,0.12); 
+        }
+        .ig-avatar-lg {
+          width: 90px; height: 90px; border-radius: 50%; margin-bottom: 16px;
+          background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
           display: flex; align-items: center; justify-content: center;
-          font-size: 24px; flex-shrink: 0;
-          animation: igGlow 3s ease-in-out infinite;
+          position: relative; overflow: hidden;
+          padding: 3px;
         }
-        .ig-profile-info { flex: 1; }
-        .ig-handle {
+        .ig-avatar-inner {
+          width: 100%; height: 100%; border-radius: 50%;
+          background: #fff; display: flex; align-items: center; justify-content: center;
+          overflow: hidden; border: 2px solid #fff;
+        }
+        .ig-avatar-inner img {
+          width: 100%; height: 100%; object-fit: cover;
+        }
+        .ig-avatar-placeholder { font-size: 32px; }
+        .ig-handle-vert {
           font-family: 'Barlow Condensed', sans-serif;
-          font-size: 16px; font-weight: 800; color: #0A1628;
-          display: block; margin-bottom: 2px;
+          font-size: 20px; font-weight: 800; color: #0A1628;
+          display: block; margin-bottom: 4px;
         }
-        .ig-verified { font-size: 12px; color: #6B7A99; }
+        .ig-name-vert { font-size: 13px; color: #6B7A99; margin-bottom: 24px; }
+        
         .btn-follow {
           display: inline-flex; align-items: center; gap: 6px;
           background: linear-gradient(135deg, #CE1126, #1A54C8);
-          color: #fff; padding: 10px 20px; border-radius: 8px;
-          font-size: 13px; font-weight: 700;
+          color: #fff; padding: 10px 24px; border-radius: 8px;
+          font-size: 14px; font-weight: 700;
           font-family: 'Barlow Condensed', sans-serif;
           letter-spacing: 1px; text-transform: uppercase;
           text-decoration: none; transition: all 0.25s; white-space: nowrap;
+          width: 100%; justify-content: center;
         }
         .btn-follow:hover {
           opacity: 0.88; transform: translateY(-2px);
           box-shadow: 0 8px 20px rgba(26,84,200,0.25);
         }
-        .btn-follow-lg { font-size: 14px; padding: 12px 28px; }
-        .ig-posts {
-          display: grid; grid-template-columns: repeat(6, 1fr);
-          gap: 10px; animation: fadeUpIg 0.6s 0.15s ease both;
-        }
-        .ig-post {
-          aspect-ratio: 1; border-radius: 10px; overflow: hidden;
-          cursor: pointer; position: relative;
-          transition: transform 0.3s, box-shadow 0.3s;
-          box-shadow: 0 2px 10px rgba(10,22,40,0.06);
-        }
-        .ig-post:hover { transform: scale(1.05); box-shadow: 0 8px 24px rgba(26,84,200,0.18); z-index: 2; }
-        .ig-post-inner {
-          width: 100%; height: 100%;
-          display: flex; align-items: center; justify-content: center; font-size: 32px;
-        }
-        .ig-post-overlay {
-          position: absolute; inset: 0; background: rgba(14,45,122,0.45);
-          display: flex; align-items: center; justify-content: center;
-          opacity: 0; transition: opacity 0.25s; font-size: 20px;
-        }
-        .ig-post:hover .ig-post-overlay { opacity: 1; }
-        .ig-cta { text-align: center; margin-top: 28px; animation: fadeUpIg 0.6s 0.25s ease both; }
-        .ig-note { font-size: 12px; color: #6B7A99; margin-top: 10px; }
+        
         @media (max-width: 768px) {
-          .ig-posts { grid-template-columns: repeat(3, 1fr); }
-          .ig-top { flex-direction: column; align-items: flex-start; }
-          .ig-profile { width: 100%; }
-        }
-        @media (max-width: 480px) {
-          .ig-posts { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+          .ig-cards-wrapper { justify-content: center; }
         }
       ` }} />
 
       <div className="ig-inner">
-        <div className="ig-top">
-          <div className="ig-header">
-            <span className="sec-label-ig">Media Sosial</span>
-            <h2 className="ig-title">Ikuti Kami di Instagram</h2>
-            <p className="ig-sub">
-              Update terbaru, behind the scene, dan momen seru setiap harinya.
-            </p>
-          </div>
+        
+        {/* Header yang diratakan ke tengah */}
+        <div className="ig-header-container">
+          <span className="sec-label-ig">Media Sosial</span>
+          <h2 className="ig-title">Ikuti Kami di Instagram</h2>
+          <p className="ig-sub">
+            Update terbaru, behind the scene, dan momen seru setiap harinya.
+          </p>
+        </div>
 
-          <div className="ig-profile">
-            <div className="ig-avatar">🏃</div>
-            <div className="ig-profile-info">
-              {/* TODO: ganti handle Instagram dari panitia */}
-              <span className="ig-handle">@[handle TBD]</span>
-              <span className="ig-verified">Run For Liberation 2026</span>
+        {/* Container untuk Card Follower */}
+        <div className="ig-cards-wrapper">
+          
+          {/* Card 1: @baikberisiksolo */}
+          <div className="ig-card-vertical">
+            <div className="ig-avatar-lg">
+              <div className="ig-avatar-inner">
+                <img src="/images/instagram/baikberisiksolo.jpg" alt="Baik Berisik Solo" /> 
+              </div>
             </div>
-            {/* TODO: ganti dengan URL Instagram resmi dari panitia */}
+            <div className="ig-profile-info">
+              <span className="ig-handle-vert">@baikberisiksolo</span>
+              <div className="ig-name-vert">Baik Berisik Solo</div>
+            </div>
             <a
-              href="#"
+              href="https://www.instagram.com/baikberisiksolo/"
               className="btn-follow"
               target="_blank"
               rel="noopener noreferrer"
@@ -141,37 +143,30 @@ export default function InstagramSection() {
               Follow
             </a>
           </div>
-        </div>
 
-        <div className="ig-posts">
-          {igPosts.map((post) => (
-            <div key={post.id} className="ig-post">
-              <div
-                className="ig-post-inner"
-                style={{ backgroundColor: post.bg }}
-              >
-                {post.emoji}
+          {/* Card 2: @ngejarpahala */}
+          <div className="ig-card-vertical">
+            <div className="ig-avatar-lg">
+              <div className="ig-avatar-inner">
+                <img src="/images/instagram/ngejarpahala.jpg" alt="Ngejar Pahala" /> 
               </div>
-              <div className="ig-post-overlay">📸</div>
             </div>
-          ))}
+            <div className="ig-profile-info">
+              <span className="ig-handle-vert">@ngejarpahala</span>
+              <div className="ig-name-vert">Ngejar Pahala</div>
+            </div>
+            <a
+              href="https://www.instagram.com/ngejarpahala/"
+              className="btn-follow"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Follow
+            </a>
+          </div>
+
         </div>
 
-        <div className="ig-cta">
-          {/* TODO: ganti dengan URL Instagram resmi dari panitia */}
-          <a
-            href="#"
-            className="btn-follow btn-follow-lg"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            📸 Lihat Feed Instagram Kami
-          </a>
-          <p className="ig-note">
-            {/* TODO: ganti handle Instagram dari panitia */}
-            Handle Instagram akan diumumkan segera oleh panitia.
-          </p>
-        </div>
       </div>
     </section>
   );

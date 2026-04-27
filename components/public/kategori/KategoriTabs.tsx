@@ -1,136 +1,195 @@
-// components/public/kategori/KategoriTabs.tsx
-
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback } from 'react'
+import Image from 'next/image'
+import { useState } from 'react'
 
-const TABS = [
-  { slug: 'syarat', label: 'Syarat & Ketentuan' },
-  { slug: 'rute', label: 'Rute Lari' },
-  { slug: 'panduan', label: 'Panduan Event' },
+const RACEPACK_ITEMS = [
+  { id: 'jersey', label: 'Jersey Official', icon: '👕' },
+  { id: 'bib', label: 'Nomor BIB', icon: '🆔' },
+  { id: 'ganci', label: 'Gantungan Kunci', icon: '🔑' },
+  { id: 'pin', label: 'Pin Event', icon: '📍' },
 ] as const
 
-type TabSlug = (typeof TABS)[number]['slug']
+type RacepackId = (typeof RACEPACK_ITEMS)[number]['id']
 
-export default function KategoriTabs() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const activeTab = (searchParams.get('tab') as TabSlug) ?? 'syarat'
+export default function RacePackSection() {
+  const [activeItem, setActiveItem] = useState<RacepackId>('jersey')
 
-  const handleTabClick = useCallback(
-    (slug: TabSlug) => {
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('tab', slug)
-      router.push(`?${params.toString()}`, { scroll: false })
-    },
-    [router, searchParams]
-  )
+  const renderPreview = () => {
+    if (activeItem === 'jersey') {
+      return (
+        <div 
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '32px',
+            alignItems: 'center'
+          }}
+        >
+          {/* Lengan Pendek */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+              position: 'relative', 
+              width: '100%', 
+              aspectRatio: '1/1',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              background: '#f1f5f9', // slate-100
+              marginBottom: '16px'
+            }}>
+              <Image
+                src="/images/racepack/jersey-pendek.png"
+                alt="Jersey Lengan Pendek Run For Liberation"
+                fill
+                style={{ objectFit: 'contain', padding: '24px' }}
+                priority
+              />
+            </div>
+            <h4 style={{ fontSize: '16px', color: 'var(--gray, #64748b)', fontWeight: 700 }}>
+              Jersey Lengan Pendek
+            </h4>
+          </div>
 
-  return (
-    <div
-      style={{
-        background: '#fff',
-        border: '1.5px solid var(--border)',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-card)',
-      }}
-    >
-      {/* Tab Navigation */}
+          {/* Lengan Panjang */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+              position: 'relative', 
+              width: '100%', 
+              aspectRatio: '1/1',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              background: '#f1f5f9',
+              marginBottom: '16px'
+            }}>
+              <Image
+                src="/images/racepack/jersey-panjang.png"
+                alt="Jersey Lengan Panjang Run For Liberation"
+                fill
+                style={{ objectFit: 'contain', padding: '24px' }}
+                priority
+              />
+            </div>
+            <h4 style={{ fontSize: '16px', color: 'var(--gray, #64748b)', fontWeight: 700 }}>
+              Jersey Lengan Panjang
+            </h4>
+          </div>
+        </div>
+      )
+    }
+
+    // Tampilan "Menyusul" untuk BIB, Ganci, dan Pin
+    return (
       <div
         style={{
+          width: '100%',
+          minHeight: '350px',
+          background: '#f8fafc',
+          border: '2px dashed var(--blue-light, #bfdbfe)',
+          borderRadius: '16px',
           display: 'flex',
-          borderBottom: '1.5px solid var(--border)',
-          background: 'var(--blue-xlight)',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '16px',
         }}
       >
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.slug
-          return (
-            <button
-              key={tab.slug}
-              onClick={() => handleTabClick(tab.slug)}
-              style={{
-                flex: 1,
-                padding: '14px 20px',
-                fontSize: '13px',
-                fontWeight: isActive ? 700 : 500,
-                color: isActive ? 'var(--blue)' : 'var(--gray)',
-                background: isActive ? '#fff' : 'transparent',
-                border: 'none',
-                borderBottom: isActive ? '2.5px solid var(--blue)' : '2.5px solid transparent',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                letterSpacing: '0.3px',
-              }}
-            >
-              {tab.label}
-            </button>
-          )
-        })}
+        <div style={{ fontSize: '56px', filter: 'grayscale(100%)', opacity: 0.4 }}>
+          {RACEPACK_ITEMS.find(i => i.id === activeItem)?.icon}
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '18px', color: 'var(--blue, #2563eb)', fontWeight: 700, marginBottom: '8px' }}>
+            Desain Akan Menyusul
+          </p>
+          <p style={{ fontSize: '14px', color: 'var(--gray, #64748b)', opacity: 0.8, maxWidth: '320px', margin: '0 auto' }}>
+            Panitia sedang menyiapkan desain final untuk {RACEPACK_ITEMS.find(i => i.id === activeItem)?.label}.
+          </p>
+        </div>
       </div>
+    )
+  }
 
-      {/* Tab Content */}
-      <div style={{ padding: '36px' }}>
-        {activeTab === 'syarat' && (
-          <div>
-            {/* TODO: isi konten S&K dari panitia */}
-            <div style={{ textAlign: 'center', padding: '40px 0' }}>
-              <div style={{ fontSize: '40px', marginBottom: '16px' }}>📋</div>
-              <p style={{ fontSize: '16px', color: 'var(--gray)', lineHeight: '1.75' }}>
-                Syarat & Ketentuan akan segera diumumkan.
-              </p>
-              <p style={{ fontSize: '13px', color: 'var(--gray)', opacity: 0.6, marginTop: '8px' }}>
-                Pantau terus update dari panitia.
-              </p>
-            </div>
-          </div>
-        )}
+  return (
+    <section
+      style={{
+        width: '100%',
+        padding: '64px 24px',
+        background: '#f8fafc', // Warna background section
+        borderTop: '1px solid var(--border, #e2e8f0)',
+        borderBottom: '1px solid var(--border, #e2e8f0)',
+        marginTop: '48px'
+      }}
+    >
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        {/* Header Section */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--blue, #2563eb)', marginBottom: '12px' }}>
+            Race Pack Run For Liberation 2026
+          </h2>
+          <p style={{ fontSize: '15px', color: 'var(--gray, #64748b)', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
+            Setiap pendaftar akan mendapatkan paket eksklusif untuk mendukung performa dan sebagai kenang-kenangan event ini. Klik item di bawah untuk melihat detail desain.
+          </p>
+        </div>
 
-        {activeTab === 'rute' && (
-          <div>
-            {/* TODO: isi ilustrasi atau peta rute dari panitia */}
-            <div
-              style={{
-                width: '100%',
-                minHeight: '320px',
-                background: 'var(--blue-xlight)',
-                border: '2px dashed var(--blue-light)',
-                borderRadius: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-              }}
-            >
-              <div style={{ fontSize: '48px' }}>🗺️</div>
-              <p style={{ fontSize: '16px', color: 'var(--gray)', fontWeight: 600 }}>
-                Rute lari akan segera diumumkan.
-              </p>
-              <p style={{ fontSize: '13px', color: 'var(--gray)', opacity: 0.6 }}>
-                Peta & ilustrasi rute akan tampil di sini.
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Menu Navigasi Racepack */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: '16px',
+            marginBottom: '40px',
+          }}
+        >
+          {RACEPACK_ITEMS.map((item) => {
+            const isActive = activeItem === item.id
+            return (
+              <div
+                key={item.id}
+                onClick={() => setActiveItem(item.id)}
+                style={{
+                  padding: '20px 16px',
+                  // Perubahan Utama: Background menjadi biru jika aktif, putih jika tidak
+                  background: isActive ? 'var(--blue, #2563eb)' : '#fff',
+                  border: isActive ? '1.5px solid var(--blue, #2563eb)' : '1.5px solid var(--border, #e2e8f0)',
+                  borderRadius: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '12px',
+                  // Perubahan Utama: Memberikan efek bayangan biru jika aktif
+                  boxShadow: isActive ? '0 8px 16px rgba(37, 99, 235, 0.25)' : 'var(--shadow-card, 0 4px 6px -1px rgba(0, 0, 0, 0.1))',
+                  transform: isActive ? 'translateY(-4px)' : 'none'
+                }}
+              >
+                <span style={{ fontSize: '28px' }}>{item.icon}</span>
+                <span style={{ 
+                  fontSize: '14px', 
+                  fontWeight: isActive ? 700 : 600,
+                  // Perubahan Utama: Teks menjadi putih jika aktif agar kontras dengan background biru
+                  color: isActive ? '#ffffff' : 'var(--gray, #64748b)' 
+                }}>
+                  {item.label}
+                </span>
+              </div>
+            )
+          })}
+        </div>
 
-        {activeTab === 'panduan' && (
-          <div>
-            {/* TODO: isi panduan event dari panitia */}
-            <div style={{ textAlign: 'center', padding: '40px 0' }}>
-              <div style={{ fontSize: '40px', marginBottom: '16px' }}>📖</div>
-              <p style={{ fontSize: '16px', color: 'var(--gray)', lineHeight: '1.75' }}>
-                Panduan event akan segera diumumkan.
-              </p>
-              <p style={{ fontSize: '13px', color: 'var(--gray)', opacity: 0.6, marginTop: '8px' }}>
-                Informasi teknis hari H akan tersedia di sini.
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Area Display Konten */}
+        <div 
+          style={{ 
+            background: '#fff', 
+            borderRadius: '24px', 
+            padding: '40px',
+            boxShadow: 'var(--shadow-card, 0 4px 6px -1px rgba(0, 0, 0, 0.1))',
+            border: '1px solid var(--border, #e2e8f0)'
+          }}
+        >
+          {renderPreview()}
+        </div>
       </div>
-    </div>
+    </section>
   )
 }

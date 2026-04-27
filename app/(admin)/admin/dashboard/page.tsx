@@ -1,13 +1,13 @@
 // app/(admin)/admin/dashboard/page.tsx
+// Server Component — tidak ada "use client"
 
-"use client";
-
+import prisma from "@/lib/prisma";
 import KpiCard from "@/components/admin/dashboard/KpiCard";
 import DistribusiChart from "@/components/admin/dashboard/DistribusiChart";
 import AktivitasTerbaru from "@/components/admin/dashboard/AktivitasTerbaru";
-import { kpiDashboard, dummyPeserta } from "@/lib/placeholder-data";
 
-// Icon components untuk KPI cards
+// ── Icon components ──────────────────────────────────────────────────────────
+
 const IconPeserta = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round"
@@ -40,7 +40,120 @@ const IconDana = () => (
   </svg>
 );
 
-export default function DashboardPage() {
+// ── Data fetching ─────────────────────────────────────────────────────────────
+
+async function getDashboardData() {
+  // Jalankan semua query secara paralel
+  const [
+    totalPeserta,
+    pesertaPending,
+    pesertaVerified,
+    pesertaDitolak,
+    sumDonasi,
+    sumPendaftaran,
+    pendaftaranTerbaru,
+    donasiTerbaru,
+    semuaPeserta,
+  ] = await Promise.all([
+    // KPI counts
+    prisma.peserta.count(),
+    prisma.peserta.count({ where: { status: "PENDING" } }),
+    prisma.peserta.count({ where: { status: "VERIFIED" } }),
+    prisma.peserta.count({ where: { status: "DITOLAK" } }),
+
+    // Total donasi VERIFIED
+    prisma.donasi.aggregate({
+      where: { status: "VERIFIED" },
+      _sum: { nominal: true },
+    }),
+
+    // Total biaya pendaftaran dari peserta VERIFIED
+    prisma.pembayaran.aggregate({
+      where: { peserta: { status: "VERIFIED" } },
+      _sum: { biayaPendaftaran: true },
+    }),
+
+    // 8 pendaftaran terbaru
+    prisma.peserta.findMany({
+      take: 8,
+      orderBy: { createdAt: "desc" },
+      select: {
+        namaLengkap: true,
+        status: true,
+        createdAt: true,
+        pembayaran: { select: { totalPembayaran: true } },
+      },
+    }),
+
+    // 8 donasi terbaru
+    prisma.donasi.findMany({
+      take: 8,
+      orderBy: { createdAt: "desc" },
+      select: {
+        namaDonatur: true,
+        sembunyikanNama: true,
+        nominal: true,
+        status: true,
+        createdAt: true,
+      },
+    }),
+
+    // Semua peserta untuk chart distribusi (hanya field kategori dan tipe)
+    prisma.peserta.findMany({
+      select: { kategori: true, tipe: true },
+    }),
+  ]);
+
+  const totalDanaTerkumpul =
+    (sumDonasi._sum.nominal ?? 0) + (sumPendaftaran._sum.biayaPendaftaran ?? 0);
+
+  // Gabungkan dan urutkan aktivitas terbaru (pendaftaran + donasi)
+  type AktivitasItem = {
+    nama: string;
+    jenis: "Pendaftaran" | "Donasi";
+    nominal: number;
+    waktu: Date;
+    status: "PENDING" | "VERIFIED" | "DITOLAK";
+  };
+
+  const aktivitasPendaftaran: AktivitasItem[] = pendaftaranTerbaru.map((p) => ({
+    nama: p.namaLengkap,
+    jenis: "Pendaftaran",
+    nominal: p.pembayaran?.totalPembayaran ?? 0,
+    waktu: p.createdAt,
+    status: p.status as "PENDING" | "VERIFIED" | "DITOLAK",
+  }));
+
+  const aktivitasDonasi: AktivitasItem[] = donasiTerbaru.map((d) => ({
+    nama: d.sembunyikanNama ? "Hamba Allah" : (d.namaDonatur ?? "Anonim"),
+    jenis: "Donasi",
+    nominal: d.nominal,
+    waktu: d.createdAt,
+    status: d.status as "PENDING" | "VERIFIED" | "DITOLAK",
+  }));
+
+  const aktivitasTerbaru = [...aktivitasPendaftaran, ...aktivitasDonasi]
+    .sort((a, b) => b.waktu.getTime() - a.waktu.getTime())
+    .slice(0, 8);
+
+  return {
+    totalPeserta,
+    pesertaPending,
+    pesertaVerified,
+    pesertaDitolak,
+    totalDanaTerkumpul,
+    aktivitasTerbaru,
+    semuaPeserta,
+  };
+}
+
+// ── Page component ────────────────────────────────────────────────────────────
+
+export const metadata = { title: "Dashboard Admin" };
+
+export default async function DashboardPage() {
+  const data = await getDashboardData();
+
   return (
     <div className="space-y-6">
 
@@ -60,32 +173,32 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* ── KPI Cards — grid 4 kolom desktop, 2 tablet, 1 mobile ── */}
+      {/* ── KPI Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard
           title="Total Peserta"
-          rawValue={kpiDashboard.totalPeserta}
+          rawValue={data.totalPeserta}
           suffix=" orang"
           accentColor="blue"
           icon={<IconPeserta />}
         />
         <KpiCard
           title="Menunggu Verifikasi"
-          rawValue={kpiDashboard.pesertaPending}
+          rawValue={data.pesertaPending}
           suffix=" pending"
           accentColor="yellow"
           icon={<IconPending />}
         />
         <KpiCard
           title="Terverifikasi"
-          rawValue={kpiDashboard.pesertaVerified}
+          rawValue={data.pesertaVerified}
           suffix=" orang"
           accentColor="green"
           icon={<IconVerified />}
         />
         <KpiCard
           title="Dana Terkumpul"
-          rawValue={kpiDashboard.totalDanaTerkumpul}
+          rawValue={data.totalDanaTerkumpul}
           prefix="Rp "
           accentColor="red"
           isCurrency={true}
@@ -94,10 +207,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Chart Distribusi ── */}
-      <DistribusiChart peserta={dummyPeserta} />
+      <DistribusiChart peserta={data.semuaPeserta} />
 
       {/* ── Aktivitas Terbaru ── */}
-      <AktivitasTerbaru data={kpiDashboard.aktivitasTerbaru} />
+      <AktivitasTerbaru data={data.aktivitasTerbaru} />
 
     </div>
   );

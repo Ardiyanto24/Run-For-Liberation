@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { generateMagicLinkToken } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limiter";
+import { sendMagicLinkEmail } from "@/lib/emails";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -111,14 +112,30 @@ export async function requestMagicLink(
   });
 
   // ── 6. Send magic link email ──────────────────────────────────────────────
-  // TODO (DEV-12): Replace this block with sendMagicLinkEmail() from lib/email.ts
-  // once the email system is implemented. The magic link URL format is:
-  // `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/magic-link?token=${token}`
-  const magicLinkUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/magic-link?token=${token}`;
-  console.log(
-    `[DEV] Magic link for ${email}: ${magicLinkUrl}`
+  // Magic link adalah satu-satunya email yang menyebabkan action gagal jika
+  // pengiriman email error — sesuai 09-email-system.md Section 5.
+  const pesertaData = await prisma.peserta.findFirst({
+    where: { id: peserta.id },
+    select: { namaLengkap: true },
+  });
+
+  const magicLinkUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://runforliberation.com"}/api/auth/magic-link?token=${token}`;
+
+  const emailResult = await sendMagicLinkEmail(
+    {
+      namaLengkap: pesertaData?.namaLengkap ?? email,
+      email,
+    },
+    magicLinkUrl
   );
-  // END TODO (DEV-12)
+
+  if (!emailResult.success) {
+    console.error("[requestMagicLink] Gagal kirim email:", emailResult.error);
+    return {
+      success: false,
+      message: "Gagal mengirim email. Silakan coba lagi.",
+    };
+  }
 
   // ── 7. Always return the same generic response ────────────────────────────
   return GENERIC_RESPONSE;

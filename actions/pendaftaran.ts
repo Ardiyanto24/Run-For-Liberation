@@ -7,6 +7,7 @@ import { uploadBuktiBayar } from "@/lib/supabase";
 import { pendaftaranSchema } from "@/lib/validation";
 import { hitungHargaPendaftaran } from "@/lib/utils";
 import type { KategoriLomba, UkuranLengan } from "@/types";
+import { sendKonfirmasiPendaftaran } from "@/lib/emails";
 
 // ============================================================
 // TYPES
@@ -210,19 +211,28 @@ export async function submitPendaftaran(
     });
 
     // ── 7. Kirim Email Konfirmasi ───────────────────────────
-    // TODO: Aktifkan setelah DEV-12 selesai
-    // try {
-    //   await kirimEmailKonfirmasiPendaftaran({
-    //     to:          data.email,
-    //     namaLengkap: data.namaLengkap,
-    //     kategori:    data.kategori,
-    //     ukuranLengan: data.ukuranLengan,
-    //     pesertaId,
-    //   });
-    // } catch (emailErr) {
-    //   console.error("[submitPendaftaran] Gagal kirim email:", emailErr);
-    //   // Email gagal tidak menggagalkan proses pendaftaran
-    // }
+    // Jika email gagal: log dan lanjutkan — pendaftaran tetap tersimpan.
+    const emailResult = await sendKonfirmasiPendaftaran({
+      peserta: {
+        namaLengkap:  data.namaLengkap,
+        email:        data.email,
+        kategori:     data.kategori,
+        tipe:         data.tipe,
+      },
+      pembayaran: {
+        totalPembayaran,
+        metodePembayaran: data.metodePembayaran,
+      },
+      jumlahPeserta,
+    });
+
+    if (!emailResult.success) {
+      console.error(
+        "[submitPendaftaran] Gagal kirim email konfirmasi:",
+        emailResult.error
+      );
+      // Email gagal tidak menggagalkan proses pendaftaran
+    }
 
     return { success: true, pesertaId };
 

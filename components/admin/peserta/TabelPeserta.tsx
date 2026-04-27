@@ -227,7 +227,7 @@ export default function TabelPeserta({
                       className="text-sm font-semibold text-[#0A1628] whitespace-nowrap"
                       style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                     >
-                      {formatRupiah(p.pembayaran.totalPembayaran)}
+                      {p.pembayaran ? formatRupiah(p.pembayaran.totalPembayaran) : "-"}
                     </span>
                   </td>
 

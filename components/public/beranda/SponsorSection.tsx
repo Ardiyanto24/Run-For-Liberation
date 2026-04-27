@@ -5,7 +5,7 @@ import Image from "next/image";
 interface SponsorItem {
   id: string;
   nama: string;
-  logoFile: string; // TODO: ganti dengan file logo dari panitia
+  logoFile: string;
 }
 
 interface SponsorGroup {
@@ -14,16 +14,14 @@ interface SponsorGroup {
   items: SponsorItem[];
 }
 
+// Data tetap utuh, tidak perlu di-comment
 const sponsorGroups: SponsorGroup[] = [
   {
     label: "Diselenggarakan Oleh",
     labelColor: "#1A54C8",
     items: [
-      // 1. SMART171 di urutan pertama (Kiri)
       { id: "smart171", nama: "SMART171", logoFile: "smart171.png" },
-      // 2. Baik Berisik di urutan kedua (Tengah)
       { id: "baik-berisik", nama: "Baik Berisik", logoFile: "baik-berisik.png" },
-      // 3. Masjid Runners (Ngejar Pahala) di urutan ketiga (Kanan)
       { id: "masjid-runners", nama: "Masjid Runners", logoFile: "ngejar-pahala.png" },
     ],
   },
@@ -45,6 +43,9 @@ const sponsorGroups: SponsorGroup[] = [
 ];
 
 export default function SponsorSection() {
+  // TOGGLE DI SINI: Ubah ke `true` jika ingin menampilkan semua sponsor dan dukungan
+  const SHOW_SPONSORS = false;
+
   return (
     <>
       <style>{`
@@ -163,50 +164,54 @@ export default function SponsorSection() {
         }
       `}</style>
 
-              <section className="sp-sec">
+      <section className="sp-sec">
         <div className="sp-inner">
-          <span className="sec-label-sp">Didukung Oleh</span>
+          <span className="sec-label-sp">Kolaborasi</span>
           <h2 className="sp-title">Sponsor & Partners</h2>
 
           <div className="sp-groups">
-            {sponsorGroups.map((group, gi) => (
-              <div key={group.label}>
-                <div
-                  className="sp-group"
-                  style={{ animationDelay: `${gi * 0.12}s` }}
-                >
-                  <p
-                    className="sp-group-label"
-                    style={{ color: group.labelColor }}
+            {sponsorGroups
+              // LOGIKA CONDITIONAL RENDERING ADA DI SINI
+              .filter((group) => SHOW_SPONSORS ? true : group.label === "Diselenggarakan Oleh")
+              // Perhatikan parameter ke-3 (filteredArray) agar sp-divider tetap akurat
+              .map((group, gi, filteredArray) => (
+                <div key={group.label}>
+                  <div
+                    className="sp-group"
+                    style={{ animationDelay: `${gi * 0.12}s` }}
                   >
-                    {group.label}
-                  </p>
+                    <p
+                      className="sp-group-label"
+                      style={{ color: group.labelColor }}
+                    >
+                      {group.label}
+                    </p>
 
-                  <div className="sp-row">
-                    {group.items.map((item, ii) => (
-                      <div
-                        key={item.id}
-                        className="sp-card"
-                        style={{ animationDelay: `${gi * 0.5 + ii * 0.5}s` }}
-                      >
-                        <Image
-                          /* PERUBAHAN ADA DI BARIS BAWAH INI */
-                          src={`/images/logos/${item.logoFile}`}
-                          alt={item.nama}
-                          width={180}
-                          height={75}
-                          style={{ objectFit: "contain" }}
-                        />
-                      </div>
-                    ))}
+                    <div className="sp-row">
+                      {group.items.map((item, ii) => (
+                        <div
+                          key={item.id}
+                          className="sp-card"
+                          style={{ animationDelay: `${gi * 0.5 + ii * 0.5}s` }}
+                        >
+                          <Image
+                            src={`/images/logos/${item.logoFile}`}
+                            alt={item.nama}
+                            width={180}
+                            height={75}
+                            style={{ objectFit: "contain" }}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {gi < sponsorGroups.length - 1 && (
-                  <div className="sp-divider" style={{ marginTop: "40px" }} />
-                )}
-              </div>
-            ))}
+                  {/* Garis pembatas hanya muncul jika bukan elemen terakhir di array yang sudah difilter */}
+                  {gi < filteredArray.length - 1 && (
+                    <div className="sp-divider" style={{ marginTop: "40px" }} />
+                  )}
+                </div>
+              ))}
           </div>
         </div>
       </section>

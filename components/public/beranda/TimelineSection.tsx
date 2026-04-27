@@ -1,6 +1,19 @@
 // components/public/beranda/TimelineSection.tsx
 
-import { timelineDummy, type TimelineMilestone } from "@/lib/placeholder-data";
+export type TimelineMilestone = {
+  tanggal: string;
+  label: string;
+  status: "done" | "now" | "upcoming" | "race-day";
+};
+
+// Data timeline dengan 'Pendaftaran' sebagai fase saat ini (now)
+const timelineData: TimelineMilestone[] = [
+  { tanggal: "28 Apr - 15 Mei", label: "Pendaftaran", status: "now" },
+  { tanggal: "7 - 22 Mei", label: "Virtual Run", status: "upcoming" },
+  { tanggal: "8 Mei", label: "Refleksi Kepalestinaan", status: "upcoming" },
+  { tanggal: "23 Mei", label: "Pengambilan Race Pack", status: "upcoming" },
+  { tanggal: "24 Mei", label: "Race Day", status: "race-day" },
+];
 
 function DotIndicator({ status }: { status: TimelineMilestone["status"] }) {
   if (status === "done") {
@@ -92,14 +105,14 @@ export default function TimelineSection() {
           z-index: 0;
         }
 
-        /* Animated fill showing progress */
+        /* Animated fill showing progress - Diubah ke 15% untuk titik Pendaftaran */
         .tl-fill {
           height: 100%;
-          width: 35%;
+          width: 15%;
           background: linear-gradient(90deg, #1A54C8, #CE1126);
           border-radius: 2px;
           animation: progressBar 1.5s ease forwards;
-          --pct: 35%;
+          --pct: 15%;
         }
 
         .tl-items {
@@ -253,7 +266,7 @@ export default function TimelineSection() {
             </div>
 
             <div className="tl-items">
-              {timelineDummy.map((milestone) => {
+              {timelineData.map((milestone) => {
                 const isRace = milestone.status === "race-day";
                 return (
                   <div key={milestone.label} className="tl-item">

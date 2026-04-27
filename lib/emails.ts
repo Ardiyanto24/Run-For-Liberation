@@ -3,6 +3,7 @@
 // (Server Actions atau Route Handlers). Jangan import dari Client Components.
 
 import { Resend } from "resend";
+import { generateEticketImage } from "@/lib/eticket-image";
 
 // ── Resend Client ─────────────────────────────────────────────────────────────
 // Inisialisasi tidak throw meski RESEND_API_KEY belum diset —
@@ -273,7 +274,11 @@ export async function sendKonfirmasiPendaftaran(data: {
   const { peserta, pembayaran, jumlahPeserta } = data;
 
   const kategoriLabel =
-    peserta.kategori === "FUN_RUN" ? "Fun Run 5K" : "Fun Walk 5K";
+    peserta.kategori === "FUN_RUN" ? "Fun Run 5K" :
+    peserta.kategori === "FUN_WALK" ? "Fun Walk 5K" :
+    peserta.kategori === "FUN_RUN_GAZA" ? "Fun Run 5K – Paket Gaza" :
+    peserta.kategori === "FUN_WALK_GAZA" ? "Fun Walk 5K – Paket Gaza" :
+    peserta.kategori;
   const tipeLabel =
     peserta.tipe === "INDIVIDU" ? "Individu" : "Kelompok";
   const metodeLabel = pembayaran.metodePembayaran.replace(/_/g, " ");
@@ -576,8 +581,9 @@ export async function sendNotifikasiVerifikasi(data: {
   const attachments = pdfBuffer
     ? [
         {
-          filename: "e-ticket-run-for-liberation-2026.pdf",
+          filename: "e-ticket-run-for-liberation-2026.png",
           content: pdfBuffer,
+          contentType: "image/png",
         },
       ]
     : [];
@@ -909,4 +915,34 @@ export async function sendEmailBlast(
   }
 
   return { success: true, terkirim, gagal };
+}
+
+// ── 4.2 generateEticketPdf ────────────────────────────────────────────────────
+// Generate PDF e-ticket sebagai Buffer. Return null jika gagal — tidak pernah throw.
+
+export async function generateEticketPdf(data: {
+  peserta: {
+    namaLengkap: string;
+    nomorBib: string;
+    kategori: string;
+    tipe: string;
+    totalBayar?: number;
+    metodePembayaran?: string;
+    tanggalDaftar?: string;
+  };
+  anggota?: { namaLengkap: string }[];
+  qrToken: string;
+}): Promise<Buffer | null> {
+  try {
+     const qrPng = await generateQrCodePng(data.qrToken);
+     const qrCodeBase64 = qrPng.toString("base64");
+     return await generateEticketImage({
+       peserta: data.peserta,
+       anggota: data.anggota,
+       qrCodeBase64,
+     });
+   } catch (error) {
+     console.error("[generateEticketPdf] Error:", error);
+     return null;
+   }
 }

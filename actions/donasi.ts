@@ -5,6 +5,7 @@
 import prisma from "@/lib/prisma";
 import { uploadBuktiBayar } from "@/lib/supabase";
 import { donasiSchema } from "@/lib/validation";
+import { sendKonfirmasiDonasi } from "@/lib/emails";
 
 // ============================================================
 // TYPES
@@ -96,20 +97,25 @@ export async function submitDonasi(
     });
 
     // ── 5. Kirim Email Konfirmasi ───────────────────────────
-    // TODO: Aktifkan setelah DEV-12 selesai
-    // if (data.emailDonatur) {
-    //   try {
-    //     await kirimEmailKonfirmasiDonasi({
-    //       to:          data.emailDonatur,
-    //       namaDonatur: data.sembunyikanNama ? "Hamba Allah" : (data.namaDonatur ?? "Donatur"),
-    //       nominal:     data.nominal,
-    //       donasiId,
-    //     });
-    //   } catch (emailErr) {
-    //     console.error("[submitDonasi] Gagal kirim email konfirmasi:", emailErr);
-    //     // Email gagal tidak menggagalkan proses donasi
-    //   }
-    // }
+    // Hanya kirim jika emailDonatur diisi. Jika gagal: log dan lanjutkan.
+    if (data.emailDonatur) {
+      const emailResult = await sendKonfirmasiDonasi({
+        namaDonatur:      data.sembunyikanNama ? null : (data.namaDonatur ?? null),
+        sembunyikanNama:  data.sembunyikanNama,
+        emailDonatur:     data.emailDonatur,
+        nominal:          data.nominal,
+        metodePembayaran: data.metodePembayaran,
+        pesan:            data.pesan ?? null,
+      });
+
+      if (!emailResult.success) {
+        console.error(
+          "[submitDonasi] Gagal kirim email konfirmasi donasi:",
+          emailResult.error
+        );
+        // Email gagal tidak menggagalkan proses donasi
+      }
+    }
 
     return { success: true };
 

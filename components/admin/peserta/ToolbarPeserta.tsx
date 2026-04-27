@@ -95,9 +95,10 @@ export default function ToolbarPeserta({
         <div className="flex items-center gap-2">
           {/* Export CSV — TODO DEV-11 */}
           <button
-            disabled
-            title="Export akan tersedia di DEV-11"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[rgba(26,84,200,0.2)] text-xs font-semibold text-[#6B7A99] opacity-50 cursor-not-allowed"
+            onClick={() => {
+              window.open(`/api/admin/export/peserta${window.location.search}`, "_blank");
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[rgba(26,84,200,0.3)] text-xs font-semibold text-[#1A54C8] hover:bg-[#EEF3FF] transition-colors"
             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

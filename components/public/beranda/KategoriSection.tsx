@@ -7,8 +7,7 @@ interface KategoriItem {
   nama: string;
   tagline: string;
   harga: string;
-  ikon: string;
-  bannerClass: string;
+  gambar: string; 
   slotLabel: string;
   slotClass: string;
   benefits: string[];
@@ -21,15 +20,13 @@ const kategoriList: KategoriItem[] = [
     nama: "Fun Run - Gaza",
     tagline: "Lari 5K dengan semangat solidaritas untuk Gaza",
     harga: "Rp 120.000",
-    ikon: "🏃",
-    bannerClass: "cb-tanpa", // Biru
+    gambar: "/images/kategori/funrun.png",
     slotLabel: "🔥 Slot Terbatas",
     slotClass: "slot-low",
     benefits: [
-      "Race Pack Lengkap (Jersey + Medali)",
-      "E-Certificate",
-      "Akses Rute Lari",
-      "Donasi Solidaritas Gaza",
+      "Race Pack Lengkap",
+      "Refreshment",
+      "Kontribusi Palestina",
     ],
     popular: true,
   },
@@ -38,15 +35,13 @@ const kategoriList: KategoriItem[] = [
     nama: "Fun Run - Rafah",
     tagline: "Lari santai 5K untuk kemanusiaan di Rafah",
     harga: "Rp 30.000",
-    ikon: "🏃",
-    bannerClass: "cb-full", // Biru Gelap
+    gambar: "/images/kategori/funrun.png",
     slotLabel: "⚡ Fast Selling",
     slotClass: "slot-mid",
     benefits: [
-      "E-Certificate",
-      "Akses Rute Lari",
+      "Race Pack (Merchandise)",
       "Refreshment",
-      "Donasi Rafah",
+      "Kontribusi Palestina",
     ],
   },
   {
@@ -54,15 +49,13 @@ const kategoriList: KategoriItem[] = [
     nama: "Fun Walk - Gaza",
     tagline: "Jalan santai keluarga untuk Gaza",
     harga: "Rp 120.000",
-    ikon: "🚶",
-    bannerClass: "cb-medal", // Hijau
+    gambar: "/images/kategori/funwalk.png",
     slotLabel: "🔥 Slot Terbatas",
     slotClass: "slot-unlimited",
     benefits: [
-      "Race Pack Lengkap (Jersey + Medali)",
-      "E-Certificate",
-      "Akses Area Event",
-      "Donasi Solidaritas Gaza",
+      "Race Pack Lengkap",
+      "Refreshment",
+      "Kontribusi Palestina",
     ],
   },
   {
@@ -70,15 +63,13 @@ const kategoriList: KategoriItem[] = [
     nama: "Fun Walk - Rafah",
     tagline: "Langkah kecil untuk perubahan di Rafah",
     harga: "Rp 30.000",
-    ikon: "🚶",
-    bannerClass: "cb-jersey", // Merah
+    gambar: "/images/kategori/funwalk.png",
     slotLabel: "♾ Unlimited Slot",
     slotClass: "slot-unlimited",
     benefits: [
-      "E-Certificate",
-      "Akses Area Event",
-      "Ikut Kegiatan Komunitas",
-      "Donasi Rafah",
+      "Race Pack (Merchandise)",
+      "Refreshment",
+      "Kontribusi Palestina",
     ],
   },
 ];
@@ -87,10 +78,6 @@ export default function KategoriSection() {
   return (
     <>
       <style>{`
-        @keyframes float2 {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-12px) rotate(-2deg); }
-        }
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
@@ -175,58 +162,46 @@ export default function KategoriSection() {
           border-color: #1A54C8;
         }
 
-        /* Banner colors */
+        /* Banner styling baru */
         .cat-banner {
-          height: 150px;
+          height: 170px;
           position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           overflow: hidden;
+          background: #eef3ff; 
         }
 
-        .cb-tanpa { background: linear-gradient(135deg, #1A54C8, #4A7CE8); }
-        .cb-medal { background: linear-gradient(135deg, #007A3D, #00a84f); }
-        .cb-jersey { background: linear-gradient(135deg, #CE1126, #e84c3d); }
-        .cb-full { background: linear-gradient(135deg, #0E2D7A, #1A54C8); }
-
-        .cb-pattern {
-          position: absolute;
-          inset: 0;
-          background: repeating-linear-gradient(
-            45deg,
-            rgba(255,255,255,0.05) 0,
-            rgba(255,255,255,0.05) 2px,
-            transparent 2px,
-            transparent 14px
-          );
+        .banner-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover; 
+          object-position: center;
+          transition: transform 0.4s ease;
+          display: block;
         }
 
-        .cat-icon {
-          font-size: 56px;
-          position: relative;
-          z-index: 1;
-          animation: float2 5s ease-in-out infinite;
+        .cat-card:hover .banner-img {
+          transform: scale(1.08);
         }
 
         .popular-badge {
           position: absolute;
-          top: 10px;
-          right: 10px;
+          top: 12px;
+          right: 12px;
           background: #FFD700;
           color: #0E2D7A;
           border-radius: 20px;
-          padding: 3px 10px;
-          font-size: 9.5px;
+          padding: 4px 12px;
+          font-size: 10px;
           font-weight: 800;
           letter-spacing: 1px;
           text-transform: uppercase;
           z-index: 2;
           animation: bounce 2s ease-in-out infinite;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .cat-body {
-          padding: 18px;
+          padding: 20px;
           flex: 1;
           display: flex;
           flex-direction: column;
@@ -234,11 +209,11 @@ export default function KategoriSection() {
 
         .cat-name {
           font-family: 'Barlow Condensed', sans-serif;
-          font-size: 17px;
+          font-size: 18px;
           font-weight: 800;
           color: #0A1628;
           letter-spacing: 0.5px;
-          margin-bottom: 3px;
+          margin-bottom: 4px;
         }
 
         .cat-price {
@@ -247,7 +222,7 @@ export default function KategoriSection() {
           color: #1A54C8;
           letter-spacing: 1px;
           display: block;
-          margin-bottom: 6px;
+          margin-bottom: 8px;
           line-height: 1;
         }
 
@@ -255,11 +230,11 @@ export default function KategoriSection() {
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          padding: 4px 10px;
+          padding: 5px 12px;
           border-radius: 20px;
           font-size: 11px;
           font-weight: 700;
-          margin-bottom: 12px;
+          margin-bottom: 14px;
           width: fit-content;
         }
         .slot-unlimited { background: rgba(0,122,61,0.09); color: #007A3D; }
@@ -277,7 +252,7 @@ export default function KategoriSection() {
           padding: 4px 0;
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 8px;
         }
 
         .cat-bens li::before {
@@ -338,14 +313,12 @@ export default function KategoriSection() {
 
       <section className="kat-sec">
         <div className="kat-inner">
-          {/* Header */}
           <span className="sec-label blue">Pilih Paketmu</span>
           <h2 className="sec-title">Kategori Event</h2>
           <p className="sec-sub">
-            Event lar dengan berbagai kategori sesuai kebutuhan dan kemampuanmu.
+            Event lari dengan berbagai kategori sesuai kebutuhan dan kemampuanmu.
           </p>
 
-          {/* Cards grid */}
           <div className="cat-grid">
             {kategoriList.map((kat, i) => (
               <div
@@ -353,24 +326,17 @@ export default function KategoriSection() {
                 className={`cat-card${kat.popular ? " popular" : ""}`}
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
-                {/* Banner */}
-                <div className={`cat-banner ${kat.bannerClass}`}>
-                  <div className="cb-pattern" />
-                  <div
-                    className="cat-icon"
-                    style={{ animationDelay: `${-i}s` }}
-                  >
-                    {kat.ikon}
-                  </div>
+                {/* Banner Penuh dengan Gambar */}
+                <div className="cat-banner">
+                  <img src={kat.gambar} alt={`Banner ${kat.nama}`} className="banner-img" />
+                  
                   {kat.popular && (
                     <div className="popular-badge">⚡ Populer</div>
                   )}
                 </div>
 
-                {/* Body */}
                 <div className="cat-body">
                   <div className="cat-name">{kat.nama}</div>
-                  {/* TODO: isi harga dari panitia — ganti string dengan env variable */}
                   <span className="cat-price">{kat.harga}</span>
                   <div className={`cat-slot ${kat.slotClass}`}>
                     {kat.slotLabel}
@@ -385,7 +351,6 @@ export default function KategoriSection() {
             ))}
           </div>
 
-          {/* CTA bawah grid */}
           <div className="cat-cta-wrap">
             <Link href="/daftar" className="btn-red">
               ✦ Daftar Sekarang

@@ -228,12 +228,12 @@ export function DonasiProgress({
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          background: '#DCFCE7', // Hijau sangat muda
-          border: '1px solid #BBF7D0',
+          background: 'rgba(220, 38, 38, 0.08)',
+          border: '1px solid rgba(220, 38, 38, 0.25)',
           borderRadius: '8px', // Sedikit disesuaikan agar cocok dengan style modern
           padding: '10px 16px',
           fontSize: '13px',
-          color: '#16A34A',
+          color: '#DC2626',
           fontWeight: 700,
         }}
       >
@@ -243,14 +243,14 @@ export function DonasiProgress({
           style={{
             width: '8px',
             height: '8px',
-            background: '#16A34A',
+            background: '#DC2626',
             borderRadius: '50%',
             display: 'inline-block',
             flexShrink: 0,
-            boxShadow: '0 0 8px rgba(22, 163, 74, 0.6)', // Memberi efek menyala/glowing
+            boxShadow: '0 0 8px rgba(220, 38, 38, 0.7)',
           }}
         />
-        Live update · Donasi terus mengalir
+        🔴 Live Update · Donasi terus mengalir
       </div>
     </div>
   );

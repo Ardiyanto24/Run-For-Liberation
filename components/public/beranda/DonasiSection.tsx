@@ -1,7 +1,7 @@
 // components/public/beranda/DonasiSection.tsx
 
 import Link from "next/link";
-import { donasiDummy } from "@/lib/placeholder-data";
+import { getStatistikDonasi } from "@/lib/queries/donasi";
 
 function formatRupiah(angka: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -11,19 +11,15 @@ function formatRupiah(angka: number): string {
   }).format(angka);
 }
 
-export default function DonasiSection() {
-  const { totalTerkumpul, jumlahDonatur, targetDonasi, persentase } =
-    donasiDummy;
+export default async function DonasiSection() {
+  const { totalTerkumpul, jumlahDonatur, jumlahPeserta, targetDonasi, persentase } =
+    await getStatistikDonasi();
 
   const pct = Math.min(persentase, 100).toFixed(1);
 
   return (
     <>
       <style>{`
-        @keyframes progressBar {
-          from { width: 0%; }
-          to { width: var(--pct); }
-        }
         @keyframes fadeUpDon {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
@@ -44,8 +40,6 @@ export default function DonasiSection() {
           overflow: hidden;
           text-align: center;
         }
-
-        /* diagonal pattern overlay */
         .don-sec::before {
           content: '';
           position: absolute;
@@ -59,15 +53,12 @@ export default function DonasiSection() {
           );
           pointer-events: none;
         }
-
         .don-inner {
           max-width: 720px;
           margin: 0 auto;
           position: relative;
           z-index: 2;
         }
-
-        /* Live badge */
         .live-badge {
           display: inline-flex;
           align-items: center;
@@ -93,8 +84,6 @@ export default function DonasiSection() {
           color: #f87171;
           text-transform: uppercase;
         }
-
-        /* Section header */
         .don-label {
           font-family: 'Barlow Condensed', sans-serif;
           font-size: 11px;
@@ -120,8 +109,6 @@ export default function DonasiSection() {
           margin-bottom: 36px;
           animation: fadeUpDon 0.6s 0.2s ease both;
         }
-
-        /* Progress box */
         .prog-box {
           background: rgba(255,255,255,0.1);
           border: 1.5px solid rgba(255,255,255,0.2);
@@ -150,8 +137,6 @@ export default function DonasiSection() {
           font-size: 13px;
           color: rgba(255,255,255,0.45);
         }
-
-        /* Progress bar */
         .prog-bg {
           height: 12px;
           background: rgba(255,255,255,0.15);
@@ -163,7 +148,7 @@ export default function DonasiSection() {
           height: 100%;
           background: linear-gradient(90deg, #22c55e, #4ade80);
           border-radius: 999px;
-          animation: progressBar 1.8s ease forwards;
+          transition: width 1.8s ease;
         }
         .prog-meta {
           font-size: 13px;
@@ -171,8 +156,6 @@ export default function DonasiSection() {
           text-align: left;
         }
         .prog-meta span { color: #4ade80; font-weight: 700; }
-
-        /* Stat cards row */
         .don-stats {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -199,8 +182,6 @@ export default function DonasiSection() {
           letter-spacing: 1px;
           text-transform: uppercase;
         }
-
-        /* CTA */
         .don-cta {
           margin-top: 32px;
           animation: fadeUpDon 0.6s 0.45s ease both;
@@ -223,7 +204,6 @@ export default function DonasiSection() {
           transform: translateY(-3px);
           box-shadow: 0 12px 30px rgba(0,0,0,0.25);
         }
-
         @media (max-width: 540px) {
           .don-stats { grid-template-columns: 1fr; gap: 8px; }
           .don-stat-num { font-size: 30px; }
@@ -234,20 +214,17 @@ export default function DonasiSection() {
       <section className="don-sec">
         <div className="don-inner">
 
-          {/* Live badge */}
           <div className="live-badge">
             <div className="live-dot" />
             <span className="live-text">🔴 Live Update</span>
           </div>
 
-          {/* Header */}
           <span className="don-label">Transparansi Dana</span>
           <h2 className="don-title">Progress Donasi</h2>
           <p className="don-sub">
             100% dana tersalurkan langsung untuk bantuan kemanusiaan Gaza.
           </p>
 
-          {/* Progress bar box */}
           <div className="prog-box">
             <div className="prog-top">
               <span className="prog-amt">{formatRupiah(totalTerkumpul)}</span>
@@ -258,7 +235,8 @@ export default function DonasiSection() {
             <div className="prog-bg">
               <div
                 className="prog-fill"
-                style={{ width: `${pct}%` } as React.CSSProperties}
+                style={{ width: "0%" } as React.CSSProperties}
+                data-width={`${pct}%`}
               />
             </div>
             <p className="prog-meta">
@@ -266,38 +244,27 @@ export default function DonasiSection() {
             </p>
           </div>
 
-          {/* Stat cards */}
           <div className="don-stats">
             <div className="don-stat">
-              <span
-                className="don-stat-num"
-                style={{ color: "#4ade80" }}
-              >
+              <span className="don-stat-num" style={{ color: "#4ade80" }}>
                 {jumlahDonatur.toLocaleString("id-ID")}
               </span>
               <span className="don-stat-label">Total Donatur</span>
             </div>
             <div className="don-stat">
-              <span
-                className="don-stat-num"
-                style={{ color: "#f87171" }}
-              >
-                847
+              <span className="don-stat-num" style={{ color: "#f87171" }}>
+                {jumlahPeserta.toLocaleString("id-ID")}
               </span>
               <span className="don-stat-label">Peserta Lomba</span>
             </div>
             <div className="don-stat">
-              <span
-                className="don-stat-num"
-                style={{ color: "#fff" }}
-              >
-                396
+              <span className="don-stat-num" style={{ color: "#fff" }}>
+                {Math.max(0, jumlahDonatur - jumlahPeserta).toLocaleString("id-ID")}
               </span>
               <span className="don-stat-label">Donatur Umum</span>
             </div>
           </div>
 
-          {/* CTA */}
           <div className="don-cta">
             <Link href="/donasi" className="btn-don">
               💚 Donasi Sekarang

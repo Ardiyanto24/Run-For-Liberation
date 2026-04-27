@@ -1,13 +1,13 @@
 // app/api/admin/export/peserta/route.ts
 
-import { type NextRequest } from "next/server";
-import { getAdminSession } from "@/lib/auth";
+import { type NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { verifyJwt } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { KategoriLomba, StatusPeserta, TipePendaftaran } from "@prisma/client";
 
-// ─── Helper: escape nilai CSV ─────────────────────────────────────────────────
-// Bungkus nilai dalam tanda kutip jika mengandung koma, kutip, atau newline.
-// Kutip ganda di dalam nilai di-escape menjadi dua kutip ganda ("").
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function escapeCSV(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
   const str = String(value);
@@ -17,14 +17,11 @@ function escapeCSV(value: string | number | null | undefined): string {
   return str;
 }
 
-// ─── Helper: label kategori ───────────────────────────────────────────────────
 function labelKategori(kategori: KategoriLomba): string {
   if (kategori === "FUN_RUN_GAZA" || kategori === "FUN_RUN_RAFAH") return "Fun Run";
-  if (kategori === "FUN_WALK_GAZA" || kategori === "FUN_WALK_RAFAH") return "Fun Walk";
-  return kategori;
+  return "Fun Walk";
 }
 
-// ─── Helper: label metode pembayaran ─────────────────────────────────────────
 function labelMetode(metode: string): string {
   const map: Record<string, string> = {
     QRIS: "QRIS",
@@ -38,62 +35,58 @@ function labelMetode(metode: string): string {
   return map[metode] ?? metode;
 }
 
-// ─── Helper: format tanggal ───────────────────────────────────────────────────
 function formatTanggal(date: Date): string {
   return date.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
+    day: "2-digit", month: "2-digit", year: "numeric",
   });
 }
 
-// ─── GET Handler ──────────────────────────────────────────────────────────────
+// ── GET Handler ───────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  // ── 1. Validasi session admin ───────────────────────────────────────────────
-  const session = await getAdminSession();
-  if (!session) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  // ── 1. Validasi session admin secara manual ───────────────────────────────
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_session")?.value;
+
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ── 2. Baca query parameters filter ────────────────────────────────────────
+  const secret = process.env.ADMIN_JWT_SECRET;
+  if (!secret) {
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+
+  const payload = await verifyJwt(token, secret);
+  if (!payload) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // ── 2. Baca query params ──────────────────────────────────────────────────
   const { searchParams } = new URL(request.url);
   const statusParam = searchParams.get("status") ?? "SEMUA";
   const kategoriParam = searchParams.get("kategori") ?? "SEMUA";
   const tipeParam = searchParams.get("tipe") ?? "SEMUA";
 
-  // ── 3. Bangun where clause Prisma ───────────────────────────────────────────
+  // ── 3. Bangun where clause ────────────────────────────────────────────────
   const where: {
     status?: StatusPeserta;
     kategori?: { in: KategoriLomba[] };
     tipe?: TipePendaftaran;
   } = {};
 
-  // Filter status
-  if (statusParam !== "SEMUA" && ["PENDING", "VERIFIED", "DITOLAK"].includes(statusParam)) {
+  if (["PENDING", "VERIFIED", "DITOLAK"].includes(statusParam)) {
     where.status = statusParam as StatusPeserta;
   }
-
-  // Filter kategori: FUN_RUN → [FUN_RUN_GAZA, FUN_RUN_RAFAH], dst.
   if (kategoriParam === "FUN_RUN") {
     where.kategori = { in: ["FUN_RUN_GAZA", "FUN_RUN_RAFAH"] };
   } else if (kategoriParam === "FUN_WALK") {
     where.kategori = { in: ["FUN_WALK_GAZA", "FUN_WALK_RAFAH"] };
   }
-  // SEMUA → tidak tambah filter kategori
+  if (tipeParam === "INDIVIDU") where.tipe = "INDIVIDU";
+  if (tipeParam === "KELUARGA") where.tipe = "KELUARGA";
 
-  // Filter tipe: INDIVIDU atau KELUARGA
-  if (tipeParam === "INDIVIDU") {
-    where.tipe = "INDIVIDU";
-  } else if (tipeParam === "KELUARGA") {
-    where.tipe = "KELUARGA";
-  }
-  // SEMUA → tidak tambah filter tipe
-
-  // ── 4. Query database ───────────────────────────────────────────────────────
+  // ── 4. Query database ─────────────────────────────────────────────────────
   let pesertaList;
   try {
     pesertaList = await prisma.peserta.findMany({
@@ -107,40 +100,20 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("[export/peserta] DB error:", err);
-    return new Response(JSON.stringify({ error: "Gagal mengambil data dari database." }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json({ error: "Database error" }, { status: 500 });
   }
 
-  // ── 5. Bangun string CSV ────────────────────────────────────────────────────
+  // ── 5. Bangun CSV ─────────────────────────────────────────────────────────
   const HEADER = [
-    "No",
-    "BIB",
-    "Nama",
-    "Email",
-    "WhatsApp",
-    "Kategori",
-    "Tipe",
-    "Nama Kelompok",
-    "Jumlah Anggota",
-    "Ukuran Jersey",
-    "Biaya Pendaftaran",
-    "Donasi Tambahan",
-    "Total Bayar",
-    "Metode Bayar",
-    "Status",
-    "Tanggal Daftar",
-    "Status CheckIn",
+    "No", "BIB", "Nama", "Email", "WhatsApp", "Kategori",
+    "Tipe", "Nama Kelompok", "Jumlah Anggota", "Ukuran Jersey",
+    "Biaya Pendaftaran", "Donasi Tambahan", "Total Bayar",
+    "Metode Bayar", "Status", "Tanggal Daftar", "Status CheckIn",
   ].join(",");
 
   const rows = pesertaList.map((p, index) => {
-    // Jumlah anggota: ketua + anggota
-    // _count.anggota = jumlah record di tabel Anggota
-    // Total peserta dalam pendaftaran = 1 (ketua) + _count.anggota
     const jumlahAnggota = 1 + p._count.anggota;
-
-    const cols = [
+    return [
       escapeCSV(index + 1),
       escapeCSV(p.nomorBib ?? "-"),
       escapeCSV(p.namaLengkap),
@@ -158,21 +131,17 @@ export async function GET(request: NextRequest) {
       escapeCSV(p.status),
       escapeCSV(formatTanggal(p.createdAt)),
       escapeCSV(p.checkIn ? "Sudah Check-In" : "Belum"),
-    ];
-
-    return cols.join(",");
+    ].join(",");
   });
 
-  const csv = [HEADER, ...rows].join("\r\n");
+  const csv = "\uFEFF" + [HEADER, ...rows].join("\r\n");
 
-  // ── 6. Return Response CSV ──────────────────────────────────────────────────
+  // ── 6. Return response CSV ────────────────────────────────────────────────
   return new Response(csv, {
     status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="peserta-run-for-liberation-2026.csv"',
-      // Tambahkan BOM UTF-8 agar Excel membaca karakter khusus dengan benar
-      // (BOM sudah di-include di awal string CSV — lihat bawah)
+      "Content-Disposition": `attachment; filename="peserta-run-for-liberation-2026.csv"`,
     },
   });
 }

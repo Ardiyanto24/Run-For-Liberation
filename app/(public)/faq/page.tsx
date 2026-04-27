@@ -1,4 +1,4 @@
-// app/(public)/faq/page.
+// app/(public)/faq/page.tsx
 
 import { Metadata } from 'next'
 import SubHero from '@/components/public/SubHero'
@@ -18,59 +18,84 @@ export const metadata: Metadata = {
 const faqItems = [
   {
     id: 'item-1',
-    question: 'Bagaimana cara mendaftar Run For Liberation Solo 2026?',
+    question: 'Apa itu Run for Liberation (RFL)?',
     answer:
-      'Pendaftaran dilakukan secara online melalui halaman Pendaftaran di website ini. Pilih kategori (Fun Run atau Fun Walk), isi data diri, lalu selesaikan pembayaran. Konfirmasi dan link dashboard peserta akan dikirim via email setelah pembayaran terverifikasi.',
+      'Run for Liberation 2026 adalah kegiatan lari non-kompetitif yang menggabungkan olahraga, solidaritas, dan kampanye kemanusiaan untuk Palestina. Event ini diselenggarakan sebagai bagian dari rangkaian kegiatan nasional serentak di 15 daerah di seluruh Indonesia.',
   },
   {
     id: 'item-2',
-    question: 'Metode pembayaran apa saja yang tersedia?',
+    question: 'Kapan dan di mana acara dilaksanakan?',
     answer:
-      'Tersedia beberapa metode pembayaran: QRIS (semua e-wallet & mobile banking), Transfer Bank BRI, Transfer Bank BSI, dan Transfer Bank Mandiri. Setelah transfer, peserta wajib mengunggah bukti pembayaran melalui link yang dikirim ke email.',
+      '📅 Tanggal: Ahad, 24 Mei 2026 | 📍 Lokasi: Diumumkan Lebih Lanjut (Area Solo Raya).',
   },
   {
     id: 'item-3',
-    question: 'Bagaimana cara cek status pendaftaran saya?',
+    question: 'Siapa saja yang boleh ikut?',
     answer:
-      'Masuk ke halaman Cek Status, masukkan email yang digunakan saat mendaftar, lalu klik tombol kirim link. Kami akan mengirimkan magic link ke email kamu — klik link tersebut untuk membuka dashboard peserta dan melihat status pendaftaran secara real-time.',
+      'Acara ini terbuka untuk umum, baik laki-laki maupun perempuan, dengan tetap menjaga adab dan ketentuan yang berlaku.',
   },
   {
     id: 'item-4',
-    question: 'Apakah bisa mendaftar secara berkelompok?',
+    question: 'Apakah ada biaya registrasi?',
     answer:
-      'Ya, tersedia opsi pendaftaran kelompok. Satu kelompok minimal 2 orang dan maksimal 10 orang. Pendaftaran dilakukan oleh satu orang sebagai ketua kelompok, dengan mengisi data seluruh anggota. Biaya dihitung per orang sesuai paket yang dipilih.',
-    // TODO: konfirmasi jawaban dengan panitia
+      'Ya, terdapat biaya pendaftaran sebesar Rp120.000 yang akan dialokasikan untuk kebutuhan peserta acara dan donasi kemanusiaan untuk Palestina.',
   },
   {
     id: 'item-5',
-    question: 'Apa saja yang didapat peserta (race pack)?',
+    question: 'Bagaimana cara mendaftar?',
     answer:
-      'Tergantung paket yang dipilih. Semua peserta mendapatkan e-certificate dan akses rute. Untuk paket dengan race pack: Medal Only mendapat finisher medal, Jersey Only mendapat jersey event eksklusif, dan Fullpack mendapat jersey + medal + goodie bag. Detail lengkap ada di halaman Kategori.',
-    // TODO: konfirmasi jawaban dengan panitia
+      'Peserta dapat mendaftar melalui website resmi ini pada bagian pendaftaran atau menghubungi CP panitia.',
   },
   {
     id: 'item-6',
-    question: 'Di mana dan kapan lokasi event Solo berlangsung?',
+    question: 'Apa saja yang didapatkan peserta?',
     answer:
-      'Event Run For Liberation Solo 2026 dilaksanakan pada Sabtu, 24 Mei 2026. Detail lokasi start/finish akan diinformasikan lebih lanjut melalui email konfirmasi dan media sosial panitia. Peserta diharapkan tiba minimal 60 menit sebelum flag-off.',
-    // TODO: konfirmasi jawaban dengan panitia
+      'Terdapat dua pilihan paket. Paket Rafah: Ganci, BIB, Pin, Refreshment. Paket Gaza: Ganci, BIB, Pin, Refreshment, Jersey Eksklusif.',
   },
   {
     id: 'item-7',
-    question: 'Bisakah saya berdonasi tanpa ikut berlari?',
+    question: 'Berapa jarak larinya?',
     answer:
-      'Tentu bisa! Halaman Donasi terbuka untuk semua orang tanpa perlu mendaftar sebagai peserta. Kamu bisa berdonasi dengan nominal berapapun mulai dari Rp 10.000. Setiap rupiah yang kamu donasikan akan disalurkan 100% untuk bantuan kemanusiaan di Gaza.',
+      'Terdapat pilihan jarak: 5K (Fun Run) dan 2,5K (Fun Walk).',
   },
   {
     id: 'item-8',
-    question: 'Bagaimana jika ada masalah teknis atau pertanyaan lain?',
+    question: 'Apakah ini lomba atau hanya fun run?',
     answer:
-      'Hubungi panitia melalui WhatsApp atau email yang tertera di bagian Kontak. Tim panitia siap membantu pada hari kerja pukul 08.00–20.00 WIB. Untuk pertanyaan umum, cek dulu halaman FAQ ini karena kemungkinan besar sudah terjawab di sini.',
-    // TODO: konfirmasi jawaban dengan panitia
+      'Acara ini bersifat fun run (non-kompetitif), sehingga tidak ada penilaian juara. Fokus utama adalah kebersamaan dan kepedulian.',
+  },
+  {
+    id: 'item-9',
+    question: 'Apakah boleh membawa anak-anak?',
+    answer:
+      'Boleh, dengan catatan tetap dalam pengawasan orang tua/wali selama kegiatan berlangsung.',
+  },
+  {
+    id: 'item-10',
+    question: 'Apakah tersedia fasilitas medis?',
+    answer:
+      'Ya, panitia menyediakan tim medis untuk mengantisipasi kondisi darurat selama acara berlangsung.',
+  },
+  {
+    id: 'item-11',
+    question: 'Apakah ada batas waktu pendaftaran?',
+    answer:
+      'Pendaftaran akan ditutup jika kuota peserta telah terpenuhi. Pantau terus media sosial kami untuk update tanggal penutupan.',
+  },
+  {
+    id: 'item-12',
+    question: 'Apakah tersedia tempat parkir?',
+    answer:
+      'Ya, tersedia area parkir di sekitar lokasi start dengan pengaturan dari tim lapangan/keamanan.',
   },
 ]
 
 export default function FaqPage() {
+  // Warna Hijau Palestina dengan opacity rendah (sekitar 10%)
+  const palestineGreenLight = 'rgba(20, 153, 84, 0.20)' 
+  // Warna Biru sesuai tombol "Daftar Sekarang"
+  const blueDaftar = '#1d4ed8' 
+
   return (
     <>
       <SubHero
@@ -81,10 +106,7 @@ export default function FaqPage() {
 
       {/* ── Section: Accordion FAQ ── */}
       <section
-        style={{
-          padding: '72px 56px',
-          background: '#fff',
-        }}
+        style={{ padding: '72px 0', background: '#fff' }}
         className="px-6 md:px-14"
       >
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -117,61 +139,67 @@ export default function FaqPage() {
           </h2>
 
           {/* Accordion */}
-          <Accordion type="single" collapsible className="flex flex-col gap-[10px]">
+          <Accordion type="single" collapsible className="flex flex-col gap-[12px]">
             {faqItems.map((item) => (
               <AccordionItem
                 key={item.id}
                 value={item.id}
                 style={{
-                  background: '#fff',
                   border: '1.5px solid var(--border)',
                   borderRadius: '12px',
                   overflow: 'hidden',
-                  transition: 'border-color 0.25s, box-shadow 0.25s',
+                  transition: 'all 0.3s ease',
                 }}
-                className="
+                className={`
                   hover:border-[var(--blue-mid)]
-                  data-[state=open]:border-[var(--blue)]
-                  data-[state=open]:shadow-sm
+                  data-[state=open]:border-[#149954]
+                  data-[state=open]:shadow-md
                   border-b-0
-                "
+                `}
+                // Inline style khusus untuk mendeteksi state open via Tailwind/CSS Variables
+                // Di sini kita gunakan CSS class data-[state=open] untuk background hijau
+                css-label="faq-item"
               >
+                <style dangerouslySetInnerHTML={{ __html: `
+                  [data-state=open][css-label="faq-item"] {
+                    background-color: ${palestineGreenLight} !important;
+                  }
+                `}} />
+                
                 <AccordionTrigger
                   style={{
-                    padding: '18px 22px',
+                    padding: '20px 24px',
                     gap: '16px',
-                    transition: 'background 0.2s',
+                    transition: 'all 0.2s',
                   }}
                   className="
-                    hover:bg-[var(--blue-xlight)] hover:no-underline
-                    data-[state=open]:bg-[var(--blue-xlight)]
-                    [&[data-state=open]>span]:text-[var(--blue)]
+                    hover:no-underline
                     [&>svg]:text-[var(--gray)]
-                    [&[data-state=open]>svg]:text-[var(--blue)]
+                    [&[data-state=open]>svg]:text-[#149954]
+                    [&[data-state=open]>svg]:rotate-180
                   "
                 >
                   <span
                     style={{
-                      fontSize: '15px',
+                      fontSize: '16px',
                       fontWeight: 700,
                       color: 'var(--black)',
                       lineHeight: 1.4,
                       textAlign: 'left',
                     }}
-                    className="data-[state=open]:text-[var(--blue)]"
+                    className="data-[state=open]:text-[#149954]"
                   >
                     {item.question}
                   </span>
                 </AccordionTrigger>
                 <AccordionContent
                   style={{
-                    fontSize: '14.5px',
-                    color: 'var(--gray)',
+                    fontSize: '15px',
+                    color: '#4b5563', // gray-600
                     lineHeight: '1.7',
-                    padding: '0 22px 16px',
+                    padding: '0 24px 20px',
                   }}
                 >
-                  {/* TODO: konfirmasi jawaban dengan panitia */}
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -180,46 +208,84 @@ export default function FaqPage() {
         </div>
       </section>
 
-      {/* ── CTA Section: Hubungi Panitia ── */}
+      {/* ── CTA Section: Hubungi Panitia (Revisi: Biru Bold & Dual Button) ── */}
       <section
         style={{
-          background: 'var(--blue-xlight)',
-          padding: '64px 56px',
+          background: blueDaftar,
+          padding: '80px 24px',
           textAlign: 'center',
-          borderTop: '1px solid var(--border)',
+          color: '#fff',
         }}
-        className="px-6 md:px-14"
       >
-        <p
-          style={{
-            fontSize: '20px',
-            color: 'var(--black)',
-            fontWeight: 700,
-            marginBottom: '22px',
-          }}
-        >
-          Masih ada pertanyaan?
-        </p>
-        {/* TODO: konfirmasi jawaban dengan panitia — isi link WhatsApp/email kontak panitia */}
-        <a
-          href="https://wa.me/628xxxxxxxxxx"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-block',
-            background: 'var(--blue)',
-            color: '#fff',
-            padding: '14px 32px',
-            borderRadius: '8px',
-            fontWeight: 700,
-            fontSize: '15px',
-            textDecoration: 'none',
-            transition: 'opacity 0.2s',
-          }}
-          className="hover:opacity-90"
-        >
-          💬 Hubungi Panitia
-        </a>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <h3
+            style={{
+              fontSize: 'clamp(24px, 3vw, 32px)',
+              fontWeight: 800,
+              marginBottom: '12px',
+              fontFamily: "'Bebas Neue', sans-serif",
+              letterSpacing: '1px'
+            }}
+          >
+            Masih ada pertanyaan?
+          </h3>
+          <p style={{ opacity: 0.9, marginBottom: '32px', fontSize: '16px' }}>
+            Tim panitia kami siap membantu Anda. Silakan hubungi admin sesuai kategori di bawah ini:
+          </p>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            {/* Admin Ikhwan */}
+            <a
+              href="https://wa.me/6289603137209" 
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: '#fff',
+                color: blueDaftar,
+                padding: '16px 28px',
+                borderRadius: '12px',
+                fontWeight: 800,
+                fontSize: '15px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                flex: 1,
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              className="hover:scale-105 hover:shadow-lg"
+            >
+              <span>🧔 Admin Ikhwan</span>
+            </a>
+
+            {/* Admin Akhwat */}
+            <a
+              href="https://wa.me/8898102926234" 
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background: 'transparent',
+                color: '#fff',
+                padding: '16px 28px',
+                borderRadius: '12px',
+                fontWeight: 800,
+                fontSize: '15px',
+                textDecoration: 'none',
+                border: '2px solid #fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                flex: 1,
+                transition: 'background 0.2s, color 0.2s, transform 0.2s',
+              }}
+              className="hover:bg-white hover:text-[#1d4ed8] hover:scale-105"
+            >
+              <span>🧕 Admin Akhwat</span>
+            </a>
+          </div>
+        </div>
       </section>
     </>
   )

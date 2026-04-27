@@ -4,20 +4,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { dummyPeserta } from "@/lib/placeholder-data";
+import { useTransition } from "react";
+import { adminLogout } from "@/actions/admin";
 
-// Hitung jumlah peserta PENDING untuk badge notifikasi
-const pendingCount = dummyPeserta.filter((p) => p.status === "PENDING").length;
-
-// Definisi item navigasi sidebar
 interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
-  badge?: number;
 }
 
-// SVG icons inline — tidak perlu install library tambahan
 const IconDashboard = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round"
@@ -58,12 +53,20 @@ const IconExport = () => (
   </svg>
 );
 
+const IconLogout = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+    />
+  </svg>
+);
+
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: <IconDashboard /> },
-  { label: "Peserta", href: "/admin/peserta", icon: <IconPeserta />, badge: pendingCount },
-  { label: "Donasi", href: "/admin/donasi", icon: <IconDonasi /> },
-  { label: "Galeri", href: "/admin/galeri", icon: <IconGaleri /> },
-  { label: "Export", href: "/admin/export", icon: <IconExport /> },
+  { label: "Peserta",   href: "/admin/peserta",   icon: <IconPeserta />   },
+  { label: "Donasi",    href: "/admin/donasi",     icon: <IconDonasi />    },
+  { label: "Galeri",    href: "/admin/galeri",     icon: <IconGaleri />    },
+  { label: "Export",    href: "/admin/export",     icon: <IconExport />    },
 ];
 
 interface AdminSidebarProps {
@@ -73,19 +76,22 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
+
+  const handleLogout = () => {
+    startTransition(async () => {
+      await adminLogout();
+    });
+  };
 
   return (
     <>
       {/* ── SIDEBAR PANEL ── */}
       <aside
         className={[
-          // Ukuran & posisi
           "fixed top-0 left-0 z-30 h-full w-64 flex flex-col",
-          // Warna — blue-darker sesuai design tokens
           "bg-[#0E2D7A]",
-          // Transisi mobile: slide in/out
           "transition-transform duration-300 ease-in-out",
-          // Desktop: selalu tampil; Mobile: hanya tampil jika isOpen
           "lg:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
@@ -94,23 +100,16 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         {/* ── LOGO / BRAND ── */}
         <div className="flex items-center justify-between h-16 px-5 border-b border-[rgba(255,255,255,0.1)] flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            {/* Ikon bendera Palestina mini */}
             <div className="flex flex-col w-5 h-5 rounded overflow-hidden flex-shrink-0">
               <div className="flex-1 bg-[#0A1628]" />
               <div className="flex-1 bg-white" />
               <div className="flex-1 bg-[#007A3D]" />
             </div>
             <div>
-              <p className="font-['Bebas_Neue'] text-white text-base leading-none tracking-wider">
-                RUN FOR
-              </p>
-              <p className="font-['Bebas_Neue'] text-[#4A7CE8] text-base leading-none tracking-wider">
-                LIBERATION
-              </p>
+              <p className="font-['Bebas_Neue'] text-white text-base leading-none tracking-wider">RUN FOR</p>
+              <p className="font-['Bebas_Neue'] text-[#4A7CE8] text-base leading-none tracking-wider">LIBERATION</p>
             </div>
           </div>
-
-          {/* Tombol close — mobile only */}
           <button
             onClick={onClose}
             className="lg:hidden p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition-colors"
@@ -133,7 +132,6 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
-
             return (
               <Link
                 key={item.href}
@@ -141,42 +139,20 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                 className={[
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group relative",
                   isActive
-                    ? // Active state: background biru solid + border kiri
-                      "bg-[#1A54C8] text-white"
-                    : // Default: transparan, hover ke biru muda
-                      "text-white/60 hover:text-white hover:bg-white/10",
+                    ? "bg-[#1A54C8] text-white"
+                    : "text-white/60 hover:text-white hover:bg-white/10",
                 ].join(" ")}
                 aria-current={isActive ? "page" : undefined}
               >
-                {/* Border kiri vertikal untuk item aktif */}
                 {isActive && (
-                  <span
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-white rounded-full"
-                    aria-hidden="true"
-                  />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-white rounded-full" />
                 )}
-
-                {/* Icon */}
-                <span
-                  className={[
-                    "flex-shrink-0 transition-colors",
-                    isActive ? "text-white" : "text-white/50 group-hover:text-white/80",
-                  ].join(" ")}
-                >
+                <span className={["flex-shrink-0 transition-colors", isActive ? "text-white" : "text-white/50 group-hover:text-white/80"].join(" ")}>
                   {item.icon}
                 </span>
-
-                {/* Label */}
                 <span className="flex-1 font-['Barlow_Condensed'] font-semibold text-sm tracking-wide">
                   {item.label}
                 </span>
-
-                {/* Badge notifikasi PENDING */}
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-[#CE1126] text-white text-[10px] font-bold font-['Barlow'] flex items-center justify-center leading-none">
-                    {item.badge > 99 ? "99+" : item.badge}
-                  </span>
-                )}
               </Link>
             );
           })}
@@ -185,10 +161,27 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         {/* ── DIVIDER ── */}
         <div className="mx-5 border-t border-white/10" />
 
-        {/* ── FOOTER SIDEBAR ── */}
-        <div className="px-5 py-4 flex-shrink-0">
+        {/* ── LOGOUT + FOOTER ── */}
+        <div className="px-4 py-4 flex-shrink-0 space-y-3">
+          {/* Tombol Logout */}
+          <button
+            onClick={handleLogout}
+            disabled={isPending}
+            className={[
+              "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all duration-150",
+              isPending
+                ? "text-white/30 cursor-wait"
+                : "text-white/60 hover:text-white hover:bg-white/10",
+            ].join(" ")}
+          >
+            <span className="flex-shrink-0"><IconLogout /></span>
+            <span className="font-['Barlow_Condensed'] font-semibold text-sm tracking-wide">
+              {isPending ? "Keluar..." : "Keluar"}
+            </span>
+          </button>
+
+          {/* Brand info */}
           <div className="flex items-center gap-2">
-            {/* Stripe bendera Palestina kecil */}
             <div className="flex gap-0.5 items-center">
               <div className="w-2 h-2 rounded-sm bg-[#0A1628]" />
               <div className="w-2 h-2 rounded-sm bg-white/70" />
@@ -196,16 +189,21 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               <div className="w-2 h-2 rounded-sm bg-[#CE1126]" />
             </div>
             <div>
-              <p className="text-[10px] text-white/40 font-['Barlow'] leading-none">
-                Run For Liberation 2026
-              </p>
-              <p className="text-[10px] text-white/25 font-['Barlow'] leading-none mt-0.5">
-                Admin Panel v1.0
-              </p>
+              <p className="text-[10px] text-white/40 font-['Barlow'] leading-none">Run For Liberation 2026</p>
+              <p className="text-[10px] text-white/25 font-['Barlow'] leading-none mt-0.5">Admin Panel v1.0</p>
             </div>
           </div>
         </div>
       </aside>
+
+      {/* ── OVERLAY mobile ── */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
     </>
   );
 }

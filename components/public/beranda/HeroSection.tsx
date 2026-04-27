@@ -467,25 +467,27 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Stats band */}
-        <div className="stats-band">
-          <div className="sb-item" style={{ animationDelay: "0.1s" }}>
-            <span className="sb-num"><span className="pal-g">500+</span></span>
-            <span className="sb-label">Peserta Solo</span>
+        {/* Stats band (Disembunyikan sementara dengan false &&) */}
+        {false && (
+          <div className="stats-band">
+            <div className="sb-item" style={{ animationDelay: "0.1s" }}>
+              <span className="sb-num"><span className="pal-g">500+</span></span>
+              <span className="sb-label">Peserta Solo</span>
+            </div>
+            <div className="sb-item" style={{ animationDelay: "0.2s" }}>
+              <span className="sb-num"><span className="pal-g">15</span></span>
+              <span className="sb-label">Kota Serentak</span>
+            </div>
+            <div className="sb-item" style={{ animationDelay: "0.3s" }}>
+              <span className="sb-num"><span className="pal-r-bright">62%</span></span>
+              <span className="sb-label">Target Donasi</span>
+            </div>
+            <div className="sb-item" style={{ animationDelay: "0.4s" }}>
+              <span className="sb-num"><span className="pal-g">100%</span></span>
+              <span className="sb-label">Untuk Gaza</span>
+            </div>
           </div>
-          <div className="sb-item" style={{ animationDelay: "0.2s" }}>
-            <span className="sb-num"><span className="pal-g">15</span></span>
-            <span className="sb-label">Kota Serentak</span>
-          </div>
-          <div className="sb-item" style={{ animationDelay: "0.3s" }}>
-            <span className="sb-num"><span className="pal-r-bright">62%</span></span>
-            <span className="sb-label">Target Donasi</span>
-          </div>
-          <div className="sb-item" style={{ animationDelay: "0.4s" }}>
-            <span className="sb-num"><span className="pal-g">100%</span></span>
-            <span className="sb-label">Untuk Gaza</span>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* Flag stripe Palestina */}

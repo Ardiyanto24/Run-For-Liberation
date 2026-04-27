@@ -2,11 +2,9 @@
 
 "use client";
 
-// TODO: Di DEV-09, logika submit diganti dengan Server Action requestMagicLink()
-// yang sesungguhnya — saat ini hanya simulasi delay 1 detik.
-
 import { useState } from "react";
 import SubHero from "@/components/public/SubHero";
+import { requestMagicLink } from "@/actions/cek-status";
 
 export default function CekStatusPage() {
   const [email, setEmail] = useState("");
@@ -33,10 +31,22 @@ export default function CekStatusPage() {
 
     setIsSubmitting(true);
 
-    // TODO DEV-09: ganti dengan Server Action requestMagicLink(formData)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Kirim ke Server Action requestMagicLink
+    const formData = new FormData();
+    formData.set("email", email);
+
+    const result = await requestMagicLink(formData);
 
     setIsSubmitting(false);
+
+    if (!result.success && result.message !== "Jika email Anda terdaftar, kami telah mengirimkan link untuk melihat status pendaftaran.") {
+      // Hanya tampilkan error jika bukan generic message
+      // (validasi format email dari server)
+      setError(result.message);
+      return;
+    }
+
+    // Selalu tampilkan submitted state — generic response untuk keamanan
     setIsSubmitted(true);
   }
 
