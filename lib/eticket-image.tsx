@@ -23,17 +23,17 @@ function formatKategori(k: string): string {
   switch (k) {
     case "FUN_RUN_GAZA":   return "Fun Run 5K \u2013 Gaza";
     case "FUN_RUN_RAFAH":  return "Fun Run 5K \u2013 Rafah";
-    case "FUN_WALK_GAZA":  return "Fun Walk 5K \u2013 Gaza";
-    case "FUN_WALK_RAFAH": return "Fun Walk 5K \u2013 Rafah";
+    case "FUN_WALK_GAZA":  return "Fun Walk \u2013 Gaza";
+    case "FUN_WALK_RAFAH": return "Fun Walk \u2013 Rafah";
     case "FUN_RUN":        return "Fun Run 5K";
-    case "FUN_WALK":       return "Fun Walk 5K";
+    case "FUN_WALK":       return "Fun Walk";
     default:               return k;
   }
 }
 
 function formatBadgeKategori(k: string): string {
   if (k.startsWith("FUN_RUN"))  return "FUN RUN 5K";
-  if (k.startsWith("FUN_WALK")) return "FUN WALK 5K";
+  if (k.startsWith("FUN_WALK")) return "FUN WALK";
   return k;
 }
 

@@ -9,6 +9,7 @@ import {
   FormDataPeserta,
 } from "@/types";
 import { validateFileBuktiBayar } from "@/lib/utils";
+import { uploadBuktiBayarClient } from "@/lib/supabase-client";
 import { getHargaKategori, submitPendaftaran, type HargaMap } from "@/actions/pendaftaran";
 
 // ============================================================
@@ -16,19 +17,19 @@ import { getHargaKategori, submitPendaftaran, type HargaMap } from "@/actions/pe
 // ============================================================
 
 const initialPeserta: FormDataPeserta = {
-  namaLengkap:  "",
-  email:        "",
-  noWhatsapp:   "",
+  namaLengkap: "",
+  email: "",
+  noWhatsapp: "",
   tanggalLahir: "",
   jenisKelamin: "",
   ukuranJersey: "",
   ukuranLengan: "",
-  namaKontak:   "",
-  noKontak:     "",
+  namaKontak: "",
+  noKontak: "",
 };
 
 const initialAnggota: FormDataAnggota = {
-  namaLengkap:  "",
+  namaLengkap: "",
   tanggalLahir: "",
   jenisKelamin: "",
   ukuranJersey: "",
@@ -36,14 +37,14 @@ const initialAnggota: FormDataAnggota = {
 };
 
 const initialFormData: FormDataPendaftaran = {
-  tipe:             null,
-  kategori:         null,
-  namaKelompok:     "",
-  peserta:          initialPeserta,
-  anggota:          [],
-  donasiTambahan:   0,
+  tipe: null,
+  kategori: null,
+  namaKelompok: "",
+  peserta: initialPeserta,
+  anggota: [],
+  donasiTambahan: 0,
   metodePembayaran: null,
-  buktiBayar:       null,
+  buktiBayar: null,
 };
 
 // ============================================================
@@ -51,21 +52,21 @@ const initialFormData: FormDataPendaftaran = {
 // ============================================================
 
 export function usePendaftaranForm() {
-  const [currentStep, setCurrentStep]   = useState<number>(1);
-  const [formData, setFormData]         = useState<FormDataPendaftaran>(initialFormData);
-  const [errors, setErrors]             = useState<Record<string, string>>({});
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [formData, setFormData] = useState<FormDataPendaftaran>(initialFormData);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // fix: hapus underscore
 
   // ── Harga dari server ─────────────────────────────────────
   // Default value adalah fallback jika fetch gagal.
   // Kalkulasi final tetap dilakukan di server saat submit.
   const [hargaMap, setHargaMap] = useState<HargaMap>({
-    "FUN_RUN_GAZA__PANJANG":  120_000,
-    "FUN_RUN_GAZA__PENDEK":   110_000,
+    "FUN_RUN_GAZA__PANJANG": 120_000,
+    "FUN_RUN_GAZA__PENDEK": 110_000,
     "FUN_WALK_GAZA__PANJANG": 120_000,
-    "FUN_WALK_GAZA__PENDEK":  110_000,
-    "FUN_RUN_RAFAH":           30_000,
-    "FUN_WALK_RAFAH":          30_000,
+    "FUN_WALK_GAZA__PENDEK": 110_000,
+    "FUN_RUN_RAFAH": 30_000,
+    "FUN_WALK_RAFAH": 30_000,
   });
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export function usePendaftaranForm() {
     const lengan = formData.peserta.ukuranLengan;
     if (!kategori) return 0;
 
-    if (kategori === "FUN_RUN_RAFAH")  return hargaMap["FUN_RUN_RAFAH"]  ?? 0;
+    if (kategori === "FUN_RUN_RAFAH") return hargaMap["FUN_RUN_RAFAH"] ?? 0;
     if (kategori === "FUN_WALK_RAFAH") return hargaMap["FUN_WALK_RAFAH"] ?? 0;
 
     // Gaza — bergantung ukuranLengan
@@ -96,7 +97,7 @@ export function usePendaftaranForm() {
   }
 
   function hitungBiayaPendaftaran(): number {
-    const hargaSatuan  = resolveHargaSatuan();
+    const hargaSatuan = resolveHargaSatuan();
     const jumlahPeserta = formData.tipe === "KELUARGA"
       ? 1 + formData.anggota.length
       : 1;
@@ -240,9 +241,15 @@ export function usePendaftaranForm() {
     setErrors({});
 
     try {
+      // Guard awal — seharusnya sudah tertangkap validateStep,
+      // tapi double-check di sini untuk keamanan.
+      if (!formData.buktiBayar) {
+        setErrors({ buktiBayar: "Upload bukti pembayaran wajib dilakukan." });
+        return;
+      }
+
       const fd = new FormData();
 
-      // Field scalar
       fd.append("tipe",             formData.tipe ?? "");
       fd.append("kategori",         formData.kategori ?? "");
       fd.append("namaKelompok",     formData.namaKelompok ?? "");
@@ -257,14 +264,27 @@ export function usePendaftaranForm() {
       fd.append("noKontak",         formData.peserta.noKontak);
       fd.append("donasiTambahan",   String(formData.donasiTambahan));
       fd.append("metodePembayaran", formData.metodePembayaran ?? "");
+      fd.append("anggota",          JSON.stringify(formData.anggota));
 
-      // Anggota sebagai JSON string
-      fd.append("anggota", JSON.stringify(formData.anggota));
+      // ── Stage 1: Upload file langsung dari browser ke Supabase ──
+      let buktiBayarPath: string;
 
-      // File bukti bayar
-      if (formData.buktiBayar) {
-        fd.append("buktiBayar", formData.buktiBayar);
+      try {
+        buktiBayarPath = await uploadBuktiBayarClient(
+          formData.buktiBayar,
+          "payment-proofs"
+        );
+      } catch (uploadErr) {
+        setErrors({
+          buktiBayar: uploadErr instanceof Error
+            ? uploadErr.message
+            : "Gagal upload bukti bayar.",
+        });
+        return;
       }
+
+      // ── Stage 2: Kirim data + path ke server action ─────────────
+      fd.append("buktiBayarPath", buktiBayarPath);
 
       const result = await submitPendaftaran(fd);
 
@@ -277,6 +297,7 @@ export function usePendaftaranForm() {
           setErrors({ _global: result.error });
         }
       }
+
     } catch (err) {
       console.error("[handleSubmit] Unexpected error:", err);
       setErrors({ _global: "Terjadi kesalahan tak terduga. Silakan coba lagi." });

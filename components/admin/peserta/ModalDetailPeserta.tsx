@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getPaymentProofSignedUrl } from "@/actions/get-signed-url";
 
 // ── Types lokal (sesuaikan dengan types/index.ts jika berbeda) ──
 interface Anggota {
@@ -61,11 +62,14 @@ function formatTanggal(date: Date) {
 }
 
 function isImageUrl(url: string) {
-  return /\.(jpg|jpeg|png|webp|gif)$/i.test(url);
+  // Pakai pathname saja, abaikan query string (?token=... dari signed URL)
+  const pathname = url.split("?")[0];
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(pathname);
 }
 
 function isPdfUrl(url: string) {
-  return /\.pdf$/i.test(url);
+  const pathname = url.split("?")[0];
+  return /\.pdf$/i.test(pathname);
 }
 
 // Label helpers
@@ -214,6 +218,8 @@ export default function ModalDetailPeserta({
   const [aksiMode, setAksiMode] = useState<AksiMode>("idle");
   const [catatanTolak, setCatatanTolak] = useState("");
   const [errorCatatan, setErrorCatatan] = useState<string | null>(null);
+  const [signedUrl, setSignedUrl]     = useState<string | null>(null);
+  const [loadingBukti, setLoadingBukti] = useState(false);
 
   useEffect(() => {
     if (!peserta) {
@@ -230,6 +236,18 @@ export default function ModalDetailPeserta({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  useEffect(() => {
+    if (!peserta?.pembayaran?.buktiBayarUrl) {
+      setSignedUrl(null);
+      return;
+    }
+    setLoadingBukti(true);
+    setSignedUrl(null);
+    getPaymentProofSignedUrl(peserta.pembayaran.buktiBayarUrl)
+      .then((url) => setSignedUrl(url))
+      .finally(() => setLoadingBukti(false));
+  }, [peserta?.id]);
 
   if (!peserta) return null;
 
@@ -343,7 +361,15 @@ export default function ModalDetailPeserta({
                   </span>
                 </span>
               </div>
-              <BuktiBayarPreview url={pembayaran.buktiBayarUrl} nama={pembayaran.buktiBayarNama} />
+              {loadingBukti ? (
+                <div className="flex items-center justify-center h-28 rounded-xl bg-[#F0F4FF] border border-dashed border-[rgba(26,84,200,0.2)]">
+                  <p className="text-sm text-[#6B7A99]" style={{ fontFamily: "'Barlow', sans-serif" }}>
+                    Memuat bukti pembayaran...
+                  </p>
+                </div>
+              ) : (
+                <BuktiBayarPreview url={signedUrl} nama={pembayaran.buktiBayarNama} />
+              )}
             </div>
 
             {/* ── SECTION: Data Peserta ── */}

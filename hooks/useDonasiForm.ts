@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { FormDataDonasi, DonasiErrors } from '@/types';
 import { validateFileBuktiBayar } from '@/lib/utils';
+import { uploadBuktiBayarClient } from '@/lib/supabase-client';
 import { submitDonasi } from '@/actions/donasi';
 
 type NominalMode = 'preset' | 'custom';
@@ -105,11 +106,25 @@ export function useDonasiForm() {
       fd.append('emailDonatur',     formData.emailDonatur ?? '');
       fd.append('pesan',            formData.pesan ?? '');
       fd.append('metodePembayaran', formData.metodePembayaran ?? '');
-
-      // File dikirim sebagai File object — bukan hanya nama file
+      
+      // ── Step Tambahan: Upload Bukti Bayar (Client-side) ───────
+      // Mengatasi Vercel Timeout (10s) dengan upload langsung ke Supabase.
+      let buktiBayarPath = "";
       if (formData.buktiBayar) {
-        fd.append('buktiBayar', formData.buktiBayar);
+        try {
+          buktiBayarPath = await uploadBuktiBayarClient(
+            formData.buktiBayar,
+            "donation-proofs"
+          );
+        } catch (uploadErr: any) {
+          setErrors({ buktiBayar: uploadErr.message || "Gagal upload bukti bayar." });
+          setIsSubmitting(false);
+          return;
+        }
       }
+
+      // Kirim path, bukan File object
+      fd.append("buktiBayarPath", buktiBayarPath);
 
       const result = await submitDonasi(fd);
 

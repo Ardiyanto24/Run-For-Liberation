@@ -38,7 +38,6 @@ interface PesertaRow {
   ukuranJersey: string | null;
   anggota?: any[]; 
   pembayaran: Pembayaran | null;
-  _count: { anggota: number };
 }
 
 interface Counts {
@@ -148,7 +147,11 @@ export default function PesertaClientShell({
       {/* ── Tabel ── */}
       <TabelPeserta
         peserta={pesertaForTable as any}
-        onOpenModal={(p) => setSelectedPeserta(p as any)}
+        onOpenModal={(p) => {
+          // Ambil data lengkap (termasuk anggota) dari pesertaList asli
+          const pesertaLengkap = pesertaList.find((row) => row.id === p.id) ?? p;
+          setSelectedPeserta(pesertaLengkap as any);
+        }}
         onVerify={handleVerify}
       />
 

@@ -137,3 +137,35 @@ export async function getSignedUrl(
 
   return data.signedUrl;
 }
+
+/**
+ * Memindahkan file bukti bayar dari folder "tmp/" ke folder permanen ({recordId}/).
+ * Digunakan setelah data peserta/donasi berhasil masuk ke database.
+ */
+export async function moveBuktiBayar(
+  tmpPath: string,
+  recordId: string,
+  bucket: "payment-proofs" | "donation-proofs" = "payment-proofs"
+): Promise<string> {
+  if (!tmpPath.startsWith("tmp/")) return tmpPath;
+
+  const filename = tmpPath.split("/").pop();
+  if (!filename) throw new Error("Invalid temporary path");
+
+  const finalPath = `${recordId}/${filename}`;
+
+  const { error } = await supabaseAdmin.storage
+    .from(bucket)
+    .move(tmpPath, finalPath);
+
+  if (error) {
+    console.error(`[supabase.ts] Gagal move file di bucket "${bucket}":`, error);
+    // Idempotency: Jika file sudah tidak ada di tmp, anggap sudah ter-move
+    if (error.message?.includes("The resource was not found")) {
+      return finalPath;
+    }
+    throw new Error("Gagal memproses file bukti pembayaran.");
+  }
+
+  return finalPath;
+}

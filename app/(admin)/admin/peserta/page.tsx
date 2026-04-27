@@ -54,7 +54,7 @@ async function getPesertaData(params: {
       where,
       include: {
         pembayaran: true,
-        _count: { select: { anggota: true } },
+        anggota: { orderBy: { urutan: "asc" } },
       },
       orderBy: { createdAt: "desc" },
     }),

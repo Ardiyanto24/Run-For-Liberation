@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getDonationProofSignedUrl } from "@/actions/get-signed-url";
 
 type StatusDonasi = "PENDING" | "VERIFIED" | "DITOLAK";
 
@@ -43,12 +44,15 @@ function formatTanggal(date: Date) {
   }).format(new Date(date));
 }
 
+// FIX: strip query string sebelum cek ekstensi (signed URL punya ?token=...)
 function isImageUrl(url: string) {
-  return /\.(jpg|jpeg|png|webp|gif)$/i.test(url);
+  const pathname = url.split("?")[0];
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(pathname);
 }
 
 function isPdfUrl(url: string) {
-  return /\.pdf$/i.test(url);
+  const pathname = url.split("?")[0];
+  return /\.pdf$/i.test(pathname);
 }
 
 const METODE_LABEL: Record<string, string> = {
@@ -61,7 +65,7 @@ const METODE_LABEL: Record<string, string> = {
   DANA: "DANA",
 };
 
-// ── Preview bukti bayar (reuse pattern dari modal peserta) ──
+// ── Preview bukti bayar ──
 function BuktiBayarPreview({
   url,
   nama,
@@ -201,6 +205,9 @@ export default function ModalDetailDonasi({
   const [aksiMode, setAksiMode] = useState<AksiMode>("idle");
   const [catatanTolak, setCatatanTolak] = useState("");
   const [errorCatatan, setErrorCatatan] = useState<string | null>(null);
+  // FIX: state dipindah ke dalam komponen (sebelumnya salah diletakkan di luar)
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [loadingBukti, setLoadingBukti] = useState(false);
 
   useEffect(() => {
     if (!donasi) {
@@ -217,6 +224,19 @@ export default function ModalDetailDonasi({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  // FIX: fetch signed URL setiap kali modal dibuka dengan donasi berbeda
+  useEffect(() => {
+    if (!donasi?.buktiBayarUrl) {
+      setSignedUrl(null);
+      return;
+    }
+    setLoadingBukti(true);
+    setSignedUrl(null);
+    getDonationProofSignedUrl(donasi.buktiBayarUrl)
+      .then((url) => setSignedUrl(url))
+      .finally(() => setLoadingBukti(false));
+  }, [donasi?.id]);
 
   if (!donasi) return null;
 
@@ -314,10 +334,16 @@ export default function ModalDetailDonasi({
                 </span>
               </span>
             </div>
-            <BuktiBayarPreview
-              url={donasi.buktiBayarUrl}
-              nama={donasi.buktiBayarNama}
-            />
+            {/* FIX: gunakan signedUrl, bukan donasi.buktiBayarUrl langsung */}
+            {loadingBukti ? (
+              <div className="flex items-center justify-center h-28 rounded-xl bg-[#F0F4FF] border border-dashed border-[rgba(26,84,200,0.2)]">
+                <p className="text-sm text-[#6B7A99]" style={{ fontFamily: "'Barlow', sans-serif" }}>
+                  Memuat bukti pembayaran...
+                </p>
+              </div>
+            ) : (
+              <BuktiBayarPreview url={signedUrl} nama={donasi.buktiBayarNama} />
+            )}
           </div>
 
           {/* ── SECTION: Data Donatur ── */}
@@ -342,10 +368,7 @@ export default function ModalDetailDonasi({
                   </span>
                 }
               />
-              <DataRow
-                label="Email"
-                value={donasi.emailDonatur ?? "—"}
-              />
+              <DataRow label="Email" value={donasi.emailDonatur ?? "—"} />
               <DataRow
                 label="Nominal"
                 value={
@@ -358,10 +381,7 @@ export default function ModalDetailDonasi({
                 label="Metode"
                 value={METODE_LABEL[donasi.metodePembayaran] ?? donasi.metodePembayaran}
               />
-              <DataRow
-                label="Tanggal Donasi"
-                value={formatTanggal(donasi.createdAt)}
-              />
+              <DataRow label="Tanggal Donasi" value={formatTanggal(donasi.createdAt)} />
               {donasi.pesan && (
                 <DataRow
                   label="Pesan / Doa"
@@ -391,10 +411,7 @@ export default function ModalDetailDonasi({
                   Catatan Penolakan
                 </h3>
               </div>
-              <p
-                className="text-sm text-[#CE1126]"
-                style={{ fontFamily: "'Barlow', sans-serif" }}
-              >
+              <p className="text-sm text-[#CE1126]" style={{ fontFamily: "'Barlow', sans-serif" }}>
                 {donasi.catatanAdmin}
               </p>
             </div>
@@ -429,10 +446,7 @@ export default function ModalDetailDonasi({
                 style={{ fontFamily: "'Barlow', sans-serif" }}
               />
               {errorCatatan && (
-                <p
-                  className="text-xs text-[#CE1126] mt-1"
-                  style={{ fontFamily: "'Barlow', sans-serif" }}
-                >
+                <p className="text-xs text-[#CE1126] mt-1" style={{ fontFamily: "'Barlow', sans-serif" }}>
                   {errorCatatan}
                 </p>
               )}
@@ -448,17 +462,11 @@ export default function ModalDetailDonasi({
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p
-                  className="text-sm font-semibold text-[#007A3D]"
-                  style={{ fontFamily: "'Barlow', sans-serif" }}
-                >
+                <p className="text-sm font-semibold text-[#007A3D]" style={{ fontFamily: "'Barlow', sans-serif" }}>
                   Verifikasi donasi ini?
                 </p>
               </div>
-              <p
-                className="text-xs text-[#007A3D]/80 ml-6"
-                style={{ fontFamily: "'Barlow', sans-serif" }}
-              >
+              <p className="text-xs text-[#007A3D]/80 ml-6" style={{ fontFamily: "'Barlow', sans-serif" }}>
                 Nominal{" "}
                 <span className="font-bold">{formatRupiah(donasi.nominal)}</span>{" "}
                 akan dihitung ke total dana terkumpul.
@@ -467,10 +475,9 @@ export default function ModalDetailDonasi({
           )}
         </div>
 
-        {/* ── FOOTER — Tombol aksi ── */}
+        {/* ── FOOTER ── */}
         <div className="sticky bottom-0 bg-white border-t border-[rgba(26,84,200,0.1)] px-6 py-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            {/* Tutup / Batal */}
             <button
               onClick={() => {
                 if (aksiMode !== "idle") {
@@ -488,7 +495,6 @@ export default function ModalDetailDonasi({
             </button>
 
             <div className="flex items-center gap-2">
-              {/* PENDING idle: Tolak */}
               {donasi.status === "PENDING" && aksiMode === "idle" && (
                 <button
                   onClick={() => setAksiMode("inputTolak")}
@@ -502,7 +508,6 @@ export default function ModalDetailDonasi({
                 </button>
               )}
 
-              {/* PENDING idle: Verify */}
               {donasi.status === "PENDING" && aksiMode === "idle" && (
                 <button
                   onClick={() => setAksiMode("confirmVerify")}
@@ -516,7 +521,6 @@ export default function ModalDetailDonasi({
                 </button>
               )}
 
-              {/* DITOLAK idle: Verify Ulang */}
               {donasi.status === "DITOLAK" && aksiMode === "idle" && (
                 <button
                   onClick={() => setAksiMode("confirmVerify")}
@@ -530,7 +534,6 @@ export default function ModalDetailDonasi({
                 </button>
               )}
 
-              {/* inputTolak: lanjut */}
               {aksiMode === "inputTolak" && (
                 <button
                   onClick={handleTolakSubmit}
@@ -541,7 +544,6 @@ export default function ModalDetailDonasi({
                 </button>
               )}
 
-              {/* confirmTolak: konfirmasi final */}
               {aksiMode === "confirmTolak" && (
                 <button
                   onClick={handleTolakConfirm}
@@ -552,7 +554,6 @@ export default function ModalDetailDonasi({
                 </button>
               )}
 
-              {/* confirmVerify: konfirmasi */}
               {aksiMode === "confirmVerify" && (
                 <button
                   onClick={handleVerifyConfirm}

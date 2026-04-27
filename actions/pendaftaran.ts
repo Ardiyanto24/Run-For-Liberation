@@ -3,7 +3,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { uploadBuktiBayar } from "@/lib/supabase";
+import { moveBuktiBayar } from "@/lib/supabase";
 import { pendaftaranSchema } from "@/lib/validation";
 import { hitungHargaPendaftaran } from "@/lib/utils";
 import type { KategoriLomba, UkuranLengan } from "@/types";
@@ -108,12 +108,12 @@ export async function submitPendaftaran(
   const data = parsed.data;
 
   // ── 4. Validasi File Bukti Bayar ────────────────────────────
-  const buktiBayarFile = formData.get("buktiBayar");
+  const buktiBayarPath = formData.get("buktiBayarPath");
 
   if (
-    !buktiBayarFile ||
-    !(buktiBayarFile instanceof File) ||
-    buktiBayarFile.size === 0
+    !buktiBayarPath ||
+    typeof buktiBayarPath !== "string" ||
+    !buktiBayarPath.startsWith("tmp/")
   ) {
     return {
       success: false,
@@ -174,9 +174,8 @@ export async function submitPendaftaran(
     const pesertaId = peserta.id;
 
     // 6b. Upload bukti bayar ke Supabase Storage
-    const buktiBayarPath = await uploadBuktiBayar(
-      buktiBayarFile,
-      "payment-proofs",
+    const finalBuktiBayarPath = await moveBuktiBayar(
+      buktiBayarPath,
       pesertaId
     );
 
@@ -204,8 +203,8 @@ export async function submitPendaftaran(
         biayaPendaftaran,
         donasiTambahan:   data.donasiTambahan,
         totalPembayaran,
-        buktiBayarUrl:    buktiBayarPath,
-        buktiBayarNama:   buktiBayarFile.name,
+        buktiBayarUrl:  finalBuktiBayarPath,
+        buktiBayarNama: finalBuktiBayarPath.split("/").pop() ?? "bukti-bayar",
         status:           "PENDING",
       },
     });

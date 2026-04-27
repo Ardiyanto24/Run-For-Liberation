@@ -3,7 +3,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { uploadBuktiBayar } from "@/lib/supabase";
+import { moveBuktiBayar } from "@/lib/supabase";
 import { donasiSchema } from "@/lib/validation";
 import { sendKonfirmasiDonasi } from "@/lib/emails";
 
@@ -49,12 +49,12 @@ export async function submitDonasi(
   const data = parsed.data;
 
   // ── 3. Validasi File Bukti Bayar ────────────────────────────
-  const buktiBayarFile = formData.get("buktiBayar");
+  const buktiBayarPath = formData.get("buktiBayarPath");
 
   if (
-    !buktiBayarFile ||
-    !(buktiBayarFile instanceof File) ||
-    buktiBayarFile.size === 0
+    !buktiBayarPath ||
+    typeof buktiBayarPath !== "string" ||
+    !buktiBayarPath.startsWith("tmp/")
   ) {
     return {
       success: false,
@@ -80,19 +80,19 @@ export async function submitDonasi(
 
     const donasiId = donasi.id;
 
-    // 4b. Upload bukti bayar ke Supabase Storage
-    const buktiBayarPath = await uploadBuktiBayar(
-      buktiBayarFile,
-      "donation-proofs",
-      donasiId
+    // 4b. Pindahkan bukti bayar ke folder permanen
+    const finalBuktiBayarPath = await moveBuktiBayar(
+      buktiBayarPath,
+      donasiId,
+      "donation-proofs"
     );
 
     // 4c. Update record Donasi dengan path file yang sudah terupload
     await prisma.donasi.update({
       where: { id: donasiId },
       data: {
-        buktiBayarUrl:  buktiBayarPath,
-        buktiBayarNama: buktiBayarFile.name,
+        buktiBayarUrl:  finalBuktiBayarPath,
+        buktiBayarNama: finalBuktiBayarPath.split("/").pop() ?? "bukti-donasi",
       },
     });
 

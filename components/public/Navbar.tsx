@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { name: "Tentang", href: "/tentang" },
   { 
     name: "Event", 
-    href: "/kategori", // URL dasar tetap /kategori
+    href: "/kategori",
     subLinks: [
       { name: "Kategori Lari", href: "/kategori#kategori" },
       { name: "Race Pack", href: "/kategori#racepack" },
@@ -28,9 +28,38 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isEventSubMenuOpen, setIsEventSubMenuOpen] = useState(false); // State untuk sub-menu mobile
+  const [isEventSubMenuOpen, setIsEventSubMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  // STATE BARU: Untuk mengatur visibilitas navbar
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Efek untuk memantau pergerakan mouse dan menyembunyikan navbar
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Jika kursor mendekati area atas layar (misal: 100px dari atas)
+      if (e.clientY < 100) {
+        setIsVisible(true);
+        clearTimeout(timeoutId);
+      } else {
+        // Jika kursor berada di luar area atas, mulai hitung mundur 3 detik (3000ms)
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setIsVisible(false);
+        }, 3000); 
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  // Efek untuk memantau scroll
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -46,17 +75,19 @@ export default function Navbar() {
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const toggleEventSubMenu = (e: React.MouseEvent) => {
-    e.preventDefault(); // Mencegah pindah halaman saat klik icon panah
+    e.preventDefault();
     setIsEventSubMenuOpen(!isEventSubMenuOpen);
   };
 
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-500", // Durasi animasi diubah agar lebih smooth saat sembunyi
         isScrolled
           ? "bg-white/90 backdrop-blur-md shadow-sm py-3"
-          : "bg-white py-5"
+          : "bg-white py-5",
+        // LOGIKA BARU: Jika isVisible false, geser navbar ke atas layar agar hilang
+        !isVisible && "-translate-y-full"
       )}
     >
       <div className="container-public flex items-center justify-between">
@@ -164,7 +195,7 @@ export default function Navbar() {
                 <div className="flex items-center justify-between">
                   <Link
                     href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)} // Tutup menu saat diklik
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
                       "flex-1 font-barlow-condensed text-lg uppercase px-4 py-3 rounded-md transition-colors",
                       isActive
@@ -193,7 +224,7 @@ export default function Navbar() {
                     <Link
                       key={subLink.name}
                       href={subLink.href}
-                      onClick={() => setIsMobileMenuOpen(false)} // Tutup saat diklik
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className="py-2.5 px-4 font-barlow-condensed text-base uppercase text-gray hover:text-blue border-l-2 border-gray-200 hover:border-blue transition-colors"
                     >
                       {subLink.name}
