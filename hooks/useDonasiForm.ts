@@ -11,21 +11,21 @@ import { submitDonasi } from '@/actions/donasi';
 type NominalMode = 'preset' | 'custom';
 
 const INITIAL_FORM_DATA: FormDataDonasi = {
-  nominal:         0,
-  namaDonatur:     '',
-  sembunyikanNama: false,
-  emailDonatur:    '',
-  pesan:           '',
+  nominal:          0,
+  namaDonatur:      '',
+  sembunyikanNama:  false,
+  emailDonatur:     '',
+  pesan:            '',
   metodePembayaran: null,
-  buktiBayar:      null,
+  buktiBayar:       null,
 };
 
 export function useDonasiForm() {
-  const [formData, setFormData]     = useState<FormDataDonasi>(INITIAL_FORM_DATA);
-  const [errors, setErrors]         = useState<DonasiErrors>({});
+  const [formData, setFormData]         = useState<FormDataDonasi>(INITIAL_FORM_DATA);
+  const [errors, setErrors]             = useState<DonasiErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess]   = useState(false);
-  const [nominalMode, setNominalMode] = useState<NominalMode>('preset');
+  const [isSuccess, setIsSuccess]       = useState(false);
+  const [nominalMode, setNominalMode]   = useState<NominalMode>('preset');
 
   // ── Update satu field secara generic ─────────────────────────
 
@@ -97,7 +97,31 @@ export function useDonasiForm() {
     setErrors({});
 
     try {
-      // Susun FormData untuk dikirim ke server action
+      // Guard awal — seharusnya sudah tertangkap validateForm,
+      // tapi double-check di sini untuk keamanan.
+      if (!formData.buktiBayar) {
+        setErrors({ buktiBayar: 'Upload bukti pembayaran terlebih dahulu.' });
+        return;
+      }
+
+      // ── Stage 1: Upload file langsung dari browser ke Supabase ──
+      let buktiBayarPath: string;
+
+      try {
+        buktiBayarPath = await uploadBuktiBayarClient(
+          formData.buktiBayar,
+          'donation-proofs'
+        );
+      } catch (uploadErr) {
+        setErrors({
+          buktiBayar: uploadErr instanceof Error
+            ? uploadErr.message
+            : 'Gagal upload bukti bayar.',
+        });
+        return; // ← stop, jangan lanjut ke server action
+      }
+
+      // ── Stage 2: Kirim data + path ke server action ─────────────
       const fd = new FormData();
 
       fd.append('nominal',          String(formData.nominal));
@@ -106,38 +130,20 @@ export function useDonasiForm() {
       fd.append('emailDonatur',     formData.emailDonatur ?? '');
       fd.append('pesan',            formData.pesan ?? '');
       fd.append('metodePembayaran', formData.metodePembayaran ?? '');
-      
-      // ── Step Tambahan: Upload Bukti Bayar (Client-side) ───────
-      // Mengatasi Vercel Timeout (10s) dengan upload langsung ke Supabase.
-      let buktiBayarPath = "";
-      if (formData.buktiBayar) {
-        try {
-          buktiBayarPath = await uploadBuktiBayarClient(
-            formData.buktiBayar,
-            "donation-proofs"
-          );
-        } catch (uploadErr: any) {
-          setErrors({ buktiBayar: uploadErr.message || "Gagal upload bukti bayar." });
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      // Kirim path, bukan File object
-      fd.append("buktiBayarPath", buktiBayarPath);
+      fd.append('buktiBayarPath',   buktiBayarPath);
 
       const result = await submitDonasi(fd);
 
       if (result.success) {
         setIsSuccess(true);
       } else {
-        // Tampilkan error di field spesifik jika ada, atau error global
         if (result.field) {
           setErrors({ [result.field]: result.error });
         } else {
           setErrors({ _global: result.error });
         }
       }
+
     } catch (err) {
       console.error('[useDonasiForm] Unexpected error:', err);
       setErrors({ _global: 'Terjadi kesalahan tak terduga. Silakan coba lagi.' });

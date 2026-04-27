@@ -277,10 +277,8 @@ export function FormDonasi() {
         <UploadBuktiBayar
           value={formData.buktiBayar}
           onChange={(file) => updateField('buktiBayar', file)}
+          error={errors.buktiBayar}
         />
-        {errors.buktiBayar && (
-          <FieldError message={errors.buktiBayar} />
-        )}
         <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '8px', marginTop: '12px' }}>
           <p style={{ fontSize: '13px', color: '#B45309', margin: 0, lineHeight: 1.5 }}>
             📌 <strong>Catatan:</strong> Bukti transfer Anda akan diverifikasi secara manual oleh panitia maksimal dalam waktu <strong>1×24 jam</strong>.

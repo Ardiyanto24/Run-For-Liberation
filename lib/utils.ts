@@ -86,7 +86,7 @@ export function labelJenisKelamin(jk: JenisKelamin): string {
 // Return null jika valid, string pesan error jika tidak valid.
 
 export function validateFileBuktiBayar(file: File): string | null {
-  const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+  const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
   const ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
   if (!ALLOWED_TYPES.includes(file.type)) {

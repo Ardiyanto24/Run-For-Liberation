@@ -152,7 +152,7 @@ export default function DaftarPage() {
           <div className="px-6 pb-6 pt-4">{renderStep()}</div>
 
           {/* Error global — muncul jika server action return error tanpa field spesifik */}
-          {errors._global && !isStep6 && !isStep7 && (
+          {errors._global && !isStep7 && (
             <div className="px-6 pb-2">
               <div className="p-3 rounded-lg bg-red-50 border border-[#CE1126]/20">
                 <p className="text-xs text-[#CE1126] font-semibold">
