@@ -3,7 +3,7 @@
 import DownloadEtiketButton from "@/components/public/dashboard/DownloadEtiketButton";
 
 interface ETiketProps {
-  peserta: { nomorBib: string | null };
+  peserta: { nomorBib?: string | null };
   eticketSignedUrl: string | null;
 }
 

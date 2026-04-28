@@ -49,6 +49,7 @@ export interface Peserta {
   noKontak: string;
   nomorBib?: string | null;
   qrToken?: string | null;
+  eticketUrl?: string | null;
   status: StatusPeserta;
   createdAt: Date;
   updatedAt: Date;
