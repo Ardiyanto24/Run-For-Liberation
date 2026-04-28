@@ -2,8 +2,7 @@
 
 import satori from "satori";
 import sharp from "sharp";
-import { readFile } from "fs/promises";
-import { join } from "path";
+import { INTER_REGULAR_BASE64, INTER_BOLD_BASE64 } from "@/lib/fonts";
 
 export interface EticketData {
   peserta: {
@@ -73,8 +72,6 @@ function EticketTemplate({ data }: { data: EticketData }) {
 
       {/* ── HEADER dengan dekorasi ── */}
       <div style={{ backgroundColor: "#0E2D7A", padding: "22px 28px 20px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
-
-        {/* Lingkaran dekoratif kanan atas — pengganti ::after karena Satori tidak support pseudo-element */}
         <div style={{
           position: "absolute",
           right: -30,
@@ -86,7 +83,6 @@ function EticketTemplate({ data }: { data: EticketData }) {
           display: "flex",
         }} />
 
-        {/* Top row */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, position: "relative" }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 3 }}>
@@ -103,7 +99,6 @@ function EticketTemplate({ data }: { data: EticketData }) {
           </div>
         </div>
 
-        {/* Meta row */}
         <div style={{ display: "flex", position: "relative" }}>
           {metaItems.map((item, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", marginRight: 20 }}>
@@ -126,9 +121,8 @@ function EticketTemplate({ data }: { data: EticketData }) {
         <div style={{ flex: 1, backgroundColor: "#CE1126" }} />
       </div>
 
-      {/* ── PERFORATION — notch hitam kiri kanan + garis putus ── */}
+      {/* ── PERFORATION ── */}
       <div style={{ backgroundColor: "#f4f7ff", display: "flex", alignItems: "center", height: 28 }}>
-        {/* Notch kiri — setengah lingkaran hitam */}
         <div style={{
           width: 24,
           height: 24,
@@ -138,9 +132,7 @@ function EticketTemplate({ data }: { data: EticketData }) {
           flexShrink: 0,
           display: "flex",
         }} />
-        {/* Garis putus-putus tengah */}
         <div style={{ flex: 1, borderTop: "2px dashed rgba(14,45,122,0.2)", margin: "0 6px" }} />
-        {/* Notch kanan */}
         <div style={{
           width: 24,
           height: 24,
@@ -292,23 +284,8 @@ function EticketTemplate({ data }: { data: EticketData }) {
 
 export async function generateEticketImage(data: EticketData): Promise<Buffer | null> {
   try {
-    const fontRegularPath = join(process.cwd(), "public", "fonts", "Inter-Regular.ttf");
-    const fontBoldPath    = join(process.cwd(), "public", "fonts", "Inter-Bold.ttf");
-
-    const [bufRegular, bufBold] = await Promise.all([
-      readFile(fontRegularPath),
-      readFile(fontBoldPath),
-    ]);
-
-    const fontRegular = bufRegular.buffer.slice(
-      bufRegular.byteOffset,
-      bufRegular.byteOffset + bufRegular.byteLength
-    ) as ArrayBuffer;
-
-    const fontBold = bufBold.buffer.slice(
-      bufBold.byteOffset,
-      bufBold.byteOffset + bufBold.byteLength
-    ) as ArrayBuffer;
+    const fontRegular = Buffer.from(INTER_REGULAR_BASE64, "base64").buffer as ArrayBuffer;
+    const fontBold = Buffer.from(INTER_BOLD_BASE64, "base64").buffer as ArrayBuffer;
 
     const svg = await satori(
       <EticketTemplate data={data} />,
