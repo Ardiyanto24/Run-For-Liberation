@@ -274,10 +274,10 @@ export async function sendKonfirmasiPendaftaran(data: {
   const { peserta, pembayaran, jumlahPeserta } = data;
 
   const kategoriLabel =
-    peserta.kategori === "FUN_RUN" ? "Fun Run 5K" :
-    peserta.kategori === "FUN_WALK" ? "Fun Walk 5K" :
-    peserta.kategori === "FUN_RUN_GAZA" ? "Fun Run 5K – Paket Gaza" :
-    peserta.kategori === "FUN_WALK_GAZA" ? "Fun Walk 5K – Paket Gaza" :
+    peserta.kategori === "FUN_RUN" ? "Fun Run" :
+    peserta.kategori === "FUN_WALK" ? "Fun Walk" :
+    peserta.kategori === "FUN_RUN_GAZA" ? "Fun Run – Paket Gaza" :
+    peserta.kategori === "FUN_WALK_GAZA" ? "Fun Walk – Paket Gaza" :
     peserta.kategori;
   const tipeLabel =
     peserta.tipe === "INDIVIDU" ? "Individu" : "Kelompok";
@@ -415,20 +415,15 @@ export async function sendNotifikasiVerifikasi(data: {
   qrToken: string;
   pdfBuffer?: Buffer;
 }): Promise<{ success: boolean; error?: string }> {
-  const { peserta, qrToken, pdfBuffer } = data;
+  const { peserta, pdfBuffer } = data;
 
   const kategoriLabel =
-    peserta.kategori === "FUN_RUN" ? "Fun Run 5K" : "Fun Walk 5K";
-
-  // Generate QR code sebagai base64 inline image
-  let qrBase64 = "";
-  try {
-    const qrBuffer = await generateQrCodePng(qrToken);
-    qrBase64 = qrBuffer.toString("base64");
-  } catch (qrErr) {
-    console.error("[sendNotifikasiVerifikasi] Gagal generate QR code:", qrErr);
-    // Lanjutkan tanpa QR code daripada gagal kirim email
-  }
+    peserta.kategori === "FUN_RUN_GAZA"  ? "Fun Run – Gaza" :
+    peserta.kategori === "FUN_RUN_RAFAH" ? "Fun Run – Rafah" :
+    peserta.kategori === "FUN_WALK_GAZA"  ? "Fun Walk – Gaza" :
+    peserta.kategori === "FUN_WALK_RAFAH" ? "Fun Walk – Rafah" :
+    peserta.kategori === "FUN_RUN"        ? "Fun Run" :
+    "Fun Walk";
 
   // Tabel anggota — tampil hanya jika kelompok dan ada data anggota
   const anggotaRows =
@@ -514,32 +509,20 @@ export async function sendNotifikasiVerifikasi(data: {
 
     ${anggotaRows}
 
-    <!-- QR Code -->
-    ${
-      qrBase64
-        ? `
+    
+    <!-- Info E-Ticket Attachment -->
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="margin: 0 0 16px 0;">
+           style="margin: 0 0 24px 0;">
       <tr>
-        <td align="center" style="padding: 24px; background-color: #f9fafb;
-                                   border: 1px solid #e5e7eb; border-radius: 6px;">
-          <img src="data:image/png;base64,${qrBase64}"
-               alt="QR Code Check-In"
-               width="200" height="200"
-               style="display: block; border: 0;" />
+        <td style="background-color: #f0fdf4; border: 1px solid #bbf7d0;
+                   border-radius: 6px; padding: 16px;">
+          <p style="margin: 0; font-size: 14px; color: #166534; line-height: 1.5;">
+            &#9989; E-ticket Anda telah dilampirkan pada email ini sebagai file gambar.
+            Simpan dan tunjukkan kepada panitia saat check-in hari H.
+          </p>
         </td>
       </tr>
     </table>
-    <p style="margin: 0 0 24px 0; font-size: 13px; color: #6b7280;
-               text-align: center; line-height: 1.5;">
-      Tunjukkan QR code ini kepada panitia saat tiba di lokasi event
-      untuk proses check-in.
-    </p>`
-        : `
-    <p style="margin: 0 0 24px 0; font-size: 13px; color: #9ca3af; text-align: center;">
-      QR code tersedia di dashboard peserta Anda.
-    </p>`
-    }
   `;
 
   const html = baseEmailTemplate(
