@@ -5,16 +5,10 @@
 import Link from "next/link";
 import { FormDataPendaftaran } from "@/types";
 
-// ============================================================
-// PROPS
-// ============================================================
 interface Step7SelesaiProps {
   formData: FormDataPendaftaran;
 }
 
-// ============================================================
-// KOMPONEN
-// ============================================================
 export default function Step7Selesai({ formData }: Step7SelesaiProps) {
   const email = formData.peserta.email || "email Anda";
 
@@ -44,7 +38,7 @@ export default function Step7Selesai({ formData }: Step7SelesaiProps) {
 
       {/* Pesan email */}
       <p className="text-sm text-[#0A1628] mb-1 leading-relaxed">
-        Magic link telah dikirim ke
+        Email konfirmasi telah dikirim ke
       </p>
       <p className="text-sm font-bold text-[#1A54C8] mb-5 break-all">
         {email}
@@ -53,33 +47,30 @@ export default function Step7Selesai({ formData }: Step7SelesaiProps) {
       {/* Card instruksi */}
       <div className="w-full rounded-xl border border-[rgba(0,122,61,0.18)] bg-[#E8F5EE] p-5 mb-4 text-left">
         <div className="flex flex-col gap-3">
-          {/* Item 1 */}
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 rounded-full bg-[#007A3D] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
               1
             </span>
             <p className="text-sm text-[#0A1628] leading-relaxed">
-              Buka email dan klik <strong>magic link</strong> yang kami kirimkan untuk mengakses dashboard peserta Anda.
+              Buka email untuk melihat <strong>ringkasan pendaftaran</strong> Anda.
             </p>
           </div>
 
-          {/* Item 2 */}
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 rounded-full bg-[#007A3D] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
               2
             </span>
             <p className="text-sm text-[#0A1628] leading-relaxed">
-              Gunakan link tersebut kapan saja untuk memantau <strong>status pendaftaran</strong> Anda.
+              Panitia akan memverifikasi pembayaran dalam <strong>1×24 jam</strong>.
             </p>
           </div>
 
-          {/* Item 3 */}
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 rounded-full bg-[#007A3D] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
               3
             </span>
             <p className="text-sm text-[#0A1628] leading-relaxed">
-              Verifikasi pembayaran berlangsung dalam <strong>1×24 jam</strong> setelah bukti transfer diterima.
+              Setelah terverifikasi, <strong>e-ticket</strong> akan dikirim ke email Anda.
             </p>
           </div>
         </div>
@@ -94,18 +85,10 @@ export default function Step7Selesai({ formData }: Step7SelesaiProps) {
         </p>
       </div>
 
-      {/* Tombol Cek Status */}
-      <Link
-        href="/cek-status"
-        className="w-full py-3.5 rounded-xl bg-[#1A54C8] hover:bg-[#0E3EA0] text-white font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(26,84,200,0.30)] hover:shadow-[0_6px_20px_rgba(26,84,200,0.40)] active:scale-[0.99]"
-      >
-        🔍 Cek Status Pendaftaran
-      </Link>
-
       {/* Link kembali ke beranda */}
       <Link
         href="/"
-        className="mt-3 text-xs text-[#6B7A99] hover:text-[#1A54C8] transition-colors duration-200"
+        className="w-full py-3.5 rounded-xl bg-[#1A54C8] hover:bg-[#0E3EA0] text-white font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(26,84,200,0.30)] hover:shadow-[0_6px_20px_rgba(26,84,200,0.40)] active:scale-[0.99]"
       >
         ← Kembali ke Beranda
       </Link>

@@ -357,21 +357,6 @@ export async function sendKonfirmasiPendaftaran(data: {
         </td>
       </tr>
     </table>
-
-    <!-- Tombol CTA -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td align="center">
-          <a href="${BASE_URL}/cek-status"
-             style="display: inline-block; background-color: #1a56db; color: #ffffff;
-                    font-family: Arial, Helvetica, sans-serif; font-size: 16px;
-                    font-weight: bold; text-decoration: none; padding: 14px 32px;
-                    border-radius: 6px;">
-            Cek Status Pendaftaran
-          </a>
-        </td>
-      </tr>
-    </table>
   `;
 
   const html = baseEmailTemplate(
@@ -555,21 +540,6 @@ export async function sendNotifikasiVerifikasi(data: {
       QR code tersedia di dashboard peserta Anda.
     </p>`
     }
-
-    <!-- Tombol CTA -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td align="center">
-          <a href="${BASE_URL}/cek-status"
-             style="display: inline-block; background-color: #1a56db; color: #ffffff;
-                    font-family: Arial, Helvetica, sans-serif; font-size: 16px;
-                    font-weight: bold; text-decoration: none; padding: 14px 32px;
-                    border-radius: 6px;">
-            Lihat Dashboard Saya
-          </a>
-        </td>
-      </tr>
-    </table>
   `;
 
   const html = baseEmailTemplate(
