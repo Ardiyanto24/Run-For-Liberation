@@ -42,12 +42,16 @@ const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
   "application/pdf",
+  "image/heic",
+  "image/heif",
 ] as const;
 
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "application/pdf": "pdf",
+  "image/heic": "heic",
+  "image/heif": "heif",
 };
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB

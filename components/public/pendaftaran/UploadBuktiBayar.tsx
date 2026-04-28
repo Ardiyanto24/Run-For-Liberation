@@ -185,7 +185,7 @@ export default function UploadBuktiBayar({
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/png,application/pdf"
+          accept="image/jpeg,image/png,application/pdf,image/heic,image/heif"
           onChange={handleInputChange}
           className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
         />
@@ -195,7 +195,7 @@ export default function UploadBuktiBayar({
           {isDragging ? "Lepaskan file di sini" : "Klik atau seret file ke sini"}
         </p>
         <p className="text-xs text-[#6B7A99]">
-          JPG, PNG, atau PDF — maksimal 5MB
+          JPG, PNG, PDF, atau HEIC — maksimal 2MB
         </p>
       </div>
 
@@ -206,7 +206,7 @@ export default function UploadBuktiBayar({
       {!localError && <FieldError message={error} />}
 
       <p className="text-[11px] text-[#6B7A99] mt-2">
-        Format: JPG, PNG, atau PDF. Maksimal 5MB.
+        Format: JPG, PNG, PDF, atau HEIC. Maksimal 2MB.
       </p>
     </div>
   );

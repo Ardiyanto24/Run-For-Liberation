@@ -87,14 +87,20 @@ export function labelJenisKelamin(jk: JenisKelamin): string {
 
 export function validateFileBuktiBayar(file: File): string | null {
   const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
-  const ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+  const ALLOWED_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
+    "image/heic",
+    "image/heif",
+  ];
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return "Format file harus JPG, PNG, atau PDF.";
+    return "Format file harus JPG, JPEG, PNG, PDF, atau HEIC.";
   }
 
   if (file.size > MAX_SIZE_BYTES) {
-    return "Ukuran file maksimal 5MB.";
+    return "Ukuran file maksimal 2MB.";
   }
 
   return null;
