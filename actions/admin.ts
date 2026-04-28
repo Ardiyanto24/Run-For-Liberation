@@ -15,7 +15,7 @@ import {
   generateQrToken,
 } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limiter";
-import { getSignedUrl } from "@/lib/supabase";
+import { getSignedUrl, uploadEticket } from "@/lib/supabase";
 import {
   generateEticketPdf,
   sendNotifikasiVerifikasi,
@@ -219,6 +219,24 @@ export async function verifikasiPeserta(
       anggota: result.peserta.anggota?.map((a: any) => ({ namaLengkap: a.namaLengkap })),
       qrToken: result.qrToken,
     });
+
+    // ── Upload e-ticket PNG ke Supabase Storage ──────────────
+    if (pdfBuffer) {
+      try {
+        const eticketPath = await uploadEticket(
+          pdfBuffer,
+          pesertaId,
+          nomorBib
+        );
+        await prisma.peserta.update({
+          where: { id: pesertaId },
+          data: { eticketUrl: eticketPath },
+        });
+      } catch (uploadErr) {
+        console.error("[verifikasiPeserta] Gagal upload eticket:", uploadErr);
+        // Tidak menggagalkan verifikasi
+      }
+    }
 
     const verifikasiEmailResult = await sendNotifikasiVerifikasi({
       peserta: {

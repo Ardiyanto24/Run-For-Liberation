@@ -102,6 +102,7 @@ model Peserta {
   noKontak       String          @map("no_kontak")
   nomorBib       String?         @unique @map("nomor_bib")
   qrToken        String?         @unique @map("qr_token")
+  eticketUrl     String?         @map("eticket_url")
   status         StatusPeserta   @default(PENDING) @map("status")
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")

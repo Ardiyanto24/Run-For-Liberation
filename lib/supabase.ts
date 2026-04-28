@@ -169,3 +169,57 @@ export async function moveBuktiBayar(
 
   return finalPath;
 }
+
+// ─── Upload E-Ticket PNG ─────────────────────────────────────
+
+/**
+ * Upload e-ticket PNG ke Supabase Storage bucket "etickets".
+ * Dipanggil saat admin memverifikasi peserta.
+ *
+ * @param pngBuffer - Buffer PNG hasil generateEticketImage
+ * @param pesertaId - ID peserta
+ * @param nomorBib  - Nomor BIB peserta
+ * @returns         - Path relatif file, contoh: "clxabc123/eticket-0001.png"
+ */
+export async function uploadEticket(
+  pngBuffer: Buffer,
+  pesertaId: string,
+  nomorBib: string
+): Promise<string> {
+  const filePath = `${pesertaId}/eticket-${nomorBib}.png`;
+
+  const { error } = await supabaseAdmin.storage
+    .from("etickets")
+    .upload(filePath, pngBuffer, {
+      contentType: "image/png",
+      upsert: true, // Timpa jika sudah ada (re-verifikasi)
+    });
+
+  if (error) {
+    console.error("[supabase.ts] Upload eticket gagal:", error);
+    throw new Error("Gagal mengupload e-ticket.");
+  }
+
+  return filePath;
+}
+
+// ─── Generate Signed URL E-Ticket ───────────────────────────
+
+/**
+ * Generate signed URL untuk e-ticket dari bucket "etickets".
+ * URL berlaku 1 jam.
+ */
+export async function getEticketSignedUrl(
+  path: string
+): Promise<string | null> {
+  const { data, error } = await supabaseAdmin.storage
+    .from("etickets")
+    .createSignedUrl(path, 3600); // 1 jam
+
+  if (error || !data?.signedUrl) {
+    console.error("[supabase.ts] Gagal generate signed URL eticket:", error);
+    return null;
+  }
+
+  return data.signedUrl;
+}

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { getPesertaSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { getSignedUrl } from "@/lib/supabase";
+import { getSignedUrl, getEticketSignedUrl } from "@/lib/supabase";
 import { labelKategori } from "@/lib/utils";
 import type { PesertaLengkap } from "@/types";
 import StatusBadge from "@/components/public/dashboard/StatusBadge";
@@ -53,6 +53,12 @@ export default async function DashboardPesertaPage() {
     );
     // getSignedUrl return null jika gagal — UI menangani null
     // dengan menyembunyikan link "Lihat Bukti Pembayaran"
+  }
+
+  // ── 4b. Generate Signed URL E-Ticket ─────────────────────
+  let eticketSignedUrl: string | null = null;
+  if (pesertaData.eticketUrl) {
+    eticketSignedUrl = await getEticketSignedUrl(pesertaData.eticketUrl);
   }
 
   // ── 4. Render ─────────────────────────────────────────────────
@@ -105,7 +111,7 @@ export default async function DashboardPesertaPage() {
         {/* ── VERIFIED ────────────────────────────────────────── */}
         {pesertaData.status === "VERIFIED" && (
           <>
-            <ETiket peserta={pesertaData} />
+            <ETiket peserta={pesertaData} eticketSignedUrl={eticketSignedUrl} />
             <DetailPendaftaran
               peserta={pesertaData}
               buktiBayarSignedUrl={buktiBayarSignedUrl}
