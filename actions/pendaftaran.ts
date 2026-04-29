@@ -47,9 +47,6 @@ function readHargaFromEnv(): HargaMap {
 
 // ============================================================
 // SERVER ACTION: getHargaKategori
-// Dipakai UI (Step5Ringkasan, usePendaftaranForm) untuk
-// kalkulasi display — bukan untuk kalkulasi final saat submit.
-// Harga tetap dihitung ulang penuh di server saat submit.
 // ============================================================
 
 export async function getHargaKategori(): Promise<HargaMap> {
@@ -71,6 +68,9 @@ export async function submitPendaftaran(
   try {
     anggotaParsed = rawAnggota ? JSON.parse(rawAnggota as string) : [];
   } catch {
+    console.error("[submitPendaftaran] Gagal parse data anggota:", {
+      rawAnggota,
+    });
     return { success: false, error: "Data anggota tidak valid." };
   }
 
@@ -98,6 +98,22 @@ export async function submitPendaftaran(
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0];
+    console.error("[submitPendaftaran] Validasi Zod gagal:", {
+      email:        raw.email,
+      tipe:         raw.tipe,
+      kategori:     raw.kategori,
+      totalIssues:  parsed.error.issues.length,
+      issues:       parsed.error.issues.map((issue) => ({
+        field:   issue.path.join("."),
+        message: issue.message,
+        value:   issue.path.reduce((obj: unknown, key) => {
+          if (obj && typeof obj === "object") {
+            return (obj as Record<string, unknown>)[key as string];
+          }
+          return undefined;
+        }, raw),
+      })),
+    });
     return {
       success: false,
       error: firstError.message,
@@ -115,6 +131,11 @@ export async function submitPendaftaran(
     typeof buktiBayarPath !== "string" ||
     !buktiBayarPath.startsWith("tmp/")
   ) {
+    console.error("[submitPendaftaran] buktiBayarPath tidak valid:", {
+      email:          data.email,
+      buktiBayarPath: buktiBayarPath ?? "(kosong)",
+      tipe:           typeof buktiBayarPath,
+    });
     return {
       success: false,
       error: "Bukti pembayaran wajib diunggah.",
@@ -123,7 +144,6 @@ export async function submitPendaftaran(
   }
 
   // ── 5. Hitung Biaya di Server ───────────────────────────────
-  // Kalkulasi dilakukan sepenuhnya di server — nilai dari client diabaikan.
   const isGaza =
     data.kategori === "FUN_RUN_GAZA" ||
     data.kategori === "FUN_WALK_GAZA";
@@ -140,6 +160,13 @@ export async function submitPendaftaran(
       isGaza ? (data.ukuranLengan as UkuranLengan) : undefined
     );
   } catch (err) {
+    console.error("[submitPendaftaran] Gagal hitung harga:", {
+      email:        data.email,
+      kategori:     data.kategori,
+      ukuranLengan: data.ukuranLengan ?? "(tidak ada)",
+      jumlahPeserta,
+      error:        err instanceof Error ? err.message : err,
+    });
     return {
       success: false,
       error: err instanceof Error
@@ -155,7 +182,7 @@ export async function submitPendaftaran(
     // 6a. Buat record Peserta
     const peserta = await prisma.peserta.create({
       data: {
-        tipe:         data.tipe as any, // Cast to any to bypass stale IDE cache after KELUARGA update
+        tipe:         data.tipe as any,
         kategori:     data.kategori,
         namaKelompok: data.namaKelompok ?? null,
         namaLengkap:  data.namaLengkap,
@@ -163,7 +190,6 @@ export async function submitPendaftaran(
         noWhatsapp:   data.noWhatsapp,
         tanggalLahir: new Date(data.tanggalLahir),
         jenisKelamin: data.jenisKelamin,
-        // Jersey hanya diisi jika paket Gaza
         ukuranJersey: isGaza ? (data.ukuranJersey ?? null) : null,
         ukuranLengan: isGaza ? (data.ukuranLengan ?? null) : null,
         namaKontak:   data.namaKontak,
@@ -173,7 +199,7 @@ export async function submitPendaftaran(
 
     const pesertaId = peserta.id;
 
-    // 6b. Upload bukti bayar ke Supabase Storage
+    // 6b. Pindahkan bukti bayar dari tmp/ ke folder final
     const finalBuktiBayarPath = await moveBuktiBayar(
       buktiBayarPath,
       pesertaId
@@ -187,7 +213,6 @@ export async function submitPendaftaran(
           namaLengkap:  anggota.namaLengkap,
           tanggalLahir: new Date(anggota.tanggalLahir),
           jenisKelamin: anggota.jenisKelamin,
-          // Jersey anggota juga hanya diisi jika Gaza
           ukuranJersey: isGaza ? (anggota.ukuranJersey ?? null) : null,
           ukuranLengan: isGaza ? (anggota.ukuranLengan ?? null) : null,
           urutan:       idx + 1,
@@ -203,14 +228,13 @@ export async function submitPendaftaran(
         biayaPendaftaran,
         donasiTambahan:   data.donasiTambahan,
         totalPembayaran,
-        buktiBayarUrl:  finalBuktiBayarPath,
-        buktiBayarNama: finalBuktiBayarPath.split("/").pop() ?? "bukti-bayar",
+        buktiBayarUrl:    finalBuktiBayarPath,
+        buktiBayarNama:   finalBuktiBayarPath.split("/").pop() ?? "bukti-bayar",
         status:           "PENDING",
       },
     });
 
     // ── 7. Kirim Email Konfirmasi ───────────────────────────
-    // Jika email gagal: log dan lanjutkan — pendaftaran tetap tersimpan.
     const emailResult = await sendKonfirmasiPendaftaran({
       peserta: {
         namaLengkap:  data.namaLengkap,
@@ -226,17 +250,26 @@ export async function submitPendaftaran(
     });
 
     if (!emailResult.success) {
-      console.error(
-        "[submitPendaftaran] Gagal kirim email konfirmasi:",
-        emailResult.error
-      );
-      // Email gagal tidak menggagalkan proses pendaftaran
+      // Email gagal tidak menggagalkan pendaftaran — tapi harus dicatat
+      console.error("[submitPendaftaran] Gagal kirim email konfirmasi:", {
+        pesertaId,
+        email: data.email,
+        error: emailResult.error,
+      });
     }
 
     return { success: true, pesertaId };
 
   } catch (err) {
-    console.error("[submitPendaftaran] Error:", err);
+    console.error("[submitPendaftaran] Error database/storage:", {
+      email:        data.email,
+      tipe:         data.tipe,
+      kategori:     data.kategori,
+      jumlahPeserta,
+      buktiBayarPath,
+      error:        err instanceof Error ? err.message : err,
+      stack:        err instanceof Error ? err.stack : undefined,
+    });
     return {
       success: false,
       error: "Terjadi kesalahan saat menyimpan pendaftaran. Silakan coba lagi.",
