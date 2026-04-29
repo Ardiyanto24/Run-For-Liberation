@@ -15,7 +15,17 @@ function formatFileSize(bytes: number): string {
 }
 
 function isImageFile(file: File): boolean {
-  return file.type === "image/jpeg" || file.type === "image/png";
+  // Handle HEIC dan file dari kamera iPhone yang type-nya kosong
+  if (file.type === "") {
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    return ["jpg", "jpeg", "png", "heic", "heif"].includes(ext);
+  }
+  return (
+    file.type === "image/jpeg" ||
+    file.type === "image/png" ||
+    file.type === "image/heic" ||
+    file.type === "image/heif"
+  );
 }
 
 // ============================================================
@@ -35,6 +45,8 @@ export default function UploadBuktiBayar({
   onChange,
   error,
 }: UploadBuktiBayarProps) {
+  // Input diletakkan di luar drop zone — dipanggil via ref
+  // untuk menghindari double-trigger file picker di Safari/iOS
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -55,7 +67,6 @@ export default function UploadBuktiBayar({
     setLocalError(null);
     onChange(file);
 
-    // Buat preview URL jika gambar
     if (isImageFile(file)) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
@@ -70,6 +81,9 @@ export default function UploadBuktiBayar({
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) processFile(file);
+    // Reset value input agar onChange terpanggil
+    // meski user pilih file yang sama
+    e.target.value = "";
   }
 
   function handleDragOver(e: DragEvent<HTMLDivElement>) {
@@ -95,12 +109,13 @@ export default function UploadBuktiBayar({
     if (inputRef.current) inputRef.current.value = "";
   }
 
+  // Dipanggil hanya dari onClick div — input TIDAK ada di dalam div
   function handleClickZone() {
     inputRef.current?.click();
   }
 
   // --------------------------------------------------------
-  // RENDER: Preview file
+  // RENDER: Preview file (sudah ada file)
   // --------------------------------------------------------
   if (value) {
     return (
@@ -157,7 +172,7 @@ export default function UploadBuktiBayar({
         </div>
 
         <p className="text-[11px] text-[#6B7A99] mt-2">
-          Format: JPG, PNG, atau PDF. Maksimal 5MB.
+          Format: JPG, PNG, PDF, atau HEIC. Maksimal 2MB.
         </p>
 
         <FieldError message={error} />
@@ -170,26 +185,32 @@ export default function UploadBuktiBayar({
   // --------------------------------------------------------
   return (
     <div>
+      {/*
+        Input file diletakkan DI LUAR div drop zone.
+        Ini mencegah double-trigger file picker di Safari/iOS
+        yang terjadi ketika input (opacity-0, full-cover) dan
+        div onClick keduanya merespons tap yang sama.
+      */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,application/pdf,image/heic,image/heif"
+        onChange={handleInputChange}
+        className="hidden"
+      />
+
       <div
         onClick={handleClickZone}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={[
-          "border-2 border-dashed rounded-xl p-7 text-center cursor-pointer transition-all duration-200 bg-[#F5F8FF] relative",
+          "border-2 border-dashed rounded-xl p-7 text-center cursor-pointer transition-all duration-200 bg-[#F5F8FF]",
           isDragging
             ? "border-[#1A54C8] bg-[#EEF3FF]"
             : "border-[rgba(26,84,200,0.20)] hover:border-[#4A7CE8] hover:bg-[#EEF3FF]",
         ].join(" ")}
       >
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,application/pdf,image/heic,image/heif"
-          onChange={handleInputChange}
-          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-        />
-
         <span className="text-3xl block mb-2">📎</span>
         <p className="text-sm font-bold text-[#0A1628] mb-1">
           {isDragging ? "Lepaskan file di sini" : "Klik atau seret file ke sini"}
