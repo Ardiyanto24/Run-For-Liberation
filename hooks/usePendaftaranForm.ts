@@ -55,32 +55,30 @@ export function usePendaftaranForm() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [formData, setFormData] = useState<FormDataPendaftaran>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // fix: hapus underscore
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // ── Harga dari server ─────────────────────────────────────
-  // Default value adalah fallback jika fetch gagal.
-  // Kalkulasi final tetap dilakukan di server saat submit.
   const [hargaMap, setHargaMap] = useState<HargaMap>({
     "FUN_RUN_GAZA__PANJANG": 120_000,
-    "FUN_RUN_GAZA__PENDEK": 110_000,
+    "FUN_RUN_GAZA__PENDEK":  110_000,
     "FUN_WALK_GAZA__PANJANG": 120_000,
-    "FUN_WALK_GAZA__PENDEK": 110_000,
-    "FUN_RUN_RAFAH": 30_000,
+    "FUN_WALK_GAZA__PENDEK":  110_000,
+    "FUN_RUN_RAFAH":  30_000,
     "FUN_WALK_RAFAH": 30_000,
   });
 
   useEffect(() => {
     getHargaKategori()
       .then(setHargaMap)
-      .catch(() => {
-        // Gagal fetch — gunakan nilai default di useState
-        console.error("[usePendaftaranForm] Gagal mengambil harga dari server.");
+      .catch((err) => {
+        console.error("[usePendaftaranForm] Gagal mengambil harga dari server:", {
+          error: err instanceof Error ? err.message : err,
+        });
       });
   }, []);
 
   // ----------------------------------------------------------
   // KALKULASI HARGA
-  // Menggunakan hargaMap dari server + ukuranLengan untuk Gaza.
   // ----------------------------------------------------------
 
   function resolveHargaSatuan(): number {
@@ -88,10 +86,9 @@ export function usePendaftaranForm() {
     const lengan = formData.peserta.ukuranLengan;
     if (!kategori) return 0;
 
-    if (kategori === "FUN_RUN_RAFAH") return hargaMap["FUN_RUN_RAFAH"] ?? 0;
+    if (kategori === "FUN_RUN_RAFAH")  return hargaMap["FUN_RUN_RAFAH"]  ?? 0;
     if (kategori === "FUN_WALK_RAFAH") return hargaMap["FUN_WALK_RAFAH"] ?? 0;
 
-    // Gaza — bergantung ukuranLengan
     const key = `${kategori}__${lengan || "PANJANG"}`;
     return hargaMap[key] ?? 0;
   }
@@ -134,7 +131,6 @@ export function usePendaftaranForm() {
           formData.kategori === "FUN_RUN_GAZA" ||
           formData.kategori === "FUN_WALK_GAZA";
 
-        // Validasi peserta / ketua
         if (!p.namaLengkap.trim())
           newErrors.namaLengkap = "Nama lengkap wajib diisi.";
 
@@ -153,7 +149,6 @@ export function usePendaftaranForm() {
         if (!p.jenisKelamin)
           newErrors.jenisKelamin = "Jenis kelamin wajib dipilih.";
 
-        // Jersey — hanya wajib jika paket Gaza
         if (isGaza && !p.ukuranLengan)
           newErrors.ukuranLengan = "Tipe lengan jersey wajib dipilih.";
 
@@ -166,7 +161,6 @@ export function usePendaftaranForm() {
         if (!p.noKontak.trim())
           newErrors.noKontak = "Nomor kontak darurat wajib diisi.";
 
-        // Validasi anggota jika KELUARGA — fix: sebelumnya "KELOMPOK"
         if (formData.tipe === "KELUARGA") {
           if (formData.anggota.length === 0) {
             newErrors.anggota =
@@ -185,7 +179,6 @@ export function usePendaftaranForm() {
                 newErrors[`anggota_${idx}_jenisKelamin`] =
                   `Jenis kelamin anggota ${idx + 1} wajib dipilih.`;
 
-              // Jersey anggota — hanya wajib jika Gaza
               if (isGaza && !anggota.ukuranLengan)
                 newErrors[`anggota_${idx}_ukuranLengan`] =
                   `Tipe lengan anggota ${idx + 1} wajib dipilih.`;
@@ -200,12 +193,10 @@ export function usePendaftaranForm() {
       }
 
       case 4: {
-        // Donasi opsional — tidak ada validasi wajib
         break;
       }
 
       case 5: {
-        // Hanya ringkasan — tidak ada validasi
         break;
       }
 
@@ -223,7 +214,6 @@ export function usePendaftaranForm() {
       }
 
       case 7: {
-        // Halaman konfirmasi — tidak ada validasi
         break;
       }
     }
@@ -241,15 +231,12 @@ export function usePendaftaranForm() {
     setErrors({});
 
     try {
-      // Guard awal — seharusnya sudah tertangkap validateStep,
-      // tapi double-check di sini untuk keamanan.
       if (!formData.buktiBayar) {
         setErrors({ buktiBayar: "Upload bukti pembayaran wajib dilakukan." });
         return;
       }
 
       const fd = new FormData();
-
       fd.append("tipe",             formData.tipe ?? "");
       fd.append("kategori",         formData.kategori ?? "");
       fd.append("namaKelompok",     formData.namaKelompok ?? "");
@@ -266,7 +253,7 @@ export function usePendaftaranForm() {
       fd.append("metodePembayaran", formData.metodePembayaran ?? "");
       fd.append("anggota",          JSON.stringify(formData.anggota));
 
-      // ── Stage 1: Upload file langsung dari browser ke Supabase ──
+      // ── Stage 1: Upload file ke Supabase ──────────────────
       let buktiBayarPath: string;
 
       try {
@@ -275,15 +262,24 @@ export function usePendaftaranForm() {
           "payment-proofs"
         );
       } catch (uploadErr) {
-        setErrors({
-          buktiBayar: uploadErr instanceof Error
-            ? uploadErr.message
-            : "Gagal upload bukti bayar.",
+        const pesanError = uploadErr instanceof Error
+          ? uploadErr.message
+          : "Gagal upload bukti bayar.";
+
+        console.error("[usePendaftaranForm] Stage 1 gagal — upload ke Supabase:", {
+          email:     formData.peserta.email,
+          kategori:  formData.kategori,
+          fileName:  formData.buktiBayar.name,
+          fileType:  formData.buktiBayar.type || "(kosong — kemungkinan Safari/iOS)",
+          fileSize:  `${(formData.buktiBayar.size / 1024).toFixed(0)} KB`,
+          error:     pesanError,
         });
+
+        setErrors({ buktiBayar: pesanError });
         return;
       }
 
-      // ── Stage 2: Kirim data + path ke server action ─────────────
+      // ── Stage 2: Kirim data ke Server Action ──────────────
       fd.append("buktiBayarPath", buktiBayarPath);
 
       const result = await submitPendaftaran(fd);
@@ -291,16 +287,37 @@ export function usePendaftaranForm() {
       if (result.success) {
         setCurrentStep(7);
       } else {
+        console.error("[usePendaftaranForm] Stage 2 gagal — Server Action:", {
+          email:          formData.peserta.email,
+          kategori:       formData.kategori,
+          tipe:           formData.tipe,
+          buktiBayarPath,
+          fieldError:     result.field ?? "(tidak ada field spesifik)",
+          errorMessage:   result.error,
+        });
+
         if (result.field) {
           setErrors({ [result.field]: result.error });
         } else {
-          setErrors({ _global: result.error });
+          // Error global — tidak terkait field spesifik
+          // ditampilkan di UI Step6 di atas tombol submit
+          setErrors({
+            _global: result.error,
+          });
         }
       }
 
     } catch (err) {
-      console.error("[handleSubmit] Unexpected error:", err);
-      setErrors({ _global: "Terjadi kesalahan tak terduga. Silakan coba lagi." });
+      console.error("[usePendaftaranForm] Unexpected error di handleSubmit:", {
+        email:    formData.peserta.email,
+        kategori: formData.kategori,
+        tipe:     formData.tipe,
+        error:    err instanceof Error ? err.message : err,
+        stack:    err instanceof Error ? err.stack : undefined,
+      });
+      setErrors({
+        _global: "Terjadi kesalahan tak terduga. Silakan coba lagi atau hubungi panitia.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -314,7 +331,6 @@ export function usePendaftaranForm() {
     const isValid = validateStep(currentStep);
     if (!isValid) return;
 
-    // Step 6: submit ke server, bukan pindah step biasa
     if (currentStep === 6) {
       await handleSubmit();
       return;
@@ -404,22 +420,17 @@ export function usePendaftaranForm() {
   // ----------------------------------------------------------
 
   return {
-    // State
     currentStep,
     formData,
     errors,
     isSubmitting,
-    // Navigasi
     goToNextStep,
     goToPrevStep,
-    // Update
     updateFormData,
     updatePeserta,
-    // Anggota
     addAnggota,
     removeAnggota,
     updateAnggota,
-    // Kalkulasi (dipakai Step5 sebagai fallback)
     hitungBiayaPendaftaran,
     hitungTotal,
   };
