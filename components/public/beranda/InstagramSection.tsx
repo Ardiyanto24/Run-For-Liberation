@@ -155,7 +155,17 @@ export default function InstagramSection() {
         }
 
         @media (max-width: 768px) {
-          .ig-cards-wrapper { justify-content: center; }
+          .sp-sec { padding: 60px 16px; }
+          .sp-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+          }
+          .sp-card {
+            min-width: unset;
+            width: 100%;
+            padding: 12px 8px;
+          }
         }
       `}}
       />
