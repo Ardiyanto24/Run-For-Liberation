@@ -1,7 +1,9 @@
 // components/public/beranda/DonasiSection.tsx
 
+"use client";
+
+import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { getStatistikDonasi } from "@/lib/queries/donasi";
 
 function formatRupiah(angka: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -11,19 +13,53 @@ function formatRupiah(angka: number): string {
   }).format(angka);
 }
 
-export default async function DonasiSection() {
-  const { totalTerkumpul, jumlahDonatur, jumlahPeserta, targetDonasi, persentase } =
-    await getStatistikDonasi();
-
+export default function DonasiSection() {
+  // TODO: DEV-10 — ganti dengan props dari Server Component parent
+  const totalTerkumpul = 0;
+  const jumlahDonatur = 0;
+  const jumlahPeserta = 0;
+  const targetDonasi = 50000000;
+  const persentase = 0;
   const pct = Math.min(persentase, 100).toFixed(1);
+
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const animEls = section.querySelectorAll<HTMLElement>("[data-anim]");
+    const progFill = section.querySelector<HTMLElement>(".prog-fill");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animEls.forEach((el) => {
+              const delay = el.dataset.animDelay ?? "0";
+              setTimeout(() => el.classList.add("don-visible"), Number(delay));
+            });
+            if (progFill) {
+              setTimeout(() => {
+                progFill.style.width = progFill.dataset.width ?? "0%";
+              }, 400);
+            }
+          } else {
+            animEls.forEach((el) => el.classList.remove("don-visible"));
+            if (progFill) progFill.style.width = "0%";
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <>
       <style>{`
-        @keyframes fadeUpDon {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
         @keyframes pulseDot {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.4; transform: scale(0.7); }
@@ -31,6 +67,19 @@ export default async function DonasiSection() {
         @keyframes liveBadge {
           0%, 100% { box-shadow: 0 0 0 0 rgba(206,17,38,0.5); }
           70% { box-shadow: 0 0 0 8px rgba(206,17,38,0); }
+        }
+
+        /* Animasi masuk viewport */
+        [data-anim] {
+          opacity: 0;
+          transform: scale(0.96) translateY(16px);
+          transition:
+            opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+            transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        [data-anim].don-visible {
+          opacity: 1;
+          transform: scale(1) translateY(0);
         }
 
         .don-sec {
@@ -93,7 +142,6 @@ export default async function DonasiSection() {
           color: rgba(255,255,255,0.55);
           margin-bottom: 6px;
           display: block;
-          animation: fadeUpDon 0.6s ease both;
         }
         .don-title {
           font-family: 'Bebas Neue', sans-serif;
@@ -101,13 +149,11 @@ export default async function DonasiSection() {
           color: #fff;
           letter-spacing: 1px;
           margin-bottom: 6px;
-          animation: fadeUpDon 0.6s 0.1s ease both;
         }
         .don-sub {
           font-size: 14px;
           color: rgba(255,255,255,0.55);
           margin-bottom: 36px;
-          animation: fadeUpDon 0.6s 0.2s ease both;
         }
         .prog-box {
           background: rgba(255,255,255,0.1);
@@ -115,7 +161,6 @@ export default async function DonasiSection() {
           border-radius: 14px;
           padding: 26px;
           margin-bottom: 16px;
-          animation: fadeUpDon 0.6s 0.25s ease both;
         }
         .prog-top {
           display: flex;
@@ -148,7 +193,8 @@ export default async function DonasiSection() {
           height: 100%;
           background: linear-gradient(90deg, #22c55e, #4ade80);
           border-radius: 999px;
-          transition: width 1.8s ease;
+          width: 0%;
+          transition: width 1.8s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .prog-meta {
           font-size: 13px;
@@ -160,7 +206,6 @@ export default async function DonasiSection() {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 12px;
-          animation: fadeUpDon 0.6s 0.35s ease both;
         }
         .don-stat {
           background: rgba(255,255,255,0.1);
@@ -184,7 +229,6 @@ export default async function DonasiSection() {
         }
         .don-cta {
           margin-top: 32px;
-          animation: fadeUpDon 0.6s 0.45s ease both;
         }
         .btn-don {
           background: #fff;
@@ -211,21 +255,23 @@ export default async function DonasiSection() {
         }
       `}</style>
 
-      <section className="don-sec">
+      <section className="don-sec" ref={sectionRef}>
         <div className="don-inner">
 
-          <div className="live-badge">
+          <div className="live-badge" data-anim data-anim-delay="0">
             <div className="live-dot" />
             <span className="live-text">🔴 Live Update</span>
           </div>
 
-          <span className="don-label">Transparansi Dana</span>
-          <h2 className="don-title">Progress Donasi</h2>
-          <p className="don-sub">
-            100% dana tersalurkan langsung untuk bantuan kemanusiaan Gaza.
-          </p>
+          <div data-anim data-anim-delay="100">
+            <span className="don-label">Transparansi Dana</span>
+            <h2 className="don-title">Progress Donasi</h2>
+            <p className="don-sub">
+              100% dana tersalurkan langsung untuk bantuan kemanusiaan Gaza.
+            </p>
+          </div>
 
-          <div className="prog-box">
+          <div className="prog-box" data-anim data-anim-delay="220">
             <div className="prog-top">
               <span className="prog-amt">{formatRupiah(totalTerkumpul)}</span>
               <span className="prog-tgt">
@@ -235,7 +281,6 @@ export default async function DonasiSection() {
             <div className="prog-bg">
               <div
                 className="prog-fill"
-                style={{ width: "0%" } as React.CSSProperties}
                 data-width={`${pct}%`}
               />
             </div>
@@ -244,7 +289,7 @@ export default async function DonasiSection() {
             </p>
           </div>
 
-          <div className="don-stats">
+          <div className="don-stats" data-anim data-anim-delay="340">
             <div className="don-stat">
               <span className="don-stat-num" style={{ color: "#4ade80" }}>
                 {jumlahDonatur.toLocaleString("id-ID")}
@@ -265,11 +310,12 @@ export default async function DonasiSection() {
             </div>
           </div>
 
-          <div className="don-cta">
+          <div className="don-cta" data-anim data-anim-delay="460">
             <Link href="/donasi" className="btn-don">
               💚 Donasi Sekarang
             </Link>
           </div>
+
         </div>
       </section>
     </>

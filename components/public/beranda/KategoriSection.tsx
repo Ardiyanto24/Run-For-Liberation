@@ -1,5 +1,8 @@
 // components/public/beranda/KategoriSection.tsx
 
+"use client";
+
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 
 interface KategoriItem {
@@ -7,7 +10,7 @@ interface KategoriItem {
   nama: string;
   tagline: string;
   harga: string;
-  gambar: string; 
+  gambar: string;
   slotLabel: string;
   slotClass: string;
   benefits: string[];
@@ -23,11 +26,7 @@ const kategoriList: KategoriItem[] = [
     gambar: "/images/kategori/funrun.png",
     slotLabel: "🔥 Slot Terbatas",
     slotClass: "slot-low",
-    benefits: [
-      "Race Pack Lengkap",
-      "Refreshment",
-      "Kontribusi Palestina",
-    ],
+    benefits: ["Race Pack Lengkap", "Refreshment", "Kontribusi Palestina"],
     popular: true,
   },
   {
@@ -38,11 +37,7 @@ const kategoriList: KategoriItem[] = [
     gambar: "/images/kategori/funrun.png",
     slotLabel: "⚡ Fast Selling",
     slotClass: "slot-mid",
-    benefits: [
-      "Race Pack (Merchandise)",
-      "Refreshment",
-      "Kontribusi Palestina",
-    ],
+    benefits: ["Race Pack (Merchandise)", "Refreshment", "Kontribusi Palestina"],
   },
   {
     id: "fun-walk-gaza",
@@ -51,12 +46,8 @@ const kategoriList: KategoriItem[] = [
     harga: "Rp 120.000",
     gambar: "/images/kategori/funwalk.png",
     slotLabel: "🔥 Slot Terbatas",
-    slotClass: "slot-unlimited",
-    benefits: [
-      "Race Pack Lengkap",
-      "Refreshment",
-      "Kontribusi Palestina",
-    ],
+    slotClass: "slot-low",
+    benefits: ["Race Pack Lengkap", "Refreshment", "Kontribusi Palestina"],
   },
   {
     id: "fun-walk-rafah",
@@ -66,15 +57,37 @@ const kategoriList: KategoriItem[] = [
     gambar: "/images/kategori/funwalk.png",
     slotLabel: "♾ Unlimited Slot",
     slotClass: "slot-unlimited",
-    benefits: [
-      "Race Pack (Merchandise)",
-      "Refreshment",
-      "Kontribusi Palestina",
-    ],
+    benefits: ["Race Pack (Merchandise)", "Refreshment", "Kontribusi Palestina"],
   },
 ];
 
 export default function KategoriSection() {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const cards = gridRef.current?.querySelectorAll<HTMLElement>(".cat-card");
+    if (!cards) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const el = entry.target as HTMLElement;
+          if (entry.isIntersecting) {
+            const delay = el.dataset.delay ?? "0";
+            setTimeout(() => el.classList.add("in-view"), Number(delay));
+          } else {
+            // Reset saat keluar viewport → animasi bisa diputar ulang
+            el.classList.remove("in-view");
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <>
       <style>{`
@@ -134,9 +147,6 @@ export default function KategoriSection() {
           grid-template-columns: repeat(4, 1fr);
           gap: 24px;
           margin-top: 44px;
-          max-width: 900px;
-          margin-left: auto;
-          margin-right: auto;
         }
 
         .cat-card {
@@ -144,12 +154,24 @@ export default function KategoriSection() {
           border: 2px solid rgba(26,84,200,0.13);
           border-radius: 16px;
           overflow: hidden;
-          transition: all 0.3s;
           box-shadow: 0 2px 16px rgba(10,22,40,0.07);
-          animation: fadeUpKat 0.6s ease both;
           text-decoration: none;
           display: flex;
           flex-direction: column;
+          /* state awal sebelum masuk viewport */
+          opacity: 0;
+          translate: 0 28px;
+          transition:
+            opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+            translate 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+            transform 0.3s ease,
+            box-shadow 0.3s ease,
+            border-color 0.3s ease;
+        }
+
+        .cat-card.in-view {
+          opacity: 1;
+          translate: 0 0;
         }
 
         .cat-card:hover {
@@ -162,18 +184,17 @@ export default function KategoriSection() {
           border-color: #1A54C8;
         }
 
-        /* Banner styling baru */
         .cat-banner {
           height: 170px;
           position: relative;
           overflow: hidden;
-          background: #eef3ff; 
+          background: #eef3ff;
         }
 
         .banner-img {
           width: 100%;
           height: 100%;
-          object-fit: cover; 
+          object-fit: cover;
           object-position: center;
           transition: transform 0.4s ease;
           display: block;
@@ -305,6 +326,10 @@ export default function KategoriSection() {
         }
         .btn-link:hover { gap: 8px; }
 
+        @media (max-width: 900px) {
+          .cat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
         @media (max-width: 580px) {
           .cat-grid { grid-template-columns: 1fr; }
           .kat-sec { padding: 60px 20px; }
@@ -319,17 +344,19 @@ export default function KategoriSection() {
             Event lari dengan berbagai kategori sesuai kebutuhan dan kemampuanmu.
           </p>
 
-          <div className="cat-grid">
+          <div className="cat-grid" ref={gridRef}>
             {kategoriList.map((kat, i) => (
               <div
                 key={kat.id}
                 className={`cat-card${kat.popular ? " popular" : ""}`}
-                style={{ animationDelay: `${i * 0.1}s` }}
+                data-delay={i * 250}
               >
-                {/* Banner Penuh dengan Gambar */}
                 <div className="cat-banner">
-                  <img src={kat.gambar} alt={`Banner ${kat.nama}`} className="banner-img" />
-                  
+                  <img
+                    src={kat.gambar}
+                    alt={`Banner ${kat.nama}`}
+                    className="banner-img"
+                  />
                   {kat.popular && (
                     <div className="popular-badge">⚡ Populer</div>
                   )}
