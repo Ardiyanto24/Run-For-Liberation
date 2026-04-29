@@ -1,4 +1,4 @@
-// app/(public)/tentang/page.
+// app/(public)/tentang/page.tsx
 
 import { Metadata } from 'next'
 import SubHero from '@/components/public/SubHero'
@@ -74,124 +74,129 @@ export default function TentangPage() {
       />
 
       {/* ── Section 1: About Grid ── */}
-      <section className="max-w-[1200px] mx-auto px-6 md:px-14 py-16 md:py-[88px]">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[60px] items-center">
-          {/* Kiri — Teks deskripsi */}
-          <div>
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                letterSpacing: '4px',
-                textTransform: 'uppercase',
-                color: 'var(--blue)',
-                display: 'block',
-                marginBottom: '10px',
-              }}
-            >
-              Tentang Event
-            </span>
-            <h2
-              style={{
-                fontFamily: "'Bebas Neue', sans-serif",
-                fontSize: 'clamp(36px, 4.5vw, 58px)',
-                lineHeight: 1,
-                letterSpacing: '1px',
-                marginBottom: '12px',
-                color: 'var(--black)',
-              }}
-            >
-              Run for Liberation
-            </h2>
-            <p style={{ fontSize: '16px', lineHeight: '1.75', maxWidth: '560px', color: 'var(--gray)', marginBottom: '18px' }}>
-              Run for Liberation adalah kegiatan lari{' '}
-              <strong>non-kompetitif</strong> yang menggabungkan olahraga,
-              solidaritas, dan kampanye kemanusiaan untuk Palestina.
-            </p>
-            <p style={{ fontSize: '16px', lineHeight: '1.75', maxWidth: '560px', color: 'var(--gray)', marginBottom: '18px' }}>
-              Diselenggarakan sebagai bagian dari rangkaian kegiatan nasional
-              yang berlangsung serentak di{' '}
-              <strong style={{ color: 'var(--blue)' }}>15 daerah</strong>{' '}
-              (Secara virtual & Offline), acara ini melibatkan pelari komunitas,
-              pegiat kemanusiaan, dan masyarakat umum.
-            </p>
-            <p style={{ fontSize: '16px', lineHeight: '1.75', maxWidth: '560px', color: 'var(--gray)', marginBottom: '28px' }}>
-              Selain aktivitas lari, Run for Liberation menjadi ruang edukasi,
-              silaturahmi, serta penggalangan donasi, di mana sebagian
-              pendapatan dialokasikan untuk{' '}
-              <strong style={{ color: 'var(--red)' }}>
-                bantuan kemanusiaan bagi Palestina
-              </strong>
-              .
-            </p>
-            <Link
-              href="/daftar"
-              style={{
-                display: 'inline-block',
-                background: 'var(--blue)',
-                color: '#fff',
-                padding: '12px 28px',
-                borderRadius: '8px',
-                fontWeight: 700,
-                fontSize: '14px',
-                letterSpacing: '0.5px',
-                textDecoration: 'none',
-              }}
-            >
-              Daftar Sekarang
-            </Link>
-          </div>
-
-          {/* Kanan — About Points */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {aboutPoints.map((point) => (
-              <div
-                key={point.title}
+      <section className="py-16 md:py-[88px] px-6 md:px-14">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[60px] items-center">
+            {/* Kiri — Teks deskripsi */}
+            <div>
+              <span
                 style={{
-                  display: 'flex',
-                  gap: '14px',
-                  alignItems: 'flex-start',
-                  padding: '16px',
-                  background: '#fff',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border)',
-                  boxShadow: 'var(--shadow-sm)',
-                  transition: 'all 0.25s',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '4px',
+                  textTransform: 'uppercase',
+                  color: 'var(--blue)',
+                  display: 'block',
+                  marginBottom: '10px',
                 }}
-                className="hover:-translate-y-0.5 hover:border-[var(--blue)] hover:shadow-md"
               >
+                Tentang Event
+              </span>
+              <h2
+                style={{
+                  fontFamily: "'Bebas Neue', sans-serif",
+                  fontSize: 'clamp(36px, 4.5vw, 58px)',
+                  lineHeight: 1,
+                  letterSpacing: '1px',
+                  marginBottom: '12px',
+                  color: 'var(--black)',
+                }}
+              >
+                Run for Liberation
+              </h2>
+              <p style={{ fontSize: '16px', lineHeight: '1.75', maxWidth: '560px', color: 'var(--gray)', marginBottom: '18px' }}>
+                Run for Liberation adalah kegiatan lari{' '}
+                <strong>non-kompetitif</strong> yang menggabungkan olahraga,
+                solidaritas, dan kampanye kemanusiaan untuk Palestina.
+              </p>
+              <p style={{ fontSize: '16px', lineHeight: '1.75', maxWidth: '560px', color: 'var(--gray)', marginBottom: '18px' }}>
+                Diselenggarakan sebagai bagian dari rangkaian kegiatan nasional
+                yang berlangsung serentak di{' '}
+                <strong style={{ color: 'var(--blue)' }}>15 daerah</strong>{' '}
+                (Secara virtual & Offline), acara ini melibatkan pelari komunitas,
+                pegiat kemanusiaan, dan masyarakat umum.
+              </p>
+              <p style={{ fontSize: '16px', lineHeight: '1.75', maxWidth: '560px', color: 'var(--gray)', marginBottom: '28px' }}>
+                Selain aktivitas lari, Run for Liberation menjadi ruang edukasi,
+                silaturahmi, serta penggalangan donasi, di mana sebagian
+                pendapatan dialokasikan untuk{' '}
+                <strong style={{ color: 'var(--red)' }}>
+                  bantuan kemanusiaan bagi Palestina
+                </strong>
+                .
+              </p>
+              <Link
+                href="/daftar"
+                style={{
+                  display: 'inline-block',
+                  background: 'var(--blue)',
+                  color: '#fff',
+                  padding: '12px 28px',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  letterSpacing: '0.5px',
+                  textDecoration: 'none',
+                }}
+              >
+                Daftar Sekarang
+              </Link>
+            </div>
+
+            {/* Kanan — About Points */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {aboutPoints.map((point) => (
                 <div
+                  key={point.title}
                   style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '9px',
-                    background: iconBg[point.color],
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '18px',
-                    flexShrink: 0,
+                    gap: '14px',
+                    alignItems: 'flex-start',
+                    padding: '16px',
+                    background: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid var(--border)',
+                    boxShadow: 'var(--shadow-sm)',
+                    transition: 'all 0.25s',
                   }}
+                  className="hover:-translate-y-0.5 hover:border-[var(--blue)] hover:shadow-md"
                 >
-                  {point.icon}
+                  <div
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '9px',
+                      background: iconBg[point.color],
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {point.icon}
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--black)', marginBottom: '3px' }}>
+                      {point.title}
+                    </h4>
+                    <p style={{ fontSize: '13px', color: 'var(--gray)', lineHeight: '1.5' }}>
+                      {point.desc}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--black)', marginBottom: '3px' }}>
-                    {point.title}
-                  </h4>
-                  <p style={{ fontSize: '13px', color: 'var(--gray)', lineHeight: '1.5' }}>
-                    {point.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Section 2: Mengapa Berlari? (sec alt) ── */}
-      <section style={{ background: 'var(--blue-xlight)', padding: '88px 56px' }}>
-        <div className="max-w-[1200px] mx-auto px-6 md:px-14">
+      {/* ── Section 2: Mengapa Berlari? ── */}
+      <section
+        style={{ background: 'var(--blue-xlight)' }}
+        className="py-16 md:py-[88px] px-6 md:px-14"
+      >
+        <div className="max-w-[1200px] mx-auto">
           {/* Header center */}
           <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <span
@@ -233,10 +238,7 @@ export default function TentangPage() {
           </div>
 
           {/* 3 Cards */}
-          <div
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '20px' }}
-            className="grid grid-cols-1 sm:grid-cols-3"
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {whyCards.map((card) => (
               <div
                 key={card.title}
@@ -256,7 +258,6 @@ export default function TentangPage() {
                     fontSize: '40px',
                     marginBottom: '12px',
                     display: 'inline-block',
-                    animation: `bounce 2s ease-in-out infinite`,
                     animationDelay: card.delay,
                   }}
                 >
