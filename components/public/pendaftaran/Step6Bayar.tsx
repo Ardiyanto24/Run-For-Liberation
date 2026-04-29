@@ -11,7 +11,7 @@ import { getHargaKategori, type HargaMap } from "@/actions/pendaftaran";
 // ============================================================
 // HELPER
 // ============================================================
-function formatRupiah(angka: number): string {  
+function formatRupiah(angka: number): string {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -129,8 +129,34 @@ export default function Step6Bayar({
         </p>
       </div>
 
+      {/* Global error — muncul saat Server Action gagal tanpa field spesifik */}
+      {errors._global && (
+        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 border border-[#CE1126]/20 mb-4">
+          <svg
+            className="w-4 h-4 text-[#CE1126] flex-shrink-0 mt-0.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+            />
+          </svg>
+          <div>
+            <p className="text-xs font-bold text-[#CE1126] mb-0.5">
+              Pendaftaran gagal diproses
+            </p>
+            <p className="text-xs text-[#CE1126]/80 leading-relaxed">
+              {errors._global}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Tombol Submit */}
-      {/* TODO: hubungkan ke Server Action di DEV-10 */}
       <button
         type="button"
         onClick={onSubmit}
