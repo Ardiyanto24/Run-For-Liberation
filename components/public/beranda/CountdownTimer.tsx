@@ -29,7 +29,6 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-// Setiap digit dianimasikan secara individual
 function AnimatedDigit({ digit }: { digit: string }) {
   return (
     <span className="cd-digit-wrap">
@@ -78,69 +77,95 @@ export default function CountdownTimer() {
   return (
     <>
       <style>{`
-        @keyframes fadeUpCd {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Animasi slide-up per digit */
         @keyframes digitSlideUp {
-          0%   { transform: translateY(60%); opacity: 0; }
+          0%   { transform: translateY(70%); opacity: 0; }
           100% { transform: translateY(0);   opacity: 1; }
         }
-
+        @keyframes fadeUpCd {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         @keyframes eventLive {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.55; }
         }
-
-        /* ── Section ── */
-        .cd-sec {
-          background: #F5F8FF;
-          padding: 64px 16px 56px;
-          text-align: center;
-          border-bottom: 1px solid rgba(26,84,200,0.13);
+        @keyframes shimmerSk {
+          0%   { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
         }
 
+        /* ── Section: full viewport ── */
+        .cd-sec {
+          background: #F5F8FF;
+          min-height: 100svh;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+          padding: 80px 20px;
+          border-bottom: 1px solid rgba(26,84,200,0.13);
+          box-sizing: border-box;
+        }
+
+        /* ── Header copy ── */
         .cd-eyebrow {
           display: inline-block;
           font-family: 'Barlow Condensed', sans-serif;
           font-size: 11px;
           font-weight: 700;
-          letter-spacing: 4px;
+          letter-spacing: 5px;
           text-transform: uppercase;
           color: #1A54C8;
-          margin-bottom: 10px;
+          margin-bottom: 14px;
           animation: fadeUpCd 0.6s ease both;
         }
 
         .cd-title {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(22px, 3vw, 34px);
+          font-size: clamp(36px, 6vw, 72px);
           color: #0A1628;
-          margin-bottom: 4px;
-          letter-spacing: 1px;
-          animation: fadeUpCd 0.6s 0.05s ease both;
+          margin-bottom: 6px;
+          letter-spacing: 1.5px;
+          line-height: 1.05;
+          animation: fadeUpCd 0.6s 0.06s ease both;
+        }
+
+        .cd-title em {
+          font-style: normal;
+          color: #1A54C8;
         }
 
         .cd-sub {
-          font-size: 13.5px;
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: clamp(14px, 2vw, 17px);
           color: #6B7A99;
-          margin-bottom: 40px;
-          animation: fadeUpCd 0.6s 0.1s ease both;
+          margin-bottom: 0;
+          animation: fadeUpCd 0.6s 0.12s ease both;
+          letter-spacing: 0.5px;
         }
 
-        /* ── Grid ── */
+        /* ── Divider tipis ── */
+        .cd-divider {
+          width: 48px;
+          height: 3px;
+          background: #1A54C8;
+          border-radius: 2px;
+          margin: 28px auto 48px;
+          animation: fadeUpCd 0.6s 0.18s ease both;
+          opacity: 0.45;
+        }
+
+        /* ── Grid countdown ── */
         .cd-grid {
           display: flex;
           justify-content: center;
           align-items: flex-start;
-          flex-wrap: nowrap;       /* paksa satu baris */
+          flex-wrap: nowrap;
           gap: 0;
-          animation: fadeUpCd 0.7s 0.15s ease both;
+          animation: fadeUpCd 0.7s 0.22s ease both;
         }
 
-        /* ── Satu unit (angka + label) ── */
         .cd-item {
           display: flex;
           align-items: center;
@@ -151,52 +176,67 @@ export default function CountdownTimer() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 0 clamp(6px, 2vw, 24px);
+          padding: 0 clamp(8px, 2.5vw, 36px);
         }
 
-        /* Row angka */
         .cd-num-row {
           display: flex;
-          gap: 1px;
+          gap: 2px;
           line-height: 1;
         }
 
-        /* Wrapper per digit — clip animasi */
+        /* Clip animasi per digit */
         .cd-digit-wrap {
           display: inline-block;
           overflow: hidden;
-          height: clamp(56px, 11vw, 108px);   /* harus sama tinggi digit */
+          height: clamp(72px, 14vw, 160px);
         }
 
         .cd-digit {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(56px, 11vw, 108px);
-          color: #0E2D7A;
+          font-size: clamp(72px, 14vw, 160px);
+          color: #007A3D;
           line-height: 1;
           display: block;
-          animation: digitSlideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+          animation: digitSlideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         .cd-label {
           font-family: 'Barlow Condensed', sans-serif;
-          font-size: clamp(9px, 1.5vw, 11px);
+          font-size: clamp(10px, 1.6vw, 13px);
           font-weight: 700;
-          letter-spacing: 3px;
+          letter-spacing: 4px;
           color: #6B7A99;
           text-transform: uppercase;
-          margin-top: 8px;
+          margin-top: 12px;
           display: block;
         }
 
         /* Separator : */
         .cd-sep {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(32px, 7vw, 72px);
+          font-size: clamp(40px, 8vw, 96px);
           color: #1A54C8;
           line-height: 1;
-          margin-bottom: clamp(20px, 3vw, 28px);
-          padding: 0 clamp(2px, 0.8vw, 6px);
+          margin-bottom: clamp(28px, 4vw, 40px);
+          padding: 0 clamp(2px, 0.5vw, 8px);
           user-select: none;
+          opacity: 0.6;
+        }
+
+        /* Tagline bawah */
+        .cd-tagline {
+          margin-top: 52px;
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: clamp(13px, 1.8vw, 16px);
+          color: #6B7A99;
+          letter-spacing: 1px;
+          animation: fadeUpCd 0.7s 0.3s ease both;
+        }
+
+        .cd-tagline strong {
+          color: #007A3D;
+          font-weight: 700;
         }
 
         /* Skeleton */
@@ -204,7 +244,7 @@ export default function CountdownTimer() {
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 12px;
+          gap: 16px;
           flex-wrap: nowrap;
         }
 
@@ -213,33 +253,43 @@ export default function CountdownTimer() {
           background-size: 200% 100%;
           animation: shimmerSk 1.4s infinite;
           border-radius: 8px;
-          width: clamp(52px, 10vw, 100px);
-          height: clamp(56px, 11vw, 108px);
-        }
-
-        @keyframes shimmerSk {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
+          width: clamp(64px, 13vw, 148px);
+          height: clamp(72px, 14vw, 160px);
         }
 
         /* Event selesai */
         .cd-finished {
           font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(24px, 4vw, 44px);
+          font-size: clamp(28px, 5vw, 52px);
           color: #007A3D;
           letter-spacing: 2px;
           animation: eventLive 2s ease-in-out infinite;
         }
+
+        /* Mobile: pastikan satu baris dengan ukuran lebih kecil */
+        @media (max-width: 480px) {
+          .cd-unit { padding: 0 clamp(4px, 2vw, 12px); }
+          .cd-digit-wrap { height: clamp(56px, 18vw, 80px); }
+          .cd-digit { font-size: clamp(56px, 18vw, 80px); }
+          .cd-sep { font-size: clamp(32px, 10vw, 48px); margin-bottom: 20px; }
+        }
       `}</style>
 
       <section className="cd-sec">
-        <span className="cd-eyebrow">Hitung Mundur</span>
-        <h2 className="cd-title">Menuju Hari Perlombaan</h2>
+        <span className="cd-eyebrow">Solo · 24 Mei 2026</span>
+
+        <h2 className="cd-title">
+          Langkahmu <span style={{ color: "#007A3D" }}>Bicara</span><br />
+          untuk Palestina
+        </h2>
+
         <p className="cd-sub">
-          Run For Liberation · Solo &bull; Ahad, 24 Mei 2026
+          Bukan sekadar lari — ini adalah suara solidaritas kita bersama
         </p>
 
-        {/* Skeleton sebelum mount — cegah hydration mismatch */}
+        <div className="cd-divider" />
+
+        {/* Skeleton sebelum mount */}
         {!mounted ? (
           <div className="cd-skeleton-row">
             {[0, 1, 2, 3].map((i) => (
@@ -256,6 +306,10 @@ export default function CountdownTimer() {
             <CountdownBox value={timeLeft.detik} label="Detik" showSeparator={false} />
           </div>
         )}
+
+        <p className="cd-tagline">
+          Bergerak bersama · Berlari untuk <strong>kemanusiaan</strong>
+        </p>
       </section>
     </>
   );
