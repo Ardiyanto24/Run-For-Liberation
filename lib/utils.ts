@@ -89,14 +89,23 @@ export function validateFileBuktiBayar(file: File): string | null {
   const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
   const ALLOWED_TYPES = [
     "image/jpeg",
+    "image/jpg",
     "image/png",
     "application/pdf",
     "image/heic",
     "image/heif",
   ];
+  const ALLOWED_EXTS = ["jpg", "jpeg", "png", "pdf", "heic", "heif"];
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return "Format file harus JPG, JPEG, PNG, PDF, atau HEIC.";
+  // Safari/iOS mengirim file.type kosong untuk foto dari kamera.
+  // Fallback: cek ekstensi nama file.
+  if (file.type === "") {
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!ALLOWED_EXTS.includes(ext)) {
+      return "Format file harus JPG, PNG, PDF, atau HEIC.";
+    }
+  } else if (!ALLOWED_TYPES.includes(file.type)) {
+    return "Format file harus JPG, PNG, PDF, atau HEIC.";
   }
 
   if (file.size > MAX_SIZE_BYTES) {
