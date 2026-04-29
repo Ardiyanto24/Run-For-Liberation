@@ -13,13 +13,21 @@ function formatRupiah(angka: number): string {
   }).format(angka);
 }
 
-export default function DonasiSection() {
-  // TODO: DEV-10 — ganti dengan props dari Server Component parent
-  const totalTerkumpul = 0;
-  const jumlahDonatur = 0;
-  const jumlahPeserta = 0;
-  const targetDonasi = 50000000;
-  const persentase = 0;
+interface DonasiSectionProps {
+  totalTerkumpul: number;
+  jumlahDonatur: number;
+  jumlahPeserta: number;
+  targetDonasi: number;
+  persentase: number;
+}
+
+export default function DonasiSection({
+  totalTerkumpul,
+  jumlahDonatur,
+  jumlahPeserta,
+  targetDonasi,
+  persentase,
+}: DonasiSectionProps) {
   const pct = Math.min(persentase, 100).toFixed(1);
 
   const sectionRef = useRef<HTMLElement>(null);
@@ -69,7 +77,6 @@ export default function DonasiSection() {
           70% { box-shadow: 0 0 0 8px rgba(206,17,38,0); }
         }
 
-        /* Animasi masuk viewport */
         [data-anim] {
           opacity: 0;
           transform: scale(0.96) translateY(16px);

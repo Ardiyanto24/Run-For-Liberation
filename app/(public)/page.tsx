@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import HeroSection from "@/components/public/beranda/HeroSection";
 import CountdownTimer from "@/components/public/beranda/CountdownTimer";
 import KategoriSection from "@/components/public/beranda/KategoriSection";
-import DonasiSection from "@/components/public/beranda/DonasiSection";
+import DonasiSection from "@/components/public/beranda/DonasiSectionWrapper";
 import TimelineSection from "@/components/public/beranda/TimelineSection";
 import GaleriPreviewSection from "@/components/public/beranda/GaleriPreviewSection";
 import InstagramSection from "@/components/public/beranda/InstagramSection";
