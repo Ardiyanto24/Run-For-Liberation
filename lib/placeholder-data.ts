@@ -231,7 +231,7 @@ export const dummyPesertaPending: PesertaLengkap = {
     biayaPendaftaran: 30000,
     donasiTambahan: 0,
     totalPembayaran: 30000,
-    metodePembayaran: "TRANSFER_BRI",
+    metodePembayaran: "TRANSFER_JAGO",
     buktiBayarUrl: null,
     buktiBayarNama: null,
     status: "PENDING",
@@ -338,7 +338,7 @@ export const dummyPesertaDitolak: PesertaLengkap = {
     biayaPendaftaran: 30000,
     donasiTambahan: 0,
     totalPembayaran: 30000,
-    metodePembayaran: "TRANSFER_BRI",
+    metodePembayaran: "TRANSFER_JAGO",
     buktiBayarUrl: null,
     buktiBayarNama: null,
     status: "DITOLAK",
@@ -401,7 +401,7 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 2 — Individu, Fun Walk Rafah (tanpa jersey), VERIFIED, Transfer BRI
+  // 2 — Individu, Fun Walk Rafah (tanpa jersey), VERIFIED, Transfer JAGO
   {
     id: "peserta-002",
     tipe: "INDIVIDU" as const,
@@ -428,7 +428,7 @@ export const dummyPeserta = [
       biayaPendaftaran: 30000,
       donasiTambahan: 50000,
       totalPembayaran: 80000,
-      metodePembayaran: "TRANSFER_BRI" as const,
+      metodePembayaran: "TRANSFER_JAGO" as const,
       buktiBayarUrl: "dummy/bukti-002.jpg",
       buktiBayarNama: "bukti-002.jpg",
       status: "VERIFIED" as const,
@@ -724,7 +724,7 @@ export const dummyPeserta = [
     checkIn: null,
   },
 
-  // 9 — Individu, Fun Run Rafah (tanpa jersey), PENDING, Transfer BRI
+  // 9 — Individu, Fun Run Rafah (tanpa jersey), PENDING, Transfer JAGO
   {
     id: "peserta-009",
     tipe: "INDIVIDU" as const,
@@ -751,7 +751,7 @@ export const dummyPeserta = [
       biayaPendaftaran: 30000,
       donasiTambahan: 0,
       totalPembayaran: 30000,
-      metodePembayaran: "TRANSFER_BRI" as const,
+      metodePembayaran: "TRANSFER_JAGO" as const,
       buktiBayarUrl: "dummy/bukti-009.jpg",
       buktiBayarNama: "bukti-009.jpg",
       status: "PENDING" as const,
@@ -842,7 +842,7 @@ export const dummyDonasi = [
     emailDonatur: "anonymous@gmail.com",
     pesan: "Lillahi ta'ala.",
     nominal: 500000,
-    metodePembayaran: "TRANSFER_BRI" as const,
+    metodePembayaran: "TRANSFER_JAGO" as const,
     buktiBayarUrl: "dummy/donasi-002.jpg",
     buktiBayarNama: "donasi-002.jpg",
     status: "PENDING" as const,
@@ -938,7 +938,7 @@ export const dummyDonasi = [
     emailDonatur: "admin@ponpes-alamin.com",
     pesan: "Dari santri dan ustadz PP Al-Amin. Jazakumullahu khairan.",
     nominal: 500000,
-    metodePembayaran: "TRANSFER_BRI" as const,
+    metodePembayaran: "TRANSFER_JAGO" as const,
     buktiBayarUrl: "dummy/donasi-008.jpg",
     buktiBayarNama: "donasi-008.jpg",
     status: "VERIFIED" as const,

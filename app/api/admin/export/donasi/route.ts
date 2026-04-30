@@ -17,7 +17,7 @@ function escapeCSV(value: string | number | null | undefined): string {
 
 function labelMetode(metode: string): string {
   const map: Record<string, string> = {
-    QRIS: "QRIS", TRANSFER_BRI: "Transfer BRI", TRANSFER_BSI: "Transfer BSI",
+    QRIS: "QRIS", TRANSFER_JAGO: "Transfer Jago Syariah", TRANSFER_BSI: "Transfer BSI",
     TRANSFER_MANDIRI: "Transfer Mandiri", GOPAY: "GoPay", OVO: "OVO", DANA: "DANA",
   };
   return map[metode] ?? metode;

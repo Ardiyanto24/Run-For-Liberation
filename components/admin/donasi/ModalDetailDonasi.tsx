@@ -57,7 +57,7 @@ function isPdfUrl(url: string) {
 
 const METODE_LABEL: Record<string, string> = {
   QRIS: "QRIS",
-  TRANSFER_BRI: "Transfer BRI",
+  TRANSFER_JAGO: "Transfer Jago Syariah",
   TRANSFER_BSI: "Transfer BSI",
   TRANSFER_MANDIRI: "Transfer Mandiri",
   GOPAY: "GoPay",

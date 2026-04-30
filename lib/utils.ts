@@ -67,7 +67,7 @@ export function labelTipe(tipe: TipePendaftaran): string {
 export function labelMetodePembayaran(metode: MetodePembayaran): string {
   switch (metode) {
     case "QRIS":             return "QRIS";
-    case "TRANSFER_BRI":     return "Transfer Bank BRI";
+    case "TRANSFER_JAGO":    return "Transfer Bank Jago Syariah";
     case "TRANSFER_BSI":     return "Transfer Bank BSI";
     case "TRANSFER_MANDIRI": return "Transfer Bank Mandiri";
     case "GOPAY":            return "GoPay";
