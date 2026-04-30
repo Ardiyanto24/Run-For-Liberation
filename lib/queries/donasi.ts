@@ -19,19 +19,47 @@ export async function getStatistikDonasi(): Promise<StatistikDonasi> {
   );
 
   try {
-    const [donasiAggregate, jumlahDonatur, jumlahPeserta] = await Promise.all([
-      // SUM nominal dari donasi yang sudah VERIFIED
+    const [
+      donasiAggregate,
+      donasiTambahanAggregate,
+      jumlahDonaturForm,
+      jumlahDonaturPendaftaran,
+      jumlahPeserta,
+    ] = await Promise.all([
+      // 1. SUM nominal dari form donasi utama yang sudah VERIFIED
       prisma.donasi.aggregate({
         _sum: { nominal: true },
         where: { status: "VERIFIED" },
       }),
-      // Hanya donatur yang sudah VERIFIED
-      prisma.donasi.count({ where: { status: "VERIFIED" } }),
-      // Hanya peserta yang sudah VERIFIED (disetujui admin)
-      prisma.peserta.count({ where: { status: "VERIFIED" } }),
+
+      // 2. SUM donasiTambahan dari pendaftaran yang sudah VERIFIED
+      prisma.pembayaran.aggregate({
+        _sum: { donasiTambahan: true },
+        where: { status: "VERIFIED" },
+      }),
+
+      // 3. COUNT donatur dari form donasi utama yang VERIFIED
+      prisma.donasi.count({
+        where: { status: "VERIFIED" },
+      }),
+
+      // 4. COUNT donatur dari pendaftaran yang VERIFIED
+      prisma.pembayaran.count({
+        where: { status: "VERIFIED" },
+      }),
+
+      // 5. COUNT peserta yang sudah disetujui admin (VERIFIED)
+      prisma.peserta.count({
+        where: { status: "VERIFIED" },
+      }),
     ]);
 
-    const totalTerkumpul = donasiAggregate._sum.nominal ?? 0;
+    const totalDariDonasi = donasiAggregate._sum.nominal ?? 0;
+    const totalDariTambahan = donasiTambahanAggregate._sum.donasiTambahan ?? 0;
+    const totalTerkumpul = totalDariDonasi + totalDariTambahan;
+
+    const jumlahDonatur = jumlahDonaturForm + jumlahDonaturPendaftaran;
+
     const persentase = targetDonasi > 0
       ? (totalTerkumpul / targetDonasi) * 100
       : 0;
