@@ -24,7 +24,8 @@ export async function getStatistikDonasi(): Promise<StatistikDonasi> {
       donasiTambahanAggregate,
       jumlahDonaturForm,
       jumlahDonaturPendaftaran,
-      jumlahPeserta,
+      jumlahPesertaUtama,
+      jumlahAnggotaKeluarga,
     ] = await Promise.all([
       // 1. SUM nominal dari form donasi utama yang sudah VERIFIED
       prisma.donasi.aggregate({
@@ -48,9 +49,17 @@ export async function getStatistikDonasi(): Promise<StatistikDonasi> {
         where: { status: "VERIFIED" },
       }),
 
-      // 5. COUNT peserta yang sudah disetujui admin (VERIFIED)
+      // 5. COUNT kepala pendaftaran yang sudah VERIFIED
       prisma.peserta.count({
         where: { status: "VERIFIED" },
+      }),
+
+      // 6. COUNT anggota keluarga dari pendaftaran yang VERIFIED
+      // (join ke peserta untuk memastikan hanya dari pendaftaran VERIFIED)
+      prisma.anggota.count({
+        where: {
+          peserta: { status: "VERIFIED" },
+        },
       }),
     ]);
 
@@ -59,6 +68,9 @@ export async function getStatistikDonasi(): Promise<StatistikDonasi> {
     const totalTerkumpul = totalDariDonasi + totalDariTambahan;
 
     const jumlahDonatur = jumlahDonaturForm + jumlahDonaturPendaftaran;
+
+    // Kepala pendaftaran + semua anggota keluarga
+    const jumlahPeserta = jumlahPesertaUtama + jumlahAnggotaKeluarga;
 
     const persentase = targetDonasi > 0
       ? (totalTerkumpul / targetDonasi) * 100
@@ -72,7 +84,6 @@ export async function getStatistikDonasi(): Promise<StatistikDonasi> {
       persentase,
     };
   } catch (error) {
-    // Fallback aman jika database belum tersambung
     console.error("[getStatistikDonasi] Database error:", error);
     return {
       totalTerkumpul: 0,
