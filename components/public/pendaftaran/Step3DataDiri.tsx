@@ -182,8 +182,8 @@ function FormPeserta({ data, errors, isGaza, onUpdate, isKetua = false }: FormPe
             hasError={!!errors.ukuranLengan}
           >
             <option value="">-- Pilih Tipe Lengan --</option>
-            <option value="PENDEK">Lengan Pendek — Rp 110.000</option>
-            <option value="PANJANG">Lengan Panjang — Rp 120.000</option>
+            <option value="PENDEK">Lengan Pendek — Rp 115.000</option>
+            <option value="PANJANG">Lengan Panjang — Rp 125.000</option>
           </StyledSelect>
         </FormField>
       )}
@@ -316,8 +316,8 @@ function CardAnggota({ anggota, index, errors, isGaza, canDelete, onUpdate, onRe
               hasError={!!errors[`anggota_${index}_ukuranLengan`]}
             >
               <option value="">-- Pilih Tipe Lengan --</option>
-              <option value="PENDEK">Lengan Pendek — Rp 110.000</option>
-              <option value="PANJANG">Lengan Panjang — Rp 120.000</option>
+              <option value="PENDEK">Lengan Pendek — Rp 115.000</option>
+              <option value="PANJANG">Lengan Panjang — Rp 125.000</option>
             </StyledSelect>
           </FormField>
         )}
@@ -397,7 +397,7 @@ export default function Step3DataDiri({
             <p className="text-xs font-bold text-[#1A54C8] mb-0.5">Paket Gaza — Dapat Jersey</p>
             <p className="text-xs text-[#6B7A99] leading-relaxed">
               Pilih tipe lengan dan ukuran jersey untuk setiap peserta.
-              Lengan pendek Rp 110.000 · Lengan panjang Rp 120.000.
+              Lengan pendek Rp 115.000 · Lengan panjang Rp 125.000.
             </p>
           </div>
         </div>

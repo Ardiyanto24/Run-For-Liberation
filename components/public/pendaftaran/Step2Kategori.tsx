@@ -197,7 +197,7 @@ export default function Step2Kategori({
             Pilih Tipe Lengan Jersey
           </h3>
           <p className="text-xs text-[#6B7A99] mb-4">
-            Lengan pendek Rp 110.000 · Lengan panjang Rp 120.000
+            Lengan pendek Rp 115.000 · Lengan panjang Rp 125.000
           </p>
           <div className="grid grid-cols-2 gap-3">
             {(["PENDEK", "PANJANG"] as UkuranLengan[]).map((tipe) => (
@@ -214,7 +214,7 @@ export default function Step2Kategori({
               >
                 {tipe === "PENDEK" ? "👕 Lengan Pendek" : "🥋 Lengan Panjang"}
                 <div className="text-xs font-normal mt-0.5 opacity-75">
-                  {tipe === "PENDEK" ? "Rp 110.000" : "Rp 120.000"}
+                  {tipe === "PENDEK" ? "Rp 115.000" : "Rp 125.000"}
                 </div>
               </button>
             ))}
