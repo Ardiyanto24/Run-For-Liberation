@@ -38,7 +38,7 @@ const METODE_GROUPS: MetodeGroup[] = [
     label: "Transfer Bank",
     icon: "🏦",
     items: [
-      { value: "TRANSFER_BRI", label: "Bank Jago Syariah", icon: "🏦" },
+      { value: "TRANSFER_JAGO", label: "Bank Jago Syariah", icon: "🏦" },
       { value: "TRANSFER_BSI", label: "BSI", icon: "🏦" },
       { value: "TRANSFER_MANDIRI", label: "Mandiri", icon: "🏦" },
     ],
@@ -81,7 +81,7 @@ function DetailPanel({ metode }: { metode: MetodePembayaran }) {
     );
   }
 
-  if (metode === "TRANSFER_BRI") {
+  if (metode === "TRANSFER_JAGO") {
     return (
       <div className="mt-3 p-4 bg-[#F5F8FF] rounded-xl border border-[rgba(26,84,200,0.13)]">
         <p className="text-xs font-bold text-[#0A1628] mb-2">Bank Jago Syariah</p>

@@ -14,7 +14,7 @@ export type StatusPembayaran = "PENDING" | "VERIFIED" | "DITOLAK";
 export type StatusDonasi = "PENDING" | "VERIFIED" | "DITOLAK";
 export type MetodePembayaran = 
   | "QRIS" 
-  | "TRANSFER_BRI" 
+  | "TRANSFER_JAGO" 
   | "TRANSFER_BSI" 
   | "TRANSFER_MANDIRI" 
   | "GOPAY" 

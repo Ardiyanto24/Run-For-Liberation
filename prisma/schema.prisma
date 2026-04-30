@@ -64,7 +64,7 @@ enum StatusPembayaran {
 
 enum MetodePembayaran {
   QRIS
-  TRANSFER_BRI
+  TRANSFER_JAGO
   TRANSFER_BSI
   TRANSFER_MANDIRI
   GOPAY

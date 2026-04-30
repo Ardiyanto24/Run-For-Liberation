@@ -43,7 +43,7 @@ function formatRupiah(n: number): string {
 function formatMetode(m: string): string {
   switch (m) {
     case "QRIS":             return "QRIS";
-    case "TRANSFER_BRI":     return "Bank Jago Syariah";
+    case "TRANSFER_JAGO":    return "Bank Jago Syariah";
     case "TRANSFER_BSI":     return "Transfer BSI";
     case "TRANSFER_MANDIRI": return "Transfer Mandiri";
     case "GOPAY":            return "GoPay";
