@@ -24,7 +24,7 @@ const UkuranLengan = z.enum(["PENDEK", "PANJANG"]);
 
 const MetodePembayaran = z.enum([
   "QRIS",
-  "TRANSFER_BRI",
+  "TRANSFER_JAGO",
   "TRANSFER_BSI",
   "TRANSFER_MANDIRI",
   "GOPAY",
