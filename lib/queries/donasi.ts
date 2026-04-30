@@ -25,10 +25,10 @@ export async function getStatistikDonasi(): Promise<StatistikDonasi> {
         _sum: { nominal: true },
         where: { status: "VERIFIED" },
       }),
-      // Total semua donatur (semua status)
-      prisma.donasi.count(),
-      // Total semua peserta terdaftar
-      prisma.peserta.count(),
+      // Hanya donatur yang sudah VERIFIED
+      prisma.donasi.count({ where: { status: "VERIFIED" } }),
+      // Hanya peserta yang sudah VERIFIED (disetujui admin)
+      prisma.peserta.count({ where: { status: "VERIFIED" } }),
     ]);
 
     const totalTerkumpul = donasiAggregate._sum.nominal ?? 0;
