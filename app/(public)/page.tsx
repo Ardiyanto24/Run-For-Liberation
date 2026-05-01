@@ -10,6 +10,9 @@ import GaleriPreviewSection from "@/components/public/beranda/GaleriPreviewSecti
 import InstagramSection from "@/components/public/beranda/InstagramSection";
 import SponsorSection from "@/components/public/beranda/SponsorSection";
 
+
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Run For Liberation 2026 — Event Lari Solidaritas Palestina di Solo",
   description:
