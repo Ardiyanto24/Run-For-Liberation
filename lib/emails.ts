@@ -523,6 +523,29 @@ export async function sendNotifikasiVerifikasi(data: {
         </td>
       </tr>
     </table>
+
+    <!-- Grup WhatsApp Peserta -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="margin: 0 0 24px 0;">
+      <tr>
+        <td style="background-color: #f0fdf4; border: 1px solid #bbf7d0;
+                   border-radius: 6px; padding: 16px;">
+          <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #166534;">
+            &#128172; Bergabung ke Grup WhatsApp Peserta
+          </p>
+          <p style="margin: 0 0 14px 0; font-size: 14px; color: #166534; line-height: 1.5;">
+            Dapatkan informasi terbaru seputar event, titik kumpul, dan pengumuman penting melalui grup resmi peserta.
+          </p>
+          <a href="https://chat.whatsapp.com/Cy63RaEh2k2GEcscOnryZi?mode=gi_t"
+             style="display: inline-block; background-color: #25d366; color: #ffffff;
+                    font-family: Arial, Helvetica, sans-serif; font-size: 14px;
+                    font-weight: bold; text-decoration: none; padding: 10px 24px;
+                    border-radius: 6px;">
+            Gabung Grup WhatsApp
+          </a>
+        </td>
+      </tr>
+    </table>
   `;
 
   const html = baseEmailTemplate(

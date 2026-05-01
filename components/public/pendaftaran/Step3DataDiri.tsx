@@ -411,7 +411,7 @@ export default function Step3DataDiri({
           </p>
           <div className="relative w-full rounded-xl overflow-hidden border border-[#1A54C8]/15">
             <Image
-              src="/images/racepack/size-chart.png"
+              src="/images/racepack/size-card.png"
               alt="Panduan Ukuran Jersey Run For Liberation"
               width={800}
               height={400}
