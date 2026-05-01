@@ -2,6 +2,7 @@
 
 "use client";
 
+import Image from "next/image";
 import {
   FormDataAnggota,
   FormDataPeserta,
@@ -374,8 +375,7 @@ export default function Step3DataDiri({
   onRemoveAnggota,
 }: Step3DataDiriProps) {
   const isKeluarga = tipe === "KELUARGA";
-  const isGaza =
-    kategori === "FUN_RUN_GAZA" || kategori === "FUN_WALK_GAZA";
+  const isGaza = kategori === "FUN_RUN_GAZA" || kategori === "FUN_WALK_GAZA";
 
   return (
     <div>
@@ -391,7 +391,7 @@ export default function Step3DataDiri({
 
       {/* Banner info jersey — tampil jika Gaza */}
       {isGaza && (
-        <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-[#EEF3FF] border border-[#1A54C8]/20">
+        <div className="mb-4 flex items-start gap-2.5 p-3.5 rounded-xl bg-[#EEF3FF] border border-[#1A54C8]/20">
           <span className="text-lg flex-shrink-0">👕</span>
           <div>
             <p className="text-xs font-bold text-[#1A54C8] mb-0.5">Paket Gaza — Dapat Jersey</p>
@@ -400,6 +400,27 @@ export default function Step3DataDiri({
               Lengan pendek Rp 115.000 · Lengan panjang Rp 125.000.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Size Chart Jersey — tampil jika Gaza */}
+      {isGaza && (
+        <div className="mb-6">
+          <p className="text-xs font-bold text-[#0A1628] mb-2 tracking-wide">
+            📏 Panduan Ukuran Jersey
+          </p>
+          <div className="relative w-full rounded-xl overflow-hidden border border-[#1A54C8]/15">
+            <Image
+              src="/images/racepack/size-chart.png"
+              alt="Panduan Ukuran Jersey Run For Liberation"
+              width={800}
+              height={400}
+              style={{ width: '100%', height: 'auto' }}
+            />
+          </div>
+          <p className="text-xs text-[#6B7A99] mt-1.5">
+            * Ukuran dapat berbeda ±1–2 cm. Disarankan memilih satu ukuran lebih besar jika ragu.
+          </p>
         </div>
       )}
 

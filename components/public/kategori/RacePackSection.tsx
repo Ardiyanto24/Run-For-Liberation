@@ -23,8 +23,8 @@ export default function RacePackSection() {
         <div 
           style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-            gap: '32px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+            gap: '24px',
             alignItems: 'center'
           }}
         >
@@ -34,20 +34,17 @@ export default function RacePackSection() {
               position: 'relative', 
               width: '100%', 
               aspectRatio: '1/1',
-              borderRadius: '16px',
-              overflow: 'hidden',
-              background: '#f1f5f9', // slate-100
-              marginBottom: '16px'
+              marginBottom: '12px'
             }}>
               <Image
                 src="/images/racepack/jersey-pendek.png"
                 alt="Jersey Lengan Pendek Run For Liberation"
                 fill
-                style={{ objectFit: 'contain', padding: '24px' }}
+                style={{ objectFit: 'contain' }}
                 priority
               />
             </div>
-            <h4 style={{ fontSize: '16px', color: 'var(--gray, #64748b)', fontWeight: 700 }}>
+            <h4 style={{ fontSize: '15px', color: 'var(--gray, #64748b)', fontWeight: 700 }}>
               Jersey Lengan Pendek
             </h4>
           </div>
@@ -58,20 +55,17 @@ export default function RacePackSection() {
               position: 'relative', 
               width: '100%', 
               aspectRatio: '1/1',
-              borderRadius: '16px',
-              overflow: 'hidden',
-              background: '#f1f5f9',
-              marginBottom: '16px'
+              marginBottom: '12px'
             }}>
               <Image
                 src="/images/racepack/jersey-panjang.png"
                 alt="Jersey Lengan Panjang Run For Liberation"
                 fill
-                style={{ objectFit: 'contain', padding: '24px' }}
+                style={{ objectFit: 'contain' }}
                 priority
               />
             </div>
-            <h4 style={{ fontSize: '16px', color: 'var(--gray, #64748b)', fontWeight: 700 }}>
+            <h4 style={{ fontSize: '15px', color: 'var(--gray, #64748b)', fontWeight: 700 }}>
               Jersey Lengan Panjang
             </h4>
           </div>
@@ -79,7 +73,6 @@ export default function RacePackSection() {
       )
     }
 
-    // Tampilan "Menyusul" untuk BIB, Ganci, dan Pin
     return (
       <div
         style={{
@@ -115,7 +108,7 @@ export default function RacePackSection() {
       style={{
         width: '100%',
         padding: '64px 24px',
-        background: '#f8fafc', // Warna background section
+        background: '#f8fafc',
         borderTop: '1px solid var(--border, #e2e8f0)',
         borderBottom: '1px solid var(--border, #e2e8f0)',
         marginTop: '48px'
@@ -132,12 +125,12 @@ export default function RacePackSection() {
           </p>
         </div>
 
-        {/* Menu Navigasi Racepack */}
+        {/* Menu Navigasi Racepack — compact di mobile */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-            gap: '16px',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '10px',
             marginBottom: '40px',
           }}
         >
@@ -148,29 +141,27 @@ export default function RacePackSection() {
                 key={item.id}
                 onClick={() => setActiveItem(item.id)}
                 style={{
-                  padding: '20px 16px',
-                  // Perubahan Utama: Background menjadi biru jika aktif, putih jika tidak
+                  padding: '12px 8px',
                   background: isActive ? 'var(--blue, #2563eb)' : '#fff',
                   border: isActive ? '1.5px solid var(--blue, #2563eb)' : '1.5px solid var(--border, #e2e8f0)',
-                  borderRadius: '16px',
+                  borderRadius: '12px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   textAlign: 'center',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '12px',
-                  // Perubahan Utama: Memberikan efek bayangan biru jika aktif
+                  gap: '6px',
                   boxShadow: isActive ? '0 8px 16px rgba(37, 99, 235, 0.25)' : 'var(--shadow-card, 0 4px 6px -1px rgba(0, 0, 0, 0.1))',
                   transform: isActive ? 'translateY(-4px)' : 'none'
                 }}
               >
-                <span style={{ fontSize: '28px' }}>{item.icon}</span>
+                <span style={{ fontSize: '20px' }}>{item.icon}</span>
                 <span style={{ 
-                  fontSize: '14px', 
+                  fontSize: '11px', 
                   fontWeight: isActive ? 700 : 600,
-                  // Perubahan Utama: Teks menjadi putih jika aktif agar kontras dengan background biru
-                  color: isActive ? '#ffffff' : 'var(--gray, #64748b)' 
+                  color: isActive ? '#ffffff' : 'var(--gray, #64748b)',
+                  lineHeight: '1.3'
                 }}>
                   {item.label}
                 </span>
