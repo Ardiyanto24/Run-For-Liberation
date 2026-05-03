@@ -137,6 +137,7 @@ export async function verifikasiPeserta(
 
   try {
     const result = await prisma.$transaction(async (tx) => {
+      // ── 1. Ambil data peserta lengkap ──────────────────────
       const peserta = await tx.peserta.findUnique({
         where: { id: pesertaId },
         select: {
@@ -146,7 +147,10 @@ export async function verifikasiPeserta(
           namaLengkap: true,
           kategori: true,
           tipe: true,
-          anggota: { select: { namaLengkap: true } },
+          anggota: {
+            select: { id: true, namaLengkap: true },
+            orderBy: { urutan: "asc" },
+          },
           pembayaran: {
             select: {
               totalPembayaran: true,
@@ -160,19 +164,33 @@ export async function verifikasiPeserta(
       if (!peserta) throw new Error("Peserta tidak ditemukan.");
       if (peserta.status !== "PENDING") throw new Error("Peserta sudah diproses sebelumnya.");
 
+      // ── 2. Hitung nomor BIB berikutnya ─────────────────────
+      // Cek BIB terakhir dari peserta
       const pesertaWithBib = await tx.peserta.findFirst({
         where: { nomorBib: { not: null } },
         orderBy: { nomorBib: "desc" },
         select: { nomorBib: true },
       });
 
-      let nextBibNumber = 1;
-      if (pesertaWithBib?.nomorBib) {
-        const parsed = parseInt(pesertaWithBib.nomorBib, 10);
-        if (!isNaN(parsed)) nextBibNumber = parsed + 1;
-      }
+      // Cek BIB terakhir dari anggota
+      const anggotaWithBib = await tx.anggota.findFirst({
+        where: { nomorBib: { not: null } },
+        orderBy: { nomorBib: "desc" },
+        select: { nomorBib: true },
+      });
 
+      // Ambil angka BIB tertinggi dari keduanya
+      const lastBibPeserta = pesertaWithBib?.nomorBib
+        ? parseInt(pesertaWithBib.nomorBib, 10)
+        : 0;
+      const lastBibAnggota = anggotaWithBib?.nomorBib
+        ? parseInt(anggotaWithBib.nomorBib, 10)
+        : 0;
+      let nextBibNumber = Math.max(lastBibPeserta, lastBibAnggota) + 1;
+
+      // ── 3. Generate BIB & QR untuk ketua ───────────────────
       const generatedBib = String(nextBibNumber).padStart(4, "0");
+      nextBibNumber++;
 
       const qrSecret = process.env.QR_SECRET_KEY;
       if (!qrSecret) throw new Error("QR_SECRET_KEY is not defined");
@@ -197,69 +215,121 @@ export async function verifikasiPeserta(
         },
       });
 
-      return { nomorBib: generatedBib, peserta, qrToken: generatedQrToken };
+      // ── 4. Generate BIB untuk setiap anggota ───────────────
+      const anggotaDenganBib: { id: string; namaLengkap: string; nomorBib: string }[] = [];
+
+      for (const anggota of peserta.anggota) {
+        const anggotaBib = String(nextBibNumber).padStart(4, "0");
+        nextBibNumber++;
+
+        await tx.anggota.update({
+          where: { id: anggota.id },
+          data: { nomorBib: anggotaBib },
+        });
+
+        anggotaDenganBib.push({
+          id: anggota.id,
+          namaLengkap: anggota.namaLengkap,
+          nomorBib: anggotaBib,
+        });
+      }
+
+      return {
+        nomorBib: generatedBib,
+        peserta,
+        qrToken: generatedQrToken,
+        anggotaDenganBib,
+      };
     });
 
     nomorBib = result.nomorBib;
 
-// ── Kirim Email Notifikasi Verifikasi + E-Ticket ──────────
-    // Generate PDF terlebih dahulu — jika gagal, tetap kirim email tanpa attachment.
-    const pdfBuffer = await generateEticketPdf({
+    const tanggalDaftar = result.peserta.createdAt.toLocaleDateString("id-ID", {
+      day: "numeric", month: "long", year: "numeric",
+    });
+
+    // ── 5. Generate, upload, & kirim e-tiket untuk KETUA ───
+    const pdfBufferKetua = await generateEticketPdf({
       peserta: {
         namaLengkap: result.peserta.namaLengkap,
         nomorBib:    nomorBib,
         kategori:    result.peserta.kategori,
         tipe:        result.peserta.tipe,
-        totalBayar: result.peserta.pembayaran?.totalPembayaran,
+        totalBayar:  result.peserta.pembayaran?.totalPembayaran,
         metodePembayaran: result.peserta.pembayaran?.metodePembayaran,
-        tanggalDaftar: result.peserta.createdAt.toLocaleDateString("id-ID", {
-          day: "numeric", month: "long", year: "numeric"
-        }),
+        tanggalDaftar,
       },
-      anggota: result.peserta.anggota?.map((a: any) => ({ namaLengkap: a.namaLengkap })),
       qrToken: result.qrToken,
     });
 
-    // ── Upload e-ticket PNG ke Supabase Storage ──────────────
-    if (pdfBuffer) {
+    if (pdfBufferKetua) {
       try {
-        const eticketPath = await uploadEticket(
-          pdfBuffer,
-          pesertaId,
-          nomorBib
-        );
+        const eticketPath = await uploadEticket(pdfBufferKetua, pesertaId, nomorBib);
         await prisma.peserta.update({
           where: { id: pesertaId },
           data: { eticketUrl: eticketPath },
         });
       } catch (uploadErr) {
-        console.error("[verifikasiPeserta] Gagal upload eticket:", uploadErr);
-        // Tidak menggagalkan verifikasi
+        console.error("[verifikasiPeserta] Gagal upload eticket ketua:", uploadErr);
       }
     }
 
-    const verifikasiEmailResult = await sendNotifikasiVerifikasi({
+    await sendNotifikasiVerifikasi({
       peserta: {
         namaLengkap: result.peserta.namaLengkap,
         email:       result.peserta.email,
         nomorBib:    nomorBib,
         kategori:    result.peserta.kategori,
         tipe:        result.peserta.tipe,
-        anggota:     result.peserta.anggota?.map((a: any) => ({ namaLengkap: a.namaLengkap })),
+        anggota:     result.anggotaDenganBib.map((a) => ({ namaLengkap: a.namaLengkap })),
       },
       qrToken: result.qrToken,
-      pdfBuffer: pdfBuffer ?? undefined,
+      pdfBuffer: pdfBufferKetua ?? undefined,
     });
 
-    if (!verifikasiEmailResult.success) {
-      console.error(
-        "[verifikasiPeserta] Gagal kirim email verifikasi:",
-        verifikasiEmailResult.error
-      );
-      // Email gagal tidak menggagalkan verifikasi — status tetap berubah ke VERIFIED
+    // ── 6. Generate, upload, & kirim e-tiket per ANGGOTA ───
+    for (const anggota of result.anggotaDenganBib) {
+      const pdfBufferAnggota = await generateEticketPdf({
+        peserta: {
+          namaLengkap: anggota.namaLengkap,
+          nomorBib:    anggota.nomorBib,
+          kategori:    result.peserta.kategori,
+          tipe:        result.peserta.tipe,
+          totalBayar:  result.peserta.pembayaran?.totalPembayaran,
+          metodePembayaran: result.peserta.pembayaran?.metodePembayaran,
+          tanggalDaftar,
+        },
+        qrToken: result.qrToken,
+      });
+
+      if (pdfBufferAnggota) {
+        try {
+          const eticketPath = await uploadEticket(pdfBufferAnggota, anggota.id, anggota.nomorBib);
+          await prisma.anggota.update({
+            where: { id: anggota.id },
+            data: { eticketUrl: eticketPath },
+          });
+        } catch (uploadErr) {
+          console.error(`[verifikasiPeserta] Gagal upload eticket anggota ${anggota.namaLengkap}:`, uploadErr);
+        }
+      }
+
+      await sendNotifikasiVerifikasi({
+        peserta: {
+          namaLengkap: anggota.namaLengkap,
+          email:       result.peserta.email, // email ketua
+          nomorBib:    anggota.nomorBib,
+          kategori:    result.peserta.kategori,
+          tipe:        result.peserta.tipe,
+          anggota:     [],
+        },
+        qrToken: result.qrToken,
+        pdfBuffer: pdfBufferAnggota ?? undefined,
+      });
     }
 
   } catch (err) {
+    console.error("[verifikasiPeserta] Error:", err);
     const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
     return { success: false, error: message };
   }

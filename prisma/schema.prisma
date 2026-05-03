@@ -129,6 +129,8 @@ model Anggota {
   ukuranJersey UkuranJersey? @map("ukuran_jersey")  // opsional — hanya jika paket Gaza
   ukuranLengan UkuranLengan? @map("ukuran_lengan")  // opsional — hanya jika paket Gaza
   urutan       Int
+  nomorBib     String?      @unique @map("nomor_bib")
+  eticketUrl   String?      @map("eticket_url")
   createdAt    DateTime     @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
 
