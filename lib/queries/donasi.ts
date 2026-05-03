@@ -4,6 +4,9 @@
 
 import prisma from "@/lib/prisma";
 
+// Nominal donasi tetap per peserta paket Gaza/Rafah
+const DONASI_PER_PESERTA_GAZA_RAFAH = 15000;
+
 export interface StatistikDonasi {
   totalTerkumpul: number;
   jumlahDonatur: number;
@@ -26,6 +29,10 @@ export async function getStatistikDonasi(): Promise<StatistikDonasi> {
       jumlahDonaturPendaftaran,
       jumlahPesertaUtama,
       jumlahAnggotaKeluarga,
+      // Jumlah ketua VERIFIED yang paket Gaza/Rafah
+      jumlahKetuaGazaRafah,
+      // Jumlah anggota keluarga VERIFIED yang ketuanya paket Gaza/Rafah
+      jumlahAnggotaGazaRafah,
     ] = await Promise.all([
       // 1. SUM nominal dari form donasi utama yang sudah VERIFIED
       prisma.donasi.aggregate({
@@ -55,21 +62,45 @@ export async function getStatistikDonasi(): Promise<StatistikDonasi> {
       }),
 
       // 6. COUNT anggota keluarga dari pendaftaran yang VERIFIED
-      // (join ke peserta untuk memastikan hanya dari pendaftaran VERIFIED)
       prisma.anggota.count({
         where: {
           peserta: { status: "VERIFIED" },
         },
       }),
+
+      // 7. COUNT ketua VERIFIED yang paket Gaza atau Rafah
+      prisma.peserta.count({
+        where: {
+          status: "VERIFIED",
+          kategori: {
+            in: ["FUN_RUN_GAZA", "FUN_RUN_RAFAH", "FUN_WALK_GAZA", "FUN_WALK_RAFAH"],
+          },
+        },
+      }),
+
+      // 8. COUNT anggota keluarga VERIFIED yang ketuanya paket Gaza/Rafah
+      prisma.anggota.count({
+        where: {
+          peserta: {
+            status: "VERIFIED",
+            kategori: {
+              in: ["FUN_RUN_GAZA", "FUN_RUN_RAFAH", "FUN_WALK_GAZA", "FUN_WALK_RAFAH"],
+            },
+          },
+        },
+      }),
     ]);
 
-    const totalDariDonasi = donasiAggregate._sum.nominal ?? 0;
-    const totalDariTambahan = donasiTambahanAggregate._sum.donasiTambahan ?? 0;
-    const totalTerkumpul = totalDariDonasi + totalDariTambahan;
+    const totalDariDonasi    = donasiAggregate._sum.nominal ?? 0;
+    const totalDariTambahan  = donasiTambahanAggregate._sum.donasiTambahan ?? 0;
+
+    // Donasi dari paket Gaza/Rafah — Rp 15.000 per peserta (ketua + anggota)
+    const totalDariPaketGazaRafah =
+      (jumlahKetuaGazaRafah + jumlahAnggotaGazaRafah) * DONASI_PER_PESERTA_GAZA_RAFAH;
+
+    const totalTerkumpul = totalDariDonasi + totalDariTambahan + totalDariPaketGazaRafah;
 
     const jumlahDonatur = jumlahDonaturForm + jumlahDonaturPendaftaran;
-
-    // Kepala pendaftaran + semua anggota keluarga
     const jumlahPeserta = jumlahPesertaUtama + jumlahAnggotaKeluarga;
 
     const persentase = targetDonasi > 0
