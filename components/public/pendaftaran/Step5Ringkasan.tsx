@@ -38,7 +38,7 @@ function labelLengan(lengan: string): string {
   return "—";
 }
 
-// Resolve harga satuan dari hargaMap berdasarkan kategori + ukuranLengan
+// Resolve harga satuan per-individu berdasarkan kategori + ukuranLengan miliknya sendiri
 function resolveHargaSatuan(
   hargaMap: HargaMap,
   kategori: string | null,
@@ -48,7 +48,7 @@ function resolveHargaSatuan(
   if (kategori === "FUN_RUN_RAFAH")  return hargaMap["FUN_RUN_RAFAH"]  ?? 0;
   if (kategori === "FUN_WALK_RAFAH") return hargaMap["FUN_WALK_RAFAH"] ?? 0;
 
-  // Gaza — bergantung ukuranLengan, default PANJANG jika belum dipilih
+  // Gaza — bergantung ukuranLengan milik individu ini, default PANJANG jika kosong
   const key = `${kategori}__${ukuranLengan || "PANJANG"}`;
   return hargaMap[key] ?? 0;
 }
@@ -98,14 +98,14 @@ interface Step5RingkasanProps {
 // ============================================================
 
 export default function Step5Ringkasan({ formData }: Step5RingkasanProps) {
-  // Harga dari server — default value sebagai fallback jika fetch gagal
+  // Default fallback sesuai env (jika getHargaKategori gagal)
   const [hargaMap, setHargaMap] = useState<HargaMap>({
-    "FUN_RUN_GAZA__PANJANG":  120_000,
-    "FUN_RUN_GAZA__PENDEK":   110_000,
-    "FUN_WALK_GAZA__PANJANG": 120_000,
-    "FUN_WALK_GAZA__PENDEK":  110_000,
-    "FUN_RUN_RAFAH":           30_000,
-    "FUN_WALK_RAFAH":          30_000,
+    "FUN_RUN_GAZA__PANJANG":  125_000,
+    "FUN_RUN_GAZA__PENDEK":   115_000,
+    "FUN_WALK_GAZA__PANJANG": 125_000,
+    "FUN_WALK_GAZA__PENDEK":  115_000,
+    "FUN_RUN_RAFAH":           35_000,
+    "FUN_WALK_RAFAH":          35_000,
   });
 
   useEffect(() => {
@@ -116,15 +116,39 @@ export default function Step5Ringkasan({ formData }: Step5RingkasanProps) {
       });
   }, []);
 
-  // Kalkulasi harga
-  const isKeluarga  = formData.tipe === "KELUARGA"; // fix: sebelumnya "KELOMPOK"
-  const isGaza      = formData.kategori === "FUN_RUN_GAZA" || formData.kategori === "FUN_WALK_GAZA";
-  const ukuranLengan = formData.peserta.ukuranLengan ?? "";
+  // ─── Kalkulasi harga ────────────────────────────────────────
+  const isKeluarga = formData.tipe === "KELUARGA";
+  const isGaza     = formData.kategori === "FUN_RUN_GAZA" || formData.kategori === "FUN_WALK_GAZA";
 
-  const jumlahPeserta   = isKeluarga ? 1 + formData.anggota.length : 1; // fix: aware INDIVIDU
-  const hargaSatuan     = resolveHargaSatuan(hargaMap, formData.kategori, ukuranLengan);
-  const biayaPendaftaran = hargaSatuan * jumlahPeserta;
-  const total           = biayaPendaftaran + (formData.donasiTambahan ?? 0);
+  // FIX: Hitung harga per-individu, lalu jumlahkan — bukan hargaSatuan × jumlahPeserta
+  // Peserta utama (ketua)
+  const hargaPesertaUtama = resolveHargaSatuan(
+    hargaMap,
+    formData.kategori,
+    formData.peserta.ukuranLengan ?? ""
+  );
+
+  // Anggota keluarga (masing-masing bisa beda ukuranLengan)
+  const hargaAnggota = isKeluarga
+    ? formData.anggota.map((anggota) =>
+        resolveHargaSatuan(hargaMap, formData.kategori, anggota.ukuranLengan ?? "")
+      )
+    : [];
+
+  const biayaPendaftaran =
+    hargaPesertaUtama + hargaAnggota.reduce((sum, h) => sum + h, 0);
+
+  const jumlahPeserta = isKeluarga ? 1 + formData.anggota.length : 1;
+  const total         = biayaPendaftaran + (formData.donasiTambahan ?? 0);
+
+  // Untuk label subtitle biaya — jika semua harga sama tampilkan "Rp X × N orang",
+  // jika beda (keluarga Gaza campur lengan) tampilkan "dihitung per peserta"
+  const semuaHargaSama =
+    hargaAnggota.every((h) => h === hargaPesertaUtama);
+  const subtitleBiaya =
+    isKeluarga && isGaza && !semuaHargaSama
+      ? "Dihitung per peserta (ukuran lengan berbeda)"
+      : `${formatRupiah(hargaPesertaUtama)} × ${jumlahPeserta} orang`;
 
   return (
     <div>
@@ -145,22 +169,10 @@ export default function Step5Ringkasan({ formData }: Step5RingkasanProps) {
         </div>
 
         <div className="px-4 py-3">
-          <RingkasanRow
-            label="Kategori"
-            value={labelKategori(formData.kategori)}
-          />
-          <RingkasanRow
-            label="Tipe"
-            value={labelTipe(formData.tipe)}
-          />
-          <RingkasanRow
-            label="Jumlah Peserta"
-            value={`${jumlahPeserta} orang`}
-          />
-          <RingkasanRow
-            label="Lokasi & Tanggal"
-            value="Solo · 24 Mei 2026"
-          />
+          <RingkasanRow label="Kategori" value={labelKategori(formData.kategori)} />
+          <RingkasanRow label="Tipe" value={labelTipe(formData.tipe)} />
+          <RingkasanRow label="Jumlah Peserta" value={`${jumlahPeserta} orang`} />
+          <RingkasanRow label="Lokasi & Tanggal" value="Solo · 24 Mei 2026" />
           <RingkasanRow
             label={isKeluarga ? "Nama Ketua" : "Nama Peserta"}
             value={formData.peserta.namaLengkap || "—"}
@@ -168,18 +180,15 @@ export default function Step5Ringkasan({ formData }: Step5RingkasanProps) {
 
           {/* Nama Kelompok — hanya jika KELUARGA dan diisi */}
           {isKeluarga && formData.namaKelompok && (
-            <RingkasanRow
-              label="Nama Kelompok"
-              value={formData.namaKelompok}
-            />
+            <RingkasanRow label="Nama Kelompok" value={formData.namaKelompok} />
           )}
 
-          {/* Info jersey — hanya jika paket Gaza */}
+          {/* Info jersey peserta utama — hanya jika paket Gaza */}
           {isGaza && (
             <>
               <RingkasanRow
                 label="Tipe Lengan Jersey"
-                value={labelLengan(ukuranLengan)}
+                value={labelLengan(formData.peserta.ukuranLengan ?? "")}
               />
               <RingkasanRow
                 label="Ukuran Jersey"
@@ -204,7 +213,6 @@ export default function Step5Ringkasan({ formData }: Step5RingkasanProps) {
                 key={idx}
                 className="py-2 border-b border-[rgba(26,84,200,0.08)] last:border-0"
               >
-                {/* Nama anggota */}
                 <div className="flex items-center gap-3 mb-1">
                   <span className="w-6 h-6 rounded-full bg-[#EEF3FF] text-[#1A54C8] text-xs font-bold flex items-center justify-center flex-shrink-0">
                     {idx + 1}
@@ -226,6 +234,15 @@ export default function Step5Ringkasan({ formData }: Step5RingkasanProps) {
                     <span className="text-xs text-[#6B7A99]">
                       Ukuran {anggota.ukuranJersey || "—"}
                     </span>
+                    {/* FIX: tampilkan harga per anggota jika beda-beda */}
+                    {isGaza && !semuaHargaSama && (
+                      <>
+                        <span className="text-xs text-[#6B7A99]">·</span>
+                        <span className="text-xs font-semibold text-[#1A54C8]">
+                          {formatRupiah(hargaAnggota[idx])}
+                        </span>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -250,7 +267,7 @@ export default function Step5Ringkasan({ formData }: Step5RingkasanProps) {
                 Biaya Pendaftaran
               </span>
               <p className="text-[10px] text-[#6B7A99] mt-0.5">
-                {formatRupiah(hargaSatuan)} × {jumlahPeserta} orang
+                {subtitleBiaya}
               </p>
             </div>
             <span className="text-sm font-bold text-[#0A1628]">
