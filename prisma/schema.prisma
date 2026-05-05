@@ -72,45 +72,91 @@ enum MetodePembayaran {
   DANA
 }
 
+// ─── Enum Baru ────────────────────────────────────────────────
+
+enum AdminRole {
+  SUPERADMIN
+  BENDAHARA
+  PANITIA
+
+  @@map("admin_role")
+}
+
+enum NamaRekening {
+  JAGO
+  BSI
+  MANDIRI
+  QRIS
+
+  @@map("nama_rekening")
+}
+
+enum DivisiPengeluaran {
+  ACARA
+  HUMAS_SPONSDAN
+  MEDIA
+  LOGISTIK
+  SEKBEND
+
+  @@map("divisi_pengeluaran")
+}
+
+enum JenisPengeluaran {
+  RACE_PACK
+  OPERASIONAL
+  DONASI
+
+  @@map("jenis_pengeluaran")
+}
+
+enum SumberPemasukan {
+  KAS
+  SPONSOR
+
+  @@map("sumber_pemasukan")
+}
+
 // ============================================================
 // MODEL DEFINITIONS
 // ============================================================
 
 model Admin {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id           String    @id @default(cuid())
+  email        String?   @unique
+  username     String?   @unique
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(SUPERADMIN) @map("role")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   @@map("admins")
 }
 
 model Peserta {
-  id             String          @id @default(cuid())
-  tipe           TipePendaftaran @map("tipe")
-  namaKelompok   String?         @map("nama_kelompok")
-  kategori       KategoriLomba   @map("kategori")
-  namaLengkap    String          @map("nama_lengkap")
-  email          String          @map("email")
-  noWhatsapp     String          @map("no_whatsapp")
-  tanggalLahir   DateTime        @map("tanggal_lahir")
-  jenisKelamin   JenisKelamin    @map("jenis_kelamin")
-  ukuranJersey  UkuranJersey?    @map("ukuran_jersey") 
-  ukuranLengan  UkuranLengan?    @map("ukuran_lengan") 
-  namaKontak     String          @map("nama_kontak")
-  noKontak       String          @map("no_kontak")
-  nomorBib       String?         @unique @map("nomor_bib")
-  qrToken        String?         @unique @map("qr_token")
-  eticketUrl     String?         @map("eticket_url")
-  status         StatusPeserta   @default(PENDING) @map("status")
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
+  id              String          @id @default(cuid())
+  tipe            TipePendaftaran @map("tipe")
+  namaKelompok    String?         @map("nama_kelompok")
+  kategori        KategoriLomba   @map("kategori")
+  namaLengkap     String          @map("nama_lengkap")
+  email           String          @map("email")
+  noWhatsapp      String          @map("no_whatsapp")
+  tanggalLahir    DateTime        @map("tanggal_lahir")
+  jenisKelamin    JenisKelamin    @map("jenis_kelamin")
+  ukuranJersey    UkuranJersey?   @map("ukuran_jersey")
+  ukuranLengan    UkuranLengan?   @map("ukuran_lengan")
+  namaKontak      String          @map("nama_kontak")
+  noKontak        String          @map("no_kontak")
+  nomorBib        String?         @unique @map("nomor_bib")
+  qrToken         String?         @unique @map("qr_token")
+  eticketUrl      String?         @map("eticket_url")
+  status          StatusPeserta   @default(PENDING) @map("status")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
-  anggota        Anggota[]
-  pembayaran     Pembayaran?
+  anggota         Anggota[]
+  pembayaran      Pembayaran?
   magicLinkTokens MagicLinkToken[]
-  checkIn        CheckIn?
+  checkIn         CheckIn?
 
   @@index([email])
   @@index([status])
@@ -121,54 +167,54 @@ model Peserta {
 }
 
 model Anggota {
-  id           String       @id @default(cuid())
-  pesertaId    String       @map("peserta_id")
-  namaLengkap  String       @map("nama_lengkap")
-  tanggalLahir DateTime     @map("tanggal_lahir")
-  jenisKelamin JenisKelamin @map("jenis_kelamin")
-  ukuranJersey UkuranJersey? @map("ukuran_jersey")  // opsional — hanya jika paket Gaza
-  ukuranLengan UkuranLengan? @map("ukuran_lengan")  // opsional — hanya jika paket Gaza
+  id           String        @id @default(cuid())
+  pesertaId    String        @map("peserta_id")
+  namaLengkap  String        @map("nama_lengkap")
+  tanggalLahir DateTime      @map("tanggal_lahir")
+  jenisKelamin JenisKelamin  @map("jenis_kelamin")
+  ukuranJersey UkuranJersey? @map("ukuran_jersey")
+  ukuranLengan UkuranLengan? @map("ukuran_lengan")
   urutan       Int
-  nomorBib     String?      @unique @map("nomor_bib")
-  eticketUrl   String?      @map("eticket_url")
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
+  nomorBib     String?       @unique @map("nomor_bib")
+  eticketUrl   String?       @map("eticket_url")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
-  peserta      Peserta      @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
+  peserta      Peserta       @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
 
   @@map("anggota")
 }
 
 model Pembayaran {
-  id                String           @id @default(cuid())
-  pesertaId         String           @unique @map("peserta_id")
-  biayaPendaftaran  Int              @map("biaya_pendaftaran")
-  donasiTambahan    Int              @default(0) @map("donasi_tambahan")
-  totalPembayaran   Int              @map("total_pembayaran")
-  metodePembayaran  MetodePembayaran @map("metode_pembayaran")
-  buktiBayarUrl     String?          @map("bukti_bayar_url")
-  buktiBayarNama    String?          @map("bukti_bayar_nama")
-  status            StatusPembayaran @default(PENDING) @map("status")
-  catatanAdmin      String?          @map("catatan_admin")
-  verifikasiAt      DateTime?        @map("verifikasi_at")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
+  id               String           @id @default(cuid())
+  pesertaId        String           @unique @map("peserta_id")
+  biayaPendaftaran Int              @map("biaya_pendaftaran")
+  donasiTambahan   Int              @default(0) @map("donasi_tambahan")
+  totalPembayaran  Int              @map("total_pembayaran")
+  metodePembayaran MetodePembayaran @map("metode_pembayaran")
+  buktiBayarUrl    String?          @map("bukti_bayar_url")
+  buktiBayarNama   String?          @map("bukti_bayar_nama")
+  status           StatusPembayaran @default(PENDING) @map("status")
+  catatanAdmin     String?          @map("catatan_admin")
+  verifikasiAt     DateTime?        @map("verifikasi_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
 
-  peserta           Peserta          @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
+  peserta          Peserta          @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
 
   @@map("pembayaran")
 }
 
 model MagicLinkToken {
-  id          String    @id @default(cuid())
-  pesertaId   String    @map("peserta_id")
-  token       String    @unique
-  sudahDipakai Boolean  @default(false) @map("sudah_dipakai")
-  expiredAt   DateTime  @map("expired_at")
-  dipakaiAt   DateTime? @map("dipakai_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id           String    @id @default(cuid())
+  pesertaId    String    @map("peserta_id")
+  token        String    @unique
+  sudahDipakai Boolean   @default(false) @map("sudah_dipakai")
+  expiredAt    DateTime  @map("expired_at")
+  dipakaiAt    DateTime? @map("dipakai_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
-  peserta     Peserta   @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
+  peserta      Peserta   @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([pesertaId])
@@ -176,13 +222,13 @@ model MagicLinkToken {
 }
 
 model CheckIn {
-  id         String   @id @default(cuid())
-  pesertaId  String   @unique @map("peserta_id")
-  checkinAt  DateTime @map("checkin_at")
-  catatan    String?
-  createdAt  DateTime @default(now()) @map("created_at")
+  id        String   @id @default(cuid())
+  pesertaId String   @unique @map("peserta_id")
+  checkinAt DateTime @map("checkin_at")
+  catatan   String?
+  createdAt DateTime @default(now()) @map("created_at")
 
-  peserta    Peserta  @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
+  peserta   Peserta  @relation(fields: [pesertaId], references: [id], onDelete: Cascade)
 
   @@map("check_ins")
 }
@@ -206,4 +252,63 @@ model Donasi {
   @@index([status])
   @@index([createdAt])
   @@map("donasi")
+}
+
+// ─── Model Baru: Keuangan Bendahara ──────────────────────────
+
+model Pengeluaran {
+  id              String            @id @default(cuid())
+  namaPengeluaran String            @map("nama_pengeluaran")
+  divisi          DivisiPengeluaran
+  jenis           JenisPengeluaran
+  nominal         Int
+  rekening        NamaRekening
+  buktiUrl        String?           @map("bukti_url")
+  buktiNama       String?           @map("bukti_nama")
+  catatan         String?
+  tanggal         DateTime
+  createdBy       String            @map("created_by")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@index([rekening])
+  @@index([divisi])
+  @@index([jenis])
+  @@index([tanggal])
+  @@map("pengeluaran")
+}
+
+model PemasukanManual {
+  id          String          @id @default(cuid())
+  sumber      SumberPemasukan
+  keterangan  String
+  nominal     Int
+  rekening    NamaRekening
+  buktiUrl    String?         @map("bukti_url")
+  buktiNama   String?         @map("bukti_nama")
+  tanggal     DateTime
+  createdBy   String          @map("created_by")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@index([sumber])
+  @@index([rekening])
+  @@index([tanggal])
+  @@map("pemasukan_manual")
+}
+
+model TransferAntar {
+  id        String       @id @default(cuid())
+  dari      NamaRekening
+  ke        NamaRekening
+  nominal   Int
+  catatan   String?
+  tanggal   DateTime
+  createdBy String       @map("created_by")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@index([dari])
+  @@index([ke])
+  @@index([tanggal])
+  @@map("transfer_antar")
 }

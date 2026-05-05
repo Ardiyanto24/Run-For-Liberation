@@ -1,31 +1,88 @@
 // prisma/seed.ts
 
-// prisma/seed.ts
-
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, AdminRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL_SEED;
-  const password = process.env.ADMIN_PASSWORD_SEED;
+  // ── 1. Superadmin ──────────────────────────────────────────
+  const superadminEmail = process.env.ADMIN_EMAIL_SEED;
+  const superadminPassword = process.env.ADMIN_PASSWORD_SEED;
 
-  if (!email || !password) {
+  if (!superadminEmail || !superadminPassword) {
     throw new Error(
-      "ADMIN_EMAIL_SEED dan ADMIN_PASSWORD_SEED harus diisi di environment variable sebelum menjalankan seed."
+      "ADMIN_EMAIL_SEED dan ADMIN_PASSWORD_SEED harus diisi di .env.local"
     );
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
+  const superadminHash = await bcrypt.hash(superadminPassword, 12);
 
-  const admin = await prisma.admin.upsert({
-    where: { email },
-    update: { passwordHash },
-    create: { email, passwordHash },
+  const superadmin = await prisma.admin.upsert({
+    where: { email: superadminEmail },
+    update: { passwordHash: superadminHash, role: AdminRole.SUPERADMIN },
+    create: {
+      email: superadminEmail,
+      passwordHash: superadminHash,
+      role: AdminRole.SUPERADMIN,
+    },
   });
 
-  console.log(`✅ Admin berhasil dibuat / diperbarui: ${admin.email}`);
+  console.log(`✅ Superadmin: ${superadmin.email}`);
+
+  // ── 2. Bendahara (3 akun) ──────────────────────────────────
+  const bendaharaList = [
+    {
+      email: "farrasfirdausy@gmail.com",
+      password: "Nissinwafer123",
+    },
+    {
+      email: "diahtriutami412@gmail.com",
+      password: "Didot1234",
+    },
+    {
+      email: "ardiyanto24042002@gmail.com",
+      password: "A24R04D20I02a",
+    },
+  ];
+
+  for (const bendahara of bendaharaList) {
+    const hash = await bcrypt.hash(bendahara.password, 12);
+
+    const result = await prisma.admin.upsert({
+      where: { email: bendahara.email },
+      update: { passwordHash: hash, role: AdminRole.BENDAHARA },
+      create: {
+        email: bendahara.email,
+        passwordHash: hash,
+        role: AdminRole.BENDAHARA,
+      },
+    });
+
+    console.log(`✅ Bendahara: ${result.email}`);
+  }
+
+  // ── 3. Panitia ─────────────────────────────────────────────
+  const panitiaUsername = process.env.PANITIA_USERNAME_SEED;
+  const panitiaPassword = process.env.PANITIA_PASSWORD_SEED;
+
+  if (panitiaUsername && panitiaPassword) {
+    const panitiaHash = await bcrypt.hash(panitiaPassword, 12);
+
+    const panitia = await prisma.admin.upsert({
+      where: { username: panitiaUsername },
+      update: { passwordHash: panitiaHash, role: AdminRole.PANITIA },
+      create: {
+        username: panitiaUsername,
+        passwordHash: panitiaHash,
+        role: AdminRole.PANITIA,
+      },
+    });
+
+    console.log(`✅ Panitia: ${panitia.username}`);
+  } else {
+    console.log("ℹ️  PANITIA_USERNAME_SEED tidak diset, skip.");
+  }
 }
 
 main()
