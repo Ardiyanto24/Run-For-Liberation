@@ -139,3 +139,22 @@ export function generateMagicLinkToken(): string {
 export function generateQrToken(pesertaId: string, secret: string): string {
   return crypto.createHmac("sha256", secret).update(pesertaId).digest("hex");
 }
+
+// ─── Role Reader ──────────────────────────────────────────────────────────────
+
+/**
+ * Baca role admin dari session cookie tanpa hit database.
+ * Returns role string ("SUPERADMIN" | "BENDAHARA" | "PANITIA") atau null.
+ */
+export async function getAdminRole(): Promise<string | null> {
+  const token = await getSessionCookie("admin_session");
+  if (!token) return null;
+
+  const secret = process.env.ADMIN_JWT_SECRET;
+  if (!secret) return null;
+
+  const payload = await verifyJwt(token, secret);
+  if (!payload) return null;
+
+  return (payload as { role?: string }).role ?? null;
+}

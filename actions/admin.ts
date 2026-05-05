@@ -2,7 +2,7 @@
 
 "use server";
 
-import { z } from "zod";
+import { string, z } from "zod";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -25,19 +25,20 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 menit
 const RATE_LIMIT_PER_IP = 5;
-const ADMIN_SESSION_MAX_AGE = 8 * 60 * 60; // 8 hours in seconds
+const ADMIN_SESSION_MAX_AGE = 8 * 60 * 60; // 8 jam dalam detik
 
 const GENERIC_ERROR = {
   success: false,
-  message: "Email atau password tidak valid.",
+  message: "Email/username atau password tidak valid.",
 } as const;
 
 // ─── Validation Schema ────────────────────────────────────────────────────────
 
+// Schema baru: terima email atau username (tidak divalidasi format email)
 const AdminLoginSchema = z.object({
-  email: z.string().min(1, "Email wajib diisi").email("Format email tidak valid"),
+  identifier: z.string().min(1, "Email atau username wajib diisi"),
   password: z.string().min(1, "Password wajib diisi"),
 });
 
@@ -55,14 +56,14 @@ type ActionResult<T = Record<string, any>> =
   | { success: false; error: string };
 
 // ============================================================
-// AUTH ACTIONS (DEV-09)
+// AUTH ACTIONS
 // ============================================================
 
 export async function adminLogin(
   formData: FormData
 ): Promise<{ success: boolean; message: string }> {
   const raw = {
-    email: formData.get("email"),
+    identifier: formData.get("identifier"),
     password: formData.get("password"),
   };
 
@@ -72,8 +73,9 @@ export async function adminLogin(
     return { success: false, message: firstError };
   }
 
-  const { email, password } = parsed.data;
+  const { identifier, password } = parsed.data;
 
+  // ── Rate limiting per IP ───────────────────────────────────────────────────
   const headerStore = await headers();
   const ip =
     headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -85,31 +87,57 @@ export async function adminLogin(
     RATE_LIMIT_PER_IP,
     LOGIN_WINDOW_MS
   );
-
   if (!ipRateLimit.allowed) return GENERIC_ERROR;
 
-  const admin = await prisma.admin.findUnique({
-    where: { email },
-    select: { id: true, passwordHash: true },
-  });
+  // ── Deteksi email vs username ──────────────────────────────────────────────
+  const isEmail = identifier.includes("@");
+
+  let admin: { id: string; passwordHash: string; role: string } | null = null;
+
+  if (isEmail) {
+    // Cari berdasarkan email (SUPERADMIN atau BENDAHARA)
+    const result = await prisma.admin.findUnique({
+      where: { email: identifier },
+      select: { id: true, passwordHash: true, role: true },
+    });
+    admin = result;
+  } else {
+    // Cari berdasarkan username (PANITIA)
+    const result = await prisma.admin.findUnique({
+      where: { username: identifier },
+      select: { id: true, passwordHash: true, role: true },
+    });
+    admin = result;
+  }
 
   if (!admin) return GENERIC_ERROR;
 
   const passwordMatch = await bcrypt.compare(password, admin.passwordHash);
   if (!passwordMatch) return GENERIC_ERROR;
 
+  // ── Buat JWT dengan role ───────────────────────────────────────────────────
   const secret = process.env.ADMIN_JWT_SECRET;
   if (!secret) throw new Error("ADMIN_JWT_SECRET is not defined");
 
-  const sessionToken = await signJwt({ adminId: admin.id }, secret, "8h");
+  const sessionToken = await signJwt(
+    { adminId: admin.id, role: admin.role },
+    secret,
+    "8h"
+  );
 
   await setSessionCookie("admin_session", sessionToken, {
     maxAge: ADMIN_SESSION_MAX_AGE,
-    path: "/admin",
+    path: "/",
     sameSite: "strict",
   });
 
-  redirect("/admin/dashboard");
+  // ── Redirect berdasarkan role ──────────────────────────────────────────────
+  if (admin.role === "SUPERADMIN") redirect("/admin/dashboard");
+  if (admin.role === "BENDAHARA") redirect("/bendahara/dashboard");
+  if (admin.role === "PANITIA") redirect("/panitia/dashboard");
+
+  // Fallback (tidak seharusnya tercapai)
+  return GENERIC_ERROR;
 }
 
 export async function adminLogout(): Promise<void> {
@@ -165,21 +193,18 @@ export async function verifikasiPeserta(
       if (peserta.status !== "PENDING") throw new Error("Peserta sudah diproses sebelumnya.");
 
       // ── 2. Hitung nomor BIB berikutnya ─────────────────────
-      // Cek BIB terakhir dari peserta
       const pesertaWithBib = await tx.peserta.findFirst({
         where: { nomorBib: { not: null } },
         orderBy: { nomorBib: "desc" },
         select: { nomorBib: true },
       });
 
-      // Cek BIB terakhir dari anggota
       const anggotaWithBib = await tx.anggota.findFirst({
         where: { nomorBib: { not: null } },
         orderBy: { nomorBib: "desc" },
         select: { nomorBib: true },
       });
 
-      // Ambil angka BIB tertinggi dari keduanya
       const lastBibPeserta = pesertaWithBib?.nomorBib
         ? parseInt(pesertaWithBib.nomorBib, 10)
         : 0;
@@ -256,77 +281,70 @@ export async function verifikasiPeserta(
         kategori:    result.peserta.kategori,
         tipe:        result.peserta.tipe,
         totalBayar:  result.peserta.pembayaran?.totalPembayaran,
-        metodePembayaran: result.peserta.pembayaran?.metodePembayaran,
         tanggalDaftar,
       },
       qrToken: result.qrToken,
     });
 
-    if (pdfBufferKetua) {
-      try {
-        const eticketPath = await uploadEticket(pdfBufferKetua, pesertaId, nomorBib);
-        await prisma.peserta.update({
-          where: { id: pesertaId },
-          data: { eticketUrl: eticketPath },
-        });
-      } catch (uploadErr) {
-        console.error("[verifikasiPeserta] Gagal upload eticket ketua:", uploadErr);
-      }
-    }
+    if (!pdfBufferKetua) throw new Error("Gagal generate e-tiket ketua.");
 
-    await sendNotifikasiVerifikasi({
-      peserta: {
-        namaLengkap: result.peserta.namaLengkap,
-        email:       result.peserta.email,
-        nomorBib:    nomorBib,
-        kategori:    result.peserta.kategori,
-        tipe:        result.peserta.tipe,
-        anggota:     result.anggotaDenganBib.map((a) => ({ namaLengkap: a.namaLengkap })),
-      },
-      qrToken: result.qrToken,
-      pdfBuffer: pdfBufferKetua ?? undefined,
+    const eticketPathKetua = await uploadEticket(
+      pdfBufferKetua,
+      pesertaId,
+      nomorBib
+    );
+
+    await prisma.peserta.update({
+      where: { id: pesertaId },
+      data: { eticketUrl: eticketPathKetua },
     });
 
-    // ── 6. Generate, upload, & kirim e-tiket per ANGGOTA ───
+    // ── 6. Generate, upload, & kirim e-tiket untuk setiap ANGGOTA ──
     for (const anggota of result.anggotaDenganBib) {
+      const anggotaQrToken = generateQrToken(anggota.id, process.env.QR_SECRET_KEY!);
+
       const pdfBufferAnggota = await generateEticketPdf({
         peserta: {
           namaLengkap: anggota.namaLengkap,
           nomorBib:    anggota.nomorBib,
           kategori:    result.peserta.kategori,
           tipe:        result.peserta.tipe,
-          totalBayar:  result.peserta.pembayaran?.totalPembayaran,
-          metodePembayaran: result.peserta.pembayaran?.metodePembayaran,
+          totalBayar:  undefined,
           tanggalDaftar,
         },
-        qrToken: result.qrToken,
+        qrToken: anggotaQrToken,
       });
 
-      if (pdfBufferAnggota) {
-        try {
-          const eticketPath = await uploadEticket(pdfBufferAnggota, anggota.id, anggota.nomorBib);
-          await prisma.anggota.update({
-            where: { id: anggota.id },
-            data: { eticketUrl: eticketPath },
-          });
-        } catch (uploadErr) {
-          console.error(`[verifikasiPeserta] Gagal upload eticket anggota ${anggota.namaLengkap}:`, uploadErr);
-        }
-      }
+      if (!pdfBufferAnggota) throw new Error(`Gagal generate e-tiket anggota ${anggota.id}.`);
 
-      await sendNotifikasiVerifikasi({
-        peserta: {
-          namaLengkap: anggota.namaLengkap,
-          email:       result.peserta.email, // email ketua
-          nomorBib:    anggota.nomorBib,
-          kategori:    result.peserta.kategori,
-          tipe:        result.peserta.tipe,
-          anggota:     [],
+      const eticketPathAnggota = await uploadEticket(
+        pdfBufferAnggota,
+        anggota.id,
+        anggota.nomorBib
+      );
+
+      await prisma.anggota.update({
+        where: { id: anggota.id },
+        data: {
+          eticketUrl: eticketPathAnggota,
+          nomorBib: anggota.nomorBib,
         },
-        qrToken: result.qrToken,
-        pdfBuffer: pdfBufferAnggota ?? undefined,
       });
     }
+
+    // ── 7. Kirim email notifikasi verifikasi ────────────────
+    await sendNotifikasiVerifikasi({
+      peserta: {
+        namaLengkap: result.peserta.namaLengkap,
+        email:       result.peserta.email,
+        nomorBib,
+        kategori:    result.peserta.kategori,
+        tipe:        result.peserta.tipe,
+        anggota:     result.anggotaDenganBib,
+      },
+      qrToken:   result.qrToken,
+      pdfBuffer: pdfBufferKetua,
+    });
 
   } catch (err) {
     console.error("[verifikasiPeserta] Error:", err);
@@ -359,65 +377,54 @@ export async function tolakPeserta(
   }
 
   try {
-    const peserta = await prisma.$transaction(async (tx) => {
-      const found = await tx.peserta.findUnique({
-        where: { id: pesertaId },
-        select: { id: true, status: true, email: true, namaLengkap: true },
-      });
+    const peserta = await prisma.peserta.findUnique({
+      where: { id: pesertaId },
+      select: { email: true, namaLengkap: true, status: true },
+    });
 
-      if (!found) throw new Error("Peserta tidak ditemukan.");
-      if (found.status !== "PENDING") throw new Error("Peserta sudah diproses sebelumnya.");
+    if (!peserta) return { success: false, error: "Peserta tidak ditemukan." };
+    if (peserta.status !== "PENDING") {
+      return { success: false, error: "Peserta sudah diproses sebelumnya." };
+    }
 
-      const now = new Date();
-
-      await tx.peserta.update({
+    await prisma.$transaction([
+      prisma.peserta.update({
         where: { id: pesertaId },
         data: { status: "DITOLAK" },
-      });
-
-      await tx.pembayaran.update({
+      }),
+      prisma.pembayaran.update({
         where: { pesertaId },
         data: {
           status: "DITOLAK",
           catatanAdmin: catatanAdmin.trim(),
-          verifikasiAt: now,
+          verifikasiAt: new Date(),
         },
-      });
+      }),
+    ]);
 
-      return found;
-    });
-
-// ── Kirim Email Notifikasi Penolakan ──────────────────────
-    const penolakanEmailResult = await sendNotifikasiPenolakan({
+    await sendNotifikasiPenolakan({
       peserta: {
-        namaLengkap: peserta.namaLengkap,   // ambil dari query peserta yang sudah ada
+        namaLengkap: peserta.namaLengkap,
         email:       peserta.email,
       },
-      catatanAdmin,                          // parameter yang masuk ke action
+      catatanAdmin: catatanAdmin.trim(),
     });
 
-    if (!penolakanEmailResult.success) {
-      console.error(
-        "[tolakPeserta] Gagal kirim email penolakan:",
-        penolakanEmailResult.error
-      );
-      // Email gagal tidak menggagalkan penolakan — status tetap berubah ke DITOLAK
-    }
-    void peserta;
-
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Terjadi kesalahan.";
-    return { success: false, error: message };
+    console.error("[tolakPeserta] Error:", err);
+    return { success: false, error: "Gagal menolak peserta. Silakan coba lagi." };
   }
 
   return { success: true };
 }
 
 // ============================================================
-// SUBSTEP 1.3 — Verifikasi dan Tolak Donasi (DEV-11)
+// SUBSTEP 1.3 — Verifikasi & Tolak Donasi (DEV-11)
 // ============================================================
 
-export async function verifikasiDonasi(donasiId: string): Promise<ActionResult> {
+export async function verifikasiDonasi(
+  donasiId: string
+): Promise<ActionResult> {
   const session = await getAdminSession();
   if (!session) {
     return { success: false, error: "Sesi admin tidak valid. Silakan login ulang." };
@@ -430,7 +437,10 @@ export async function verifikasiDonasi(donasiId: string): Promise<ActionResult> 
   try {
     await prisma.donasi.update({
       where: { id: donasiId },
-      data: { status: "VERIFIED", verifikasiAt: new Date() },
+      data: {
+        status: "VERIFIED",
+        verifikasiAt: new Date(),
+      },
     });
   } catch (err) {
     console.error("[verifikasiDonasi] Error:", err);
@@ -536,13 +546,9 @@ export async function kirimEmailBlast(
 // SUBSTEP 3.3 — Get Detail Peserta (DEV-11)
 // ============================================================
 
-/**
- * Ambil data lengkap peserta beserta signed URL bukti bayar.
- * Dipanggil dari ModalDetailPeserta saat modal dibuka.
- * Signed URL berlaku 5 menit — di-generate fresh setiap kali modal dibuka.
- */
-export async function getDetailPeserta(pesertaId: string): Promise<
-  ActionResult<{
+export async function getDetailPeserta(
+  pesertaId: string
+): Promise<ActionResult<{
     peserta: {
       id: string;
       namaLengkap: string;
@@ -578,18 +584,15 @@ export async function getDetailPeserta(pesertaId: string): Promise<
     signedUrl: string | null;
   }>
 > {
-  // ── 1. Validasi session admin ─────────────────────────────────────────────
   const session = await getAdminSession();
   if (!session) {
     return { success: false, error: "Sesi admin tidak valid. Silakan login ulang." };
   }
 
-  // ── 2. Validasi input ─────────────────────────────────────────────────────
   if (!pesertaId || pesertaId.trim() === "") {
     return { success: false, error: "ID peserta tidak boleh kosong." };
   }
 
-  // ── 3. Query peserta lengkap dengan relasi ────────────────────────────────
   try {
     const peserta = await prisma.peserta.findUnique({
       where: { id: pesertaId },
@@ -603,10 +606,6 @@ export async function getDetailPeserta(pesertaId: string): Promise<
       return { success: false, error: "Peserta tidak ditemukan." };
     }
 
-    // ── 4. Generate signed URL untuk bukti bayar ──────────────────────────────
-    // Signed URL berlaku 5 menit (dikonfigurasi di lib/supabase.ts).
-    // Jika gagal generate, return null — modal tetap terbuka dengan pesan
-    // "File tidak tersedia" sesuai spesifikasi 08-file-storage.md Section 2.5.
     let signedUrl: string | null = null;
     if (peserta.pembayaran?.buktiBayarUrl) {
       signedUrl = await getSignedUrl(
@@ -627,11 +626,6 @@ export async function getDetailPeserta(pesertaId: string): Promise<
 // SUBSTEP 3.4 — Get Detail Donasi (DEV-11)
 // ============================================================
 
-/**
- * Ambil data lengkap donasi beserta signed URL bukti bayar.
- * Dipanggil dari ModalDetailDonasi saat modal dibuka.
- * Signed URL berlaku 5 menit — di-generate fresh setiap kali modal dibuka.
- */
 export async function getDetailDonasi(donasiId: string): Promise<
   ActionResult<{
     donasi: {
@@ -651,18 +645,15 @@ export async function getDetailDonasi(donasiId: string): Promise<
     signedUrl: string | null;
   }>
 > {
-  // ── 1. Validasi session admin ─────────────────────────────────────────────
   const session = await getAdminSession();
   if (!session) {
     return { success: false, error: "Sesi admin tidak valid. Silakan login ulang." };
   }
 
-  // ── 2. Validasi input ─────────────────────────────────────────────────────
   if (!donasiId || donasiId.trim() === "") {
     return { success: false, error: "ID donasi tidak boleh kosong." };
   }
 
-  // ── 3. Query donasi ───────────────────────────────────────────────────────
   try {
     const donasi = await prisma.donasi.findUnique({
       where: { id: donasiId },
@@ -672,7 +663,6 @@ export async function getDetailDonasi(donasiId: string): Promise<
       return { success: false, error: "Donasi tidak ditemukan." };
     }
 
-    // ── 4. Generate signed URL untuk bukti bayar ──────────────────────────────
     let signedUrl: string | null = null;
     if (donasi.buktiBayarUrl) {
       signedUrl = await getSignedUrl(

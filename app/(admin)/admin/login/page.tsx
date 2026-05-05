@@ -18,8 +18,6 @@ export default function AdminLoginPage() {
 
     startTransition(async () => {
       const result = await adminLogin(formData);
-      // Jika adminLogin berhasil → redirect otomatis dari server action
-      // Jika gagal → result.success = false, tampilkan pesan error
       if (result && !result.success) {
         setError(result.message);
       }
@@ -77,8 +75,16 @@ export default function AdminLoginPage() {
           {/* Header card */}
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-[#EEF3FF] flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-[#1A54C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round"
+              <svg
+                className="w-5 h-5 text-[#1A54C8]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                 />
               </svg>
@@ -99,25 +105,24 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          {/* Form — gunakan name attribute agar FormData bisa baca nilainya */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Field Email */}
+            {/* Field Identifier (Email atau Username) */}
             <div>
               <label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="block text-xs font-semibold text-[#0A1628] mb-1.5 uppercase tracking-wide"
                 style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
               >
-                Email
+                Email atau Username
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="identifier"
+                name="identifier"
+                type="text"
+                autoComplete="username"
                 required
                 disabled={isPending}
-                placeholder="admin@example.com"
+                placeholder="Email atau username"
                 className={[
                   "w-full px-4 py-3 rounded-xl border text-sm text-[#0A1628] outline-none transition-all",
                   "placeholder-[#6B7A99]/50 bg-[#F5F8FF]",
@@ -190,8 +195,18 @@ export default function AdminLoginPage() {
             {/* Error message */}
             {error && (
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[rgba(206,17,38,0.08)] border border-[rgba(206,17,38,0.2)]">
-                <svg className="w-4 h-4 text-[#CE1126] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  className="w-4 h-4 text-[#CE1126] flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
                 <p
                   className="text-sm text-[#CE1126]"
@@ -212,7 +227,11 @@ export default function AdminLoginPage() {
                   ? "bg-[#1A54C8]/60 cursor-wait"
                   : "bg-[#1A54C8] hover:bg-[#1340A0] active:scale-[0.98]",
               ].join(" ")}
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.05em", fontSize: "1rem" }}
+              style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                letterSpacing: "0.05em",
+                fontSize: "1rem",
+              }}
             >
               {isPending ? (
                 <span className="flex items-center justify-center gap-2">

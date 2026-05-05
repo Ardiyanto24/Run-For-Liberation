@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-// NOTE: Do NOT import from lib/auth.ts or lib/prisma.ts here.
-// Middleware runs on the Edge Runtime — only jose and next/server are safe.
+// NOTE: Jangan import dari lib/auth.ts atau lib/prisma.ts di sini.
+// Middleware berjalan di Edge Runtime — hanya jose dan next/server yang aman.
 
 function getSecret(envKey: string): Uint8Array {
   const value = process.env[envKey];
@@ -11,16 +11,36 @@ function getSecret(envKey: string): Uint8Array {
   return new TextEncoder().encode(value);
 }
 
+/**
+ * Verifikasi JWT dan kembalikan payload-nya.
+ * Returns null jika token tidak valid atau expired.
+ */
 async function verifyJwtEdge(
   token: string,
   envKey: string
-): Promise<boolean> {
+): Promise<{ adminId?: string; role?: string } | null> {
   try {
-    await jwtVerify(token, getSecret(envKey));
-    return true;
+    const { payload } = await jwtVerify(token, getSecret(envKey));
+    return payload as { adminId?: string; role?: string };
   } catch {
-    return false;
+    return null;
   }
+}
+
+/**
+ * Helper: buat response redirect + hapus cookie admin_session yang stale.
+ */
+function redirectToLogin(request: NextRequest): NextResponse {
+  const response = NextResponse.redirect(
+    new URL("/admin/login", request.url)
+  );
+  response.cookies.set("admin_session", "", {
+    httpOnly: true,
+    secure: true,
+    maxAge: 0,
+    path: "/",
+  });
+  return response;
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
@@ -28,47 +48,58 @@ async function verifyJwtEdge(
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
-  // ── 1. Protect /admin/* (except /admin/login) ────────────────────────────
+  // ── 1. Protect /admin/* (hanya SUPERADMIN) ──────────────────────────────
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const token = request.cookies.get("admin_session")?.value;
+    if (!token) return redirectToLogin(request);
 
-    // No cookie → redirect to login
-    if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
+    const payload = await verifyJwtEdge(token, "ADMIN_JWT_SECRET");
+    if (!payload) return redirectToLogin(request);
 
-    // Cookie present but JWT invalid or expired → clear cookie + redirect
-    const valid = await verifyJwtEdge(token, "ADMIN_JWT_SECRET");
-    if (!valid) {
-      const response = NextResponse.redirect(
-        new URL("/admin/login", request.url)
-      );
-      // Delete the stale cookie so the browser doesn't keep sending it
-      response.cookies.set("admin_session", "", {
-        httpOnly: true,
-        secure: true,
-        maxAge: 0,
-        path: "/admin",
-      });
-      return response;
-    }
+    // Pastikan role adalah SUPERADMIN
+    if (payload.role !== "SUPERADMIN") return redirectToLogin(request);
 
-    // Valid session → continue
     return NextResponse.next();
   }
 
-  // ── 2. Protect /cek-status/dashboard ────────────────────────────────────
+  // ── 2. Protect /bendahara/* (hanya BENDAHARA) ───────────────────────────
+  if (pathname.startsWith("/bendahara")) {
+    const token = request.cookies.get("admin_session")?.value;
+    if (!token) return redirectToLogin(request);
+
+    const payload = await verifyJwtEdge(token, "ADMIN_JWT_SECRET");
+    if (!payload) return redirectToLogin(request);
+
+    // Pastikan role adalah BENDAHARA
+    if (payload.role !== "BENDAHARA") return redirectToLogin(request);
+
+    return NextResponse.next();
+  }
+
+  // ── 3. Protect /panitia/* (hanya PANITIA) ───────────────────────────────
+  if (pathname.startsWith("/panitia")) {
+    const token = request.cookies.get("admin_session")?.value;
+    if (!token) return redirectToLogin(request);
+
+    const payload = await verifyJwtEdge(token, "ADMIN_JWT_SECRET");
+    if (!payload) return redirectToLogin(request);
+
+    // Pastikan role adalah PANITIA
+    if (payload.role !== "PANITIA") return redirectToLogin(request);
+
+    return NextResponse.next();
+  }
+
+  // ── 4. Protect /cek-status/dashboard ────────────────────────────────────
   if (pathname === "/cek-status/dashboard") {
     const token = request.cookies.get("peserta_session")?.value;
 
-    // No cookie → redirect to cek-status entry page
     if (!token) {
       return NextResponse.redirect(new URL("/cek-status", request.url));
     }
 
-    // Cookie present but JWT invalid or expired → clear cookie + redirect
-    const valid = await verifyJwtEdge(token, "JWT_SECRET");
-    if (!valid) {
+    const payload = await verifyJwtEdge(token, "JWT_SECRET");
+    if (!payload) {
       const response = NextResponse.redirect(
         new URL("/cek-status", request.url)
       );
@@ -81,17 +112,19 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
       return response;
     }
 
-    // Valid session → continue
     return NextResponse.next();
   }
 
-  // ── 3. All other paths — pass through ────────────────────────────────────
+  // ── 5. Semua path lain — pass through ───────────────────────────────────
   return NextResponse.next();
 }
 
 // ─── Matcher ──────────────────────────────────────────────────────────────────
-// Only run middleware on these paths — avoids unnecessary overhead on static
-// pages, images, API routes, and _next internals.
 export const config = {
-  matcher: ["/admin/:path*", "/cek-status/dashboard"],
+  matcher: [
+    "/admin/:path*",
+    "/bendahara/:path*",
+    "/panitia/:path*",
+    "/cek-status/dashboard",
+  ],
 };
