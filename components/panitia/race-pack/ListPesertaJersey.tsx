@@ -13,9 +13,9 @@ const WARNA_UKURAN: Record<string, string> = {
   XXL: "#CE1126",
 };
 
-const WARNA_LENGAN: Record<string, { backgroundColor: string; color: string }> = {
-  PENDEK: { backgroundColor: "#EEF3FF", color: "#1A54C8" },
-  PANJANG: { backgroundColor: "#DCFCE7", color: "#007A3D" },
+const WARNA_LENGAN: Record<string, { background: string; color: string }> = {
+  PENDEK:  { background: "#EEF3FF", color: "#1A54C8" },
+  PANJANG: { background: "#DCFCE7", color: "#007A3D" },
 };
 
 const WARNA_KATEGORI: Record<string, string> = {
@@ -113,7 +113,7 @@ export default function ListPesertaJersey({ data }: { data: IndividuJersey[] }) 
         </div>
       </div>
 
-      {/* Hasil filter info */}
+      {/* Info hasil filter */}
       <p className="text-xs text-[#94A3B8]" style={{ fontFamily: "'Barlow', sans-serif" }}>
         Menampilkan{" "}
         <span className="font-semibold text-[#0A1628]">{filtered.length}</span>
@@ -125,10 +125,10 @@ export default function ListPesertaJersey({ data }: { data: IndividuJersey[] }) 
         <table className="w-full text-sm" style={{ fontFamily: "'Barlow', sans-serif" }}>
           <thead>
             <tr className="border-b-2 border-[#E2E8F0]">
-              {["#", "Nama", "Kategori", "Jersey", "Lengan", "Keterangan"].map((h) => (
+              {["#", "Nama", "Kategori", "Jersey", "Lengan", "Tipe", "Nama Kelompok"].map((h) => (
                 <th
                   key={h}
-                  className="pb-2.5 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-[#94A3B8] pr-4"
+                  className="pb-2.5 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-[#94A3B8] pr-4 last:pr-0"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                 >
                   {h}
@@ -139,7 +139,7 @@ export default function ListPesertaJersey({ data }: { data: IndividuJersey[] }) 
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-10 text-center text-xs text-[#94A3B8]">
+                <td colSpan={7} className="py-10 text-center text-xs text-[#94A3B8]">
                   Tidak ada data yang sesuai filter
                 </td>
               </tr>
@@ -156,7 +156,7 @@ export default function ListPesertaJersey({ data }: { data: IndividuJersey[] }) 
 
                   {/* Nama */}
                   <td className="py-2.5 pr-4">
-                    <span className="font-medium text-[#0A1628] text-sm">
+                    <span className="font-medium text-[#0A1628] text-sm whitespace-nowrap">
                       {item.nama}
                     </span>
                   </td>
@@ -164,7 +164,7 @@ export default function ListPesertaJersey({ data }: { data: IndividuJersey[] }) 
                   {/* Kategori */}
                   <td className="py-2.5 pr-4">
                     <span
-                      className="text-xs font-semibold"
+                      className="text-xs font-semibold whitespace-nowrap"
                       style={{ color: WARNA_KATEGORI[item.kategori] ?? "#1A54C8" }}
                     >
                       {item.labelKategori}
@@ -188,27 +188,47 @@ export default function ListPesertaJersey({ data }: { data: IndividuJersey[] }) 
                   {/* Lengan */}
                   <td className="py-2.5 pr-4">
                     <span
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
                       style={WARNA_LENGAN[item.ukuranLengan]}
                     >
                       {item.ukuranLengan === "PENDEK" ? "Pendek" : "Panjang"}
                     </span>
                   </td>
 
-                  {/* Keterangan */}
-                  <td className="py-2.5">
+                  {/* Tipe */}
+                  <td className="py-2.5 pr-4">
                     {item.tipe === "KELUARGA" ? (
                       <span
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FEF3C7] text-amber-700 text-xs font-medium"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
+                        style={{ background: "#FEF3C7", color: "#92400E" }}
                       >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round"
                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        Keluarga{item.namaKelompok ? `: ${item.namaKelompok}` : ""}
+                        Keluarga
                       </span>
                     ) : (
-                      <span className="text-xs text-[#94A3B8]">Individu</span>
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                        style={{ background: "#EEF3FF", color: "#1A54C8" }}
+                      >
+                        Individu
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Nama Kelompok — kolom terpisah */}
+                  <td className="py-2.5">
+                    {item.tipe === "KELUARGA" && item.namaKelompok ? (
+                      <span
+                        className="text-xs font-medium text-[#0A1628]"
+                        style={{ fontFamily: "'Barlow', sans-serif" }}
+                      >
+                        {item.namaKelompok}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#CBD5E1]">—</span>
                     )}
                   </td>
                 </tr>
