@@ -29,6 +29,13 @@ const IconPembayaran = () => (
   </svg>
 );
 
+const IconRacePack = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+  </svg>
+);
+
 const IconLogout = () => (
   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round"
@@ -39,8 +46,9 @@ const IconLogout = () => (
 // ─── Nav Items ────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard",           href: "/panitia/dashboard",          icon: <IconDashboard />  },
-  { label: "Pembayaran & Donasi", href: "/panitia/pembayaran-donasi",  icon: <IconPembayaran /> },
+  { label: "Dashboard",           href: "/panitia/dashboard",         icon: <IconDashboard />  },
+  { label: "Pembayaran & Donasi", href: "/panitia/pembayaran-donasi", icon: <IconPembayaran /> },
+  { label: "Race Pack",           href: "/panitia/race-pack",         icon: <IconRacePack />   },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────

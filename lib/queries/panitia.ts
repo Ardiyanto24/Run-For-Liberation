@@ -547,3 +547,177 @@ export async function getPembayaranDonasiStats(): Promise<PembayaranDonasiStats>
     },
   };
 }
+
+// ─── Types Section 6 ──────────────────────────────────────────────────────────
+
+export type UkuranJersey = "S" | "M" | "L" | "XL" | "XXL";
+export type UkuranLengan = "PENDEK" | "PANJANG";
+
+export interface MatriksUkuran {
+  ukuran: UkuranJersey;
+  pendek: number;
+  panjang: number;
+  total: number;
+}
+
+export interface MatriksPerKategori {
+  kategori: KategoriKey;
+  label: string;
+  matriks: MatriksUkuran[];
+  totalJersey: number;
+}
+
+export interface IndividuJersey {
+  nama: string;
+  kategori: KategoriKey;
+  labelKategori: string;
+  ukuranJersey: UkuranJersey;
+  ukuranLengan: UkuranLengan;
+  tipe: "INDIVIDU" | "KELUARGA";
+  namaKelompok: string | null;
+}
+
+export interface RacePackStats {
+  // KPI
+  totalBerjersey: number;       // Gaza saja (individu + anggota)
+  totalTanpaJersey: number;     // Rafah saja
+  totalPesertaFisik: number;    // semua VERIFIED
+
+  // Per kategori Gaza ringkasan
+  gazaRun: number;
+  gazaWalk: number;
+  totalJerseyPendek: number;
+  totalJerseyPanjang: number;
+
+  // Matriks per kategori Gaza
+  perKategori: MatriksPerKategori[];
+
+  // Rekapitulasi total lintas kategori
+  totalPerUkuran: MatriksUkuran[];
+
+  // List individu (hanya Gaza, VERIFIED)
+  listIndividu: IndividuJersey[];
+}
+
+// ─── Query Section 6 ──────────────────────────────────────────────────────────
+
+const UKURAN_URUTAN: UkuranJersey[] = ["S", "M", "L", "XL", "XXL"];
+const KATEGORI_GAZA: KategoriKey[]  = ["FUN_RUN_GAZA", "FUN_WALK_GAZA"];
+const KATEGORI_RAFAH: KategoriKey[] = ["FUN_RUN_RAFAH", "FUN_WALK_RAFAH"];
+
+export async function getRacePackStats(): Promise<RacePackStats> {
+  const pesertaList = await prisma.peserta.findMany({
+    where: { status: "VERIFIED" },
+    select: {
+      namaLengkap: true,
+      kategori: true,
+      tipe: true,
+      namaKelompok: true,
+      ukuranJersey: true,
+      ukuranLengan: true,
+      anggota: {
+        select: {
+          namaLengkap: true,
+          ukuranJersey: true,
+          ukuranLengan: true,
+        },
+      },
+    },
+  });
+
+  // ── Flatten semua individu ─────────────────────────────────
+  interface RawIndividu {
+    nama: string;
+    kategori: KategoriKey;
+    tipe: "INDIVIDU" | "KELUARGA";
+    namaKelompok: string | null;
+    ukuranJersey: string | null;
+    ukuranLengan: string | null;
+  }
+
+  const semua: RawIndividu[] = [];
+
+  for (const p of pesertaList) {
+    semua.push({
+      nama:         p.namaLengkap,
+      kategori:     p.kategori as KategoriKey,
+      tipe:         p.tipe as "INDIVIDU" | "KELUARGA",
+      namaKelompok: p.namaKelompok,
+      ukuranJersey: p.ukuranJersey,
+      ukuranLengan: p.ukuranLengan,
+    });
+    for (const a of p.anggota) {
+      semua.push({
+        nama:         a.namaLengkap,
+        kategori:     p.kategori as KategoriKey,
+        tipe:         p.tipe as "INDIVIDU" | "KELUARGA",
+        namaKelompok: p.namaKelompok,
+        ukuranJersey: a.ukuranJersey,
+        ukuranLengan: a.ukuranLengan,
+      });
+    }
+  }
+
+  const totalPesertaFisik  = semua.length;
+  const individusGaza      = semua.filter((i) => KATEGORI_GAZA.includes(i.kategori));
+  const individusRafah     = semua.filter((i) => KATEGORI_RAFAH.includes(i.kategori));
+  const totalBerjersey     = individusGaza.length;
+  const totalTanpaJersey   = individusRafah.length;
+
+  const gazaRun  = individusGaza.filter((i) => i.kategori === "FUN_RUN_GAZA").length;
+  const gazaWalk = individusGaza.filter((i) => i.kategori === "FUN_WALK_GAZA").length;
+
+  const totalJerseyPendek = individusGaza.filter((i) => i.ukuranLengan === "PENDEK").length;
+  const totalJerseyPanjang = individusGaza.filter((i) => i.ukuranLengan === "PANJANG").length;
+
+  // ── Helper: hitung matriks dari subset individu ────────────
+  function hitungMatriks(subset: RawIndividu[]): MatriksUkuran[] {
+    return UKURAN_URUTAN.map((ukuran) => {
+      const byUkuran = subset.filter((i) => i.ukuranJersey === ukuran);
+      const pendek   = byUkuran.filter((i) => i.ukuranLengan === "PENDEK").length;
+      const panjang  = byUkuran.filter((i) => i.ukuranLengan === "PANJANG").length;
+      return { ukuran, pendek, panjang, total: pendek + panjang };
+    });
+  }
+
+  // ── Matriks per kategori Gaza ──────────────────────────────
+  const perKategori: MatriksPerKategori[] = KATEGORI_GAZA.map((kat) => {
+    const subset = individusGaza.filter((i) => i.kategori === kat);
+    const matriks = hitungMatriks(subset);
+    return {
+      kategori:    kat,
+      label:       KATEGORI_LABEL[kat],
+      matriks,
+      totalJersey: subset.length,
+    };
+  });
+
+  // ── Total lintas kategori ──────────────────────────────────
+  const totalPerUkuran = hitungMatriks(individusGaza);
+
+  // ── List individu Gaza ─────────────────────────────────────
+  const listIndividu: IndividuJersey[] = individusGaza
+    .filter((i) => i.ukuranJersey && i.ukuranLengan)
+    .map((i) => ({
+      nama:          i.nama,
+      kategori:      i.kategori,
+      labelKategori: KATEGORI_LABEL[i.kategori],
+      ukuranJersey:  i.ukuranJersey as UkuranJersey,
+      ukuranLengan:  i.ukuranLengan as UkuranLengan,
+      tipe:          i.tipe,
+      namaKelompok:  i.namaKelompok,
+    }));
+
+  return {
+    totalBerjersey,
+    totalTanpaJersey,
+    totalPesertaFisik,
+    gazaRun,
+    gazaWalk,
+    totalJerseyPendek,
+    totalJerseyPanjang,
+    perKategori,
+    totalPerUkuran,
+    listIndividu,
+  };
+}
