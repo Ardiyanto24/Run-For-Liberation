@@ -227,3 +227,65 @@ export async function getEticketSignedUrl(
 
   return data.signedUrl;
 }
+
+// ─── Upload Treasury File (Pemasukan & Pengeluaran) ──────────
+
+/**
+ * Upload file bukti pemasukan atau nota pengeluaran ke bucket treasury.
+ *
+ * @param file     - File dari FormData (server-side)
+ * @param bucket   - "treasury-income-proofs" atau "treasury-expense-proofs"
+ * @param recordId - ID record dari database
+ * @returns        - Path relatif file, contoh: "clxabc123/1714900000000.jpg"
+ */
+export async function uploadTreasuryFile(
+  file: File,
+  bucket: "treasury-income-proofs" | "treasury-expense-proofs",
+  recordId: string
+): Promise<string> {
+  if (!ALLOWED_MIME_TYPES.includes(file.type as (typeof ALLOWED_MIME_TYPES)[number])) {
+    throw new Error("Format file harus JPG, PNG, atau PDF.");
+  }
+
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    throw new Error("Ukuran file maksimal 5MB.");
+  }
+
+  const ext       = MIME_TO_EXT[file.type];
+  const timestamp = Date.now();
+  const filePath  = `${recordId}/${timestamp}.${ext}`;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer      = Buffer.from(arrayBuffer);
+
+  const { error } = await supabaseAdmin.storage
+    .from(bucket)
+    .upload(filePath, buffer, { contentType: file.type, upsert: false });
+
+  if (error) {
+    console.error(`[supabase.ts] Upload gagal ke bucket "${bucket}":`, error);
+    throw new Error("Terjadi kesalahan saat upload file. Silakan coba lagi.");
+  }
+
+  return filePath;
+}
+
+/**
+ * Generate signed URL untuk file di bucket treasury.
+ * URL berlaku 5 menit.
+ */
+export async function getTreasurySignedUrl(
+  bucket: "treasury-income-proofs" | "treasury-expense-proofs",
+  path: string
+): Promise<string | null> {
+  const { data, error } = await supabaseAdmin.storage
+    .from(bucket)
+    .createSignedUrl(path, 300);
+
+  if (error || !data?.signedUrl) {
+    console.error(`[supabase.ts] Gagal generate signed URL untuk "${bucket}/${path}":`, error);
+    return null;
+  }
+
+  return data.signedUrl;
+}

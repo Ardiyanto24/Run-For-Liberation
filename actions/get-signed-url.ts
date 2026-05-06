@@ -3,6 +3,7 @@
 "use server";
 
 import { getSignedUrl } from "@/lib/supabase";
+import { getTreasurySignedUrl } from "@/lib/supabase";
 
 export async function getPaymentProofSignedUrl(
   rawPath: string | null
@@ -16,4 +17,11 @@ export async function getDonationProofSignedUrl(
 ): Promise<string | null> {
   if (!rawPath) return null;
   return getSignedUrl("donation-proofs", rawPath);
+}
+
+export async function getTreasuryIncomeSignedUrl(
+  rawPath: string | null
+): Promise<string | null> {
+  if (!rawPath) return null;
+  return getTreasurySignedUrl("treasury-income-proofs", rawPath);
 }

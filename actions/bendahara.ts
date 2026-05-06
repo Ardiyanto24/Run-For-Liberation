@@ -4,6 +4,7 @@
 
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
+import { uploadTreasuryFile } from "@/lib/supabase";
 
 // ─── Guard Helper ─────────────────────────────────────────────────────────────
 
@@ -277,9 +278,9 @@ export async function getSaldoKantong(): Promise<{
       prisma.pengeluaran.findMany({
         select: { nominal: true, rekening: true, jenis: true },
       }),
-      prisma.transferAntar.findMany({
+      (prisma.transferAntar.findMany({
         orderBy: { tanggal: "desc" },
-      }),
+      }) as unknown as any[]),
     ]);
 
   // ── Inisialisasi akumulator per rekening ──────────────────
@@ -431,7 +432,7 @@ export async function inputTransferAntar(formData: FormData): Promise<{
     return { success: false, error: "Nominal tidak boleh bernilai negatif." };
 
   try {
-    await prisma.transferAntar.create({
+    await (prisma.transferAntar as any).create({
       data: {
         dari:                 dari    as NamaRekening,
         ke:                   ke      as NamaRekening,
@@ -450,5 +451,200 @@ export async function inputTransferAntar(formData: FormData): Promise<{
   } catch (err) {
     console.error("[inputTransferAntar] Error:", err);
     return { success: false, error: "Gagal menyimpan transfer. Silakan coba lagi." };
+  }
+}
+
+// ============================================================
+// PEMASUKAN
+// ============================================================
+
+// ─── Types ───────────────────────────────────────────────────
+
+export type SumberPemasukan = "KAS" | "SPONSOR";
+
+export interface RingkasanPemasukan {
+  pendaftaranDonasi: {
+    totalPendaftaran: number;
+    totalDonasi:      number;
+    total:            number;
+  };
+  kas:     number;
+  sponsor: number;
+  grandTotal: number;
+}
+
+export interface PemasukanManualRecord {
+  id:          string;
+  sumber:      SumberPemasukan;
+  keterangan:  string;
+  nominal:     number;
+  rekening:    NamaRekening;
+  buktiUrl:    string | null;
+  buktiNama:   string | null;
+  tanggal:     Date;
+  createdAt:   Date;
+}
+
+// ─── getRingkasanPemasukan ────────────────────────────────────
+
+export async function getRingkasanPemasukan(): Promise<RingkasanPemasukan> {
+  await guardBendahara();
+
+  const [pembayaranList, donasiList, pemasukanManualList] = await Promise.all([
+    prisma.pembayaran.findMany({
+      where:  { status: "VERIFIED" },
+      select: { totalPembayaran: true, donasiTambahan: true },
+    }),
+    prisma.donasi.findMany({
+      where:  { status: "VERIFIED" },
+      select: { nominal: true },
+    }),
+    prisma.pemasukanManual.findMany({
+      select: { nominal: true, sumber: true },
+    }),
+  ]);
+
+  // Pendaftaran = biayaPendaftaran saja (totalPembayaran - donasiTambahan)
+  const totalPendaftaran = pembayaranList.reduce(
+    (sum, p) => sum + (p.totalPembayaran - p.donasiTambahan),
+    0
+  );
+
+  // Donasi = donasi tambahan dari pembayaran + donasi standalone
+  const totalDonasiTambahan = pembayaranList.reduce(
+    (sum, p) => sum + p.donasiTambahan,
+    0
+  );
+  const totalDonasiStandalone = donasiList.reduce(
+    (sum, d) => sum + d.nominal,
+    0
+  );
+  const totalDonasi = totalDonasiTambahan + totalDonasiStandalone;
+
+  const kas     = pemasukanManualList.filter((p) => p.sumber === "KAS")    .reduce((sum, p) => sum + p.nominal, 0);
+  const sponsor = pemasukanManualList.filter((p) => p.sumber === "SPONSOR").reduce((sum, p) => sum + p.nominal, 0);
+
+  return {
+    pendaftaranDonasi: {
+      totalPendaftaran,
+      totalDonasi,
+      total: totalPendaftaran + totalDonasi,
+    },
+    kas,
+    sponsor,
+    grandTotal: totalPendaftaran + totalDonasi + kas + sponsor,
+  };
+}
+
+// ─── getPemasukanManual ───────────────────────────────────────
+
+export async function getPemasukanManual(): Promise<PemasukanManualRecord[]> {
+  await guardBendahara();
+
+  const list = await prisma.pemasukanManual.findMany({
+    orderBy: { tanggal: "desc" },
+  });
+
+  return list.map((p) => ({
+    id:         p.id,
+    sumber:     p.sumber as SumberPemasukan,
+    keterangan: p.keterangan,
+    nominal:    p.nominal,
+    rekening:   p.rekening as NamaRekening,
+    buktiUrl:   p.buktiUrl,
+    buktiNama:  p.buktiNama,
+    tanggal:    p.tanggal,
+    createdAt:  p.createdAt,
+  }));
+}
+
+// ─── inputPemasukan ───────────────────────────────────────────
+
+export async function inputPemasukan(formData: FormData): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const session = await guardBendahara();
+
+  const sumber      = formData.get("sumber")      as string;
+  const keterangan  = formData.get("keterangan")  as string;
+  const nominalRaw  = formData.get("nominal")      as string;
+  const rekening    = formData.get("rekening")     as string;
+  const tanggalRaw  = formData.get("tanggal")      as string;
+  const buktiFile   = formData.get("bukti")        as File | null;
+
+  // ── Validasi ──────────────────────────────────────────────
+  const validSumber:   SumberPemasukan[] = ["KAS", "SPONSOR"];
+  const validRekening: NamaRekening[]    = ["JAGO", "BSI", "MANDIRI", "QRIS"];
+
+  if (!validSumber.includes(sumber as SumberPemasukan))
+    return { success: false, error: "Sumber pemasukan tidak valid." };
+  if (!keterangan?.trim())
+    return { success: false, error: "Keterangan wajib diisi." };
+
+  const nominal = parseInt(nominalRaw?.replace(/\D/g, "") || "0", 10);
+  if (!nominal || nominal <= 0)
+    return { success: false, error: "Nominal harus lebih dari 0." };
+
+  if (!validRekening.includes(rekening as NamaRekening))
+    return { success: false, error: "Rekening tidak valid." };
+  if (!tanggalRaw)
+    return { success: false, error: "Tanggal wajib diisi." };
+
+  try {
+    // ── Simpan ke DB dulu untuk dapat ID ──────────────────
+    const record = await prisma.pemasukanManual.create({
+      data: {
+        sumber:     sumber    as SumberPemasukan,
+        keterangan: keterangan.trim(),
+        nominal,
+        rekening:   rekening  as NamaRekening,
+        tanggal:    new Date(tanggalRaw),
+        createdBy:  (session as { adminId?: string }).adminId ?? "unknown",
+      },
+    });
+
+    // ── Upload bukti jika ada ──────────────────────────────
+    if (buktiFile && buktiFile.size > 0) {
+      const buktiPath = await uploadTreasuryFile(
+        buktiFile,
+        "treasury-income-proofs",
+        record.id
+      );
+
+      await prisma.pemasukanManual.update({
+        where: { id: record.id },
+        data: {
+          buktiUrl:  buktiPath,
+          buktiNama: buktiFile.name,
+        },
+      });
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("[inputPemasukan] Error:", err);
+    const message = err instanceof Error ? err.message : "Gagal menyimpan pemasukan.";
+    return { success: false, error: message };
+  }
+}
+
+// ─── hapusPemasukan ───────────────────────────────────────────
+
+export async function hapusPemasukan(id: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  await guardBendahara();
+
+  if (!id?.trim())
+    return { success: false, error: "ID tidak valid." };
+
+  try {
+    await prisma.pemasukanManual.delete({ where: { id } });
+    return { success: true };
+  } catch (err) {
+    console.error("[hapusPemasukan] Error:", err);
+    return { success: false, error: "Gagal menghapus data pemasukan." };
   }
 }
