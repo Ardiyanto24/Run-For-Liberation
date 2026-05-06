@@ -197,11 +197,12 @@ export async function getHistoryKeuangan(): Promise<PesertaHistory[]> {
 export type NamaRekening = "JAGO" | "BSI" | "MANDIRI" | "QRIS";
 
 export interface AlokasiKantong {
-  totalUang: number;
-  racePack: number;
-  operasional: number;
-  donasiPaket: number;
-  donasiTambahan: number;
+  totalUang:       number;
+  racePack:        number;
+  operasional:     number;
+  donasiPaket:     number;
+  donasiTambahan:  number;
+  donasiStandalone: number;
 }
 
 export interface SaldoKantong {
@@ -285,10 +286,10 @@ export async function getSaldoKantong(): Promise<{
 
   // ── Inisialisasi akumulator per rekening ──────────────────
   const acc: Record<NamaRekening, AlokasiKantong> = {
-    JAGO:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
-    BSI:     { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
-    MANDIRI: { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
-    QRIS:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+    JAGO:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0, donasiStandalone: 0 },
+    BSI:     { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0, donasiStandalone: 0 },
+    MANDIRI: { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0, donasiStandalone: 0 },
+    QRIS:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0, donasiStandalone: 0 },
   };
 
   // ── 1. Pembayaran peserta VERIFIED ────────────────────────
@@ -319,8 +320,8 @@ export async function getSaldoKantong(): Promise<{
   for (const d of donasiList) {
     const rek = metodeKeRekening(d.metodePembayaran);
     if (!rek) continue;
-    acc[rek].totalUang   += d.nominal;
-    acc[rek].donasiPaket += d.nominal;
+    acc[rek].totalUang        += d.nominal;
+    acc[rek].donasiStandalone += d.nominal; // pisah dari donasiPaket
   }
 
   // ── 3. Pemasukan manual (Kas & Sponsor) ──────────────────
@@ -1046,10 +1047,10 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
 
   // ── Hitung saldo kantong ──────────────────────────────────
   const acc: Record<NamaRekening, AlokasiKantong> = {
-    JAGO:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
-    BSI:     { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
-    MANDIRI: { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
-    QRIS:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+    JAGO:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0, donasiStandalone: 0 },
+    BSI:     { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0, donasiStandalone: 0 },
+    MANDIRI: { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0, donasiStandalone: 0 },
+    QRIS:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0, donasiStandalone: 0 },
   };
 
   for (const p of pembayaranList) {
@@ -1071,8 +1072,8 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
   for (const d of donasiList) {
     const rek = metodeKeRekening(d.metodePembayaran);
     if (!rek) continue;
-    acc[rek].totalUang   += d.nominal;
-    acc[rek].donasiPaket += d.nominal;
+    acc[rek].totalUang        += d.nominal;
+    acc[rek].donasiStandalone += d.nominal; // pisah dari donasiPaket
   }
   for (const pm of pemasukanManualList) {
     acc[pm.rekening as NamaRekening].totalUang += pm.nominal;
@@ -1087,16 +1088,18 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
   for (const t of transferList) {
     const dari = t.dari as NamaRekening;
     const ke   = t.ke   as NamaRekening;
-    acc[dari].totalUang      -= t.nominal;
-    acc[dari].racePack       -= t.nominalRacePack;
-    acc[dari].operasional    -= t.nominalOperasional;
-    acc[dari].donasiPaket    -= t.nominalDonasiPaket;
-    acc[dari].donasiTambahan -= t.nominalDonasiTambahan;
-    acc[ke].totalUang        += t.nominal;
-    acc[ke].racePack         += t.nominalRacePack;
-    acc[ke].operasional      += t.nominalOperasional;
-    acc[ke].donasiPaket      += t.nominalDonasiPaket;
-    acc[ke].donasiTambahan   += t.nominalDonasiTambahan;
+    acc[dari].totalUang        -= t.nominal;
+    acc[dari].racePack         -= t.nominalRacePack;
+    acc[dari].operasional      -= t.nominalOperasional;
+    acc[dari].donasiPaket      -= t.nominalDonasiPaket;
+    acc[dari].donasiTambahan   -= t.nominalDonasiTambahan;
+    // donasiStandalone tidak ada di transfer — transfer hanya memindahkan
+    // komponen yang sudah ada, bukan komponen donasi standalone
+    acc[ke].totalUang          += t.nominal;
+    acc[ke].racePack           += t.nominalRacePack;
+    acc[ke].operasional        += t.nominalOperasional;
+    acc[ke].donasiPaket        += t.nominalDonasiPaket;
+    acc[ke].donasiTambahan     += t.nominalDonasiTambahan;
   }
 
   const kantong: SaldoKantong[] = SEMUA_REKENING.map((rek) => ({

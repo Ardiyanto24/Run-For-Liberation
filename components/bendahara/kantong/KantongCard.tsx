@@ -21,15 +21,22 @@ export default function KantongCard({ data }: KantongCardProps) {
   const color = REKENING_COLOR[data.rekening];
 
   const breakdown = [
-    { label: "Race Pack",       nilai: data.alokasi.racePack,       warna: "text-[#4A9CE8]" },
-    { label: "Operasional",     nilai: data.alokasi.operasional,    warna: "text-[#F59E0B]" },
-    { label: "Donasi Paket",    nilai: data.alokasi.donasiPaket,    warna: "text-[#34D399]" },
-    { label: "Donasi Tambahan", nilai: data.alokasi.donasiTambahan, warna: "text-[#34D399]" },
+    { label: "Race Pack",         nilai: data.alokasi.racePack,         warna: "text-[#4A9CE8]" },
+    { label: "Operasional",       nilai: data.alokasi.operasional,      warna: "text-[#F59E0B]" },
+    { label: "Donasi Paket",      nilai: data.alokasi.donasiPaket,      warna: "text-[#34D399]" },
+    { label: "Donasi Tambahan",   nilai: data.alokasi.donasiTambahan,   warna: "text-[#34D399]" },
+    { label: "Donasi Standalone", nilai: data.alokasi.donasiStandalone, warna: "text-[#34D399]" },
   ];
 
-  // Cek apakah ada komponen yang minus
   const adaDefisit = breakdown.some((b) => b.nilai < 0);
   const saldoMinus = data.saldo < 0;
+
+  const totalAlokasi =
+    data.alokasi.racePack +
+    data.alokasi.operasional +
+    data.alokasi.donasiPaket +
+    data.alokasi.donasiTambahan +
+    data.alokasi.donasiStandalone;
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ boxShadow: "0 4px 24px rgba(10,22,40,0.12)" }}>
@@ -118,10 +125,13 @@ export default function KantongCard({ data }: KantongCardProps) {
         {breakdown.map((item) => {
           const isMinus = item.nilai < 0;
           return (
-            <div key={item.label} className={[
-              "flex items-center justify-between rounded-lg px-2 py-1 -mx-2 transition-colors",
-              isMinus ? "bg-[rgba(217,119,6,0.06)]" : "",
-            ].join(" ")}>
+            <div
+              key={item.label}
+              className={[
+                "flex items-center justify-between rounded-lg px-2 py-1 -mx-2 transition-colors",
+                isMinus ? "bg-[rgba(217,119,6,0.06)]" : "",
+              ].join(" ")}
+            >
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-[#6B7A99]"
                   style={{ fontFamily: "'Barlow', sans-serif" }}>
@@ -153,7 +163,7 @@ export default function KantongCard({ data }: KantongCardProps) {
           </div>
         )}
 
-        {/* Divider + total alokasi */}
+        {/* Total alokasi — hanya tampil jika tidak ada defisit */}
         {!adaDefisit && (
           <div className="pt-2 border-t border-[rgba(26,84,200,0.08)] flex items-center justify-between">
             <span className="text-xs font-semibold text-[#0A1628]"
@@ -162,12 +172,7 @@ export default function KantongCard({ data }: KantongCardProps) {
             </span>
             <span className="text-xs font-bold text-[#0A1628] tabular-nums"
               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              {formatRupiah(
-                data.alokasi.racePack +
-                data.alokasi.operasional +
-                data.alokasi.donasiPaket +
-                data.alokasi.donasiTambahan
-              )}
+              {formatRupiah(totalAlokasi)}
             </span>
           </div>
         )}
