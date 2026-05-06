@@ -2,25 +2,34 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 function useCountUp(target: number, duration = 1000) {
   const [value, setValue] = useState(0);
-  const ran = useRef(false);
+
   useEffect(() => {
-    if (ran.current) return;
-    ran.current = true;
-    const steps = 50;
-    const interval = duration / steps;
+    if (target === 0) {
+      setValue(0);
+      return;
+    }
+
     let current = 0;
+    const steps    = 50;
+    const interval = duration / steps;
+
     const timer = setInterval(() => {
       current++;
       const eased = 1 - Math.pow(1 - current / steps, 3);
       setValue(Math.round(eased * target));
-      if (current >= steps) { setValue(target); clearInterval(timer); }
+      if (current >= steps) {
+        setValue(target);
+        clearInterval(timer);
+      }
     }, interval);
+
     return () => clearInterval(timer);
   }, [target, duration]);
+
   return value;
 }
 
@@ -29,27 +38,30 @@ function formatRupiah(n: number) {
 }
 
 interface KpiConfig {
-  label:     string;
-  nilai:     number;
-  sub:       string;
-  bg:        string;
-  teks:      string;
-  subteks:   string;
-  ikonBg:   string;
-  icon:      React.ReactNode;
+  label:      string;
+  nilai:      number;
+  sub:        string;
+  bg:         string;
+  teks:       string;
+  subteks:    string;
+  ikonBg:     string;
+  icon:       React.ReactNode;
   isNegative?: boolean;
 }
 
 function KpiCard({ config }: { config: KpiConfig }) {
   const display = useCountUp(Math.abs(config.nilai));
+
   return (
     <div
       className={`rounded-2xl p-5 ${config.bg} relative overflow-hidden`}
       style={{ boxShadow: "0 4px 24px rgba(10,22,40,0.1)" }}
     >
       {/* Dekorasi */}
-      <div className="absolute top-[-20px] right-[-20px] w-28 h-28 rounded-full opacity-10"
-        style={{ background: "radial-gradient(circle, white, transparent 70%)" }} />
+      <div
+        className="absolute top-[-20px] right-[-20px] w-28 h-28 rounded-full opacity-10"
+        style={{ background: "radial-gradient(circle, white, transparent 70%)" }}
+      />
 
       <div className="relative z-10">
         {/* Icon */}
@@ -58,21 +70,27 @@ function KpiCard({ config }: { config: KpiConfig }) {
         </div>
 
         {/* Label */}
-        <p className={`text-[10px] font-semibold uppercase tracking-[0.15em] mb-1 ${config.subteks}`}
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <p
+          className={`text-[10px] font-semibold uppercase tracking-[0.15em] mb-1 ${config.subteks}`}
+          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+        >
           {config.label}
         </p>
 
         {/* Nilai */}
-        <p className={`text-2xl font-bold tabular-nums leading-none ${config.teks}`}
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <p
+          className={`text-2xl font-bold tabular-nums leading-none ${config.teks}`}
+          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+        >
           {config.isNegative && config.nilai < 0 ? "−" : ""}
           {formatRupiah(display)}
         </p>
 
         {/* Sub */}
-        <p className={`text-xs mt-1.5 ${config.subteks}`}
-          style={{ fontFamily: "'Barlow', sans-serif" }}>
+        <p
+          className={`text-xs mt-1.5 ${config.subteks}`}
+          style={{ fontFamily: "'Barlow', sans-serif" }}
+        >
           {config.sub}
         </p>
       </div>
@@ -106,8 +124,7 @@ export default function KpiKeuangan({
       ikonBg:  "bg-white/10",
       icon: (
         <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round"
-            d="M7 11l5-5m0 0l5 5m-5-5v12" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12" />
         </svg>
       ),
     },
@@ -121,15 +138,16 @@ export default function KpiKeuangan({
       ikonBg:  "bg-white/10",
       icon: (
         <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round"
-            d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
         </svg>
       ),
     },
     {
       label:      "Saldo Bersih",
       nilai:      saldoBersih,
-      sub:        saldoPositif ? "Pemasukan melebihi pengeluaran" : "Pengeluaran melebihi pemasukan",
+      sub:        saldoPositif
+        ? "Pemasukan melebihi pengeluaran"
+        : "Pengeluaran melebihi pemasukan",
       bg:         saldoPositif
         ? "bg-gradient-to-br from-[#005229] to-[#007A3D]"
         : "bg-gradient-to-br from-[#8B0000] to-[#CE1126]",

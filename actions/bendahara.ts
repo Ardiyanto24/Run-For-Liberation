@@ -937,7 +937,8 @@ export interface DashboardData {
 export async function getBendaharaDashboard(): Promise<DashboardData> {
   await guardBendahara();
 
-  // ── Query semua data paralel ──────────────────────────────
+  console.log("[dashboard] guard passed, querying...");
+
   const [
     pembayaranList,
     donasiList,
@@ -972,6 +973,10 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
     prisma.peserta.count({ where: { status: "PENDING"  } }),
   ]);
 
+  console.log("[dashboard] pembayaran VERIFIED:", pembayaranList.length);
+  console.log("[dashboard] donasi VERIFIED:", donasiList.length);
+  console.log("[dashboard] sample pembayaran[0]:", JSON.stringify(pembayaranList[0]?.totalPembayaran));
+
   // ── Hitung pemasukan dari pendaftaran & donasi ────────────
   const totalPendaftaran = pembayaranList.reduce(
     (sum, p) => sum + (p.totalPembayaran - p.donasiTambahan), 0
@@ -982,8 +987,8 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
   const totalDonasiStandalone = donasiList.reduce(
     (sum, d) => sum + d.nominal, 0
   );
-  const totalDonasi        = totalDonasiTambahan + totalDonasiStandalone;
-  const pendaftaranDonasi  = totalPendaftaran + totalDonasi;
+  const totalDonasi       = totalDonasiTambahan + totalDonasiStandalone;
+  const pendaftaranDonasi = totalPendaftaran + totalDonasi;
 
   const kas     = pemasukanManualList.filter((p) => p.sumber === "KAS")    .reduce((s, p) => s + p.nominal, 0);
   const sponsor = pemasukanManualList.filter((p) => p.sumber === "SPONSOR").reduce((s, p) => s + p.nominal, 0);
@@ -992,7 +997,13 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
   const totalPengeluaran = pengeluaranList.reduce((s, p) => s + p.nominal, 0);
   const saldoBersih      = totalPemasukan - totalPengeluaran;
 
-  // ── Hitung saldo kantong (reuse logika getSaldoKantong) ───
+  console.log("[dashboard] totalPendaftaran:", totalPendaftaran);
+  console.log("[dashboard] totalDonasi:", totalDonasi);
+  console.log("[dashboard] totalPemasukan:", totalPemasukan);
+  console.log("[dashboard] totalPengeluaran:", totalPengeluaran);
+  console.log("[dashboard] saldoBersih:", saldoBersih);
+
+  // ── Hitung saldo kantong ──────────────────────────────────
   const acc: Record<NamaRekening, AlokasiKantong> = {
     JAGO:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
     BSI:     { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
@@ -1055,7 +1066,7 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
     alokasi:     acc[rek],
   }));
 
-  // ── Aktivitas terbaru (gabungan 10 terakhir) ──────────────
+  // ── Aktivitas terbaru ─────────────────────────────────────
   const aktivitasRaw: AktivitasDashboard[] = [
     ...pemasukanManualList.map((p) => ({
       id:       p.id,
