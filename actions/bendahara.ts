@@ -189,3 +189,218 @@ export async function getHistoryKeuangan(): Promise<PesertaHistory[]> {
     }),
   }));
 }
+
+
+// ─── Types Kantong ────────────────────────────────────────────────────────────
+
+export type NamaRekening = "JAGO" | "BSI" | "MANDIRI" | "QRIS";
+
+export interface AlokasiKantong {
+  totalUang: number;
+  racePack: number;
+  operasional: number;
+  donasiPaket: number;
+  donasiTambahan: number;
+}
+
+export interface SaldoKantong {
+  rekening: NamaRekening;
+  namaBank: string;
+  namaPemilik: string;
+  saldo: number;
+  alokasi: AlokasiKantong;
+}
+
+export interface TransferAntarRecord {
+  id: string;
+  dari: NamaRekening;
+  ke: NamaRekening;
+  nominal: number;
+  catatan: string | null;
+  tanggal: Date;
+  createdAt: Date;
+}
+
+// ─── Mapping MetodePembayaran → NamaRekening ──────────────────────────────────
+
+function metodeKeRekening(metode: string): NamaRekening | null {
+  switch (metode) {
+    case "TRANSFER_JAGO":    return "JAGO";
+    case "TRANSFER_BSI":     return "BSI";
+    case "TRANSFER_MANDIRI": return "MANDIRI";
+    case "QRIS":
+    case "GOPAY":
+    case "OVO":
+    case "DANA":             return "QRIS";
+    default:                 return null;
+  }
+}
+
+// ─── Metadata Rekening ────────────────────────────────────────────────────────
+
+const REKENING_META: Record<NamaRekening, { namaBank: string; namaPemilik: string }> = {
+  JAGO:    { namaBank: "Jago Syariah", namaPemilik: "Ardiyanto" },
+  BSI:     { namaBank: "BSI",          namaPemilik: "Farras"    },
+  MANDIRI: { namaBank: "Mandiri",      namaPemilik: "Diah"      },
+  QRIS:    { namaBank: "QRIS",         namaPemilik: "Asyraf"    },
+};
+
+const SEMUA_REKENING: NamaRekening[] = ["JAGO", "BSI", "MANDIRI", "QRIS"];
+
+// ─── getSaldoKantong ──────────────────────────────────────────────────────────
+
+export async function getSaldoKantong(): Promise<{
+  kantong: SaldoKantong[];
+  transferHistory: TransferAntarRecord[];
+}> {
+  await guardBendahara();
+
+  // Query semua data sekaligus
+  const [pembayaranList, donasiList, pemasukanManualList, pengeluaranList, transferList] =
+    await Promise.all([
+      prisma.pembayaran.findMany({
+        where: { status: "VERIFIED" },
+        include: {
+          peserta: {
+            include: { anggota: true },
+          },
+        },
+      }),
+      prisma.donasi.findMany({
+        where: { status: "VERIFIED" },
+        select: { nominal: true, metodePembayaran: true },
+      }),
+      prisma.pemasukanManual.findMany({
+        select: { nominal: true, rekening: true },
+      }),
+      prisma.pengeluaran.findMany({
+        select: { nominal: true, rekening: true },
+      }),
+      prisma.transferAntar.findMany({
+        orderBy: { tanggal: "desc" },
+      }),
+    ]);
+
+  // Inisialisasi akumulator per rekening
+  const acc: Record<NamaRekening, AlokasiKantong> = {
+    JAGO:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+    BSI:     { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+    MANDIRI: { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+    QRIS:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+  };
+
+  // Akumulasi dari pembayaran peserta VERIFIED
+  for (const p of pembayaranList) {
+    const rek = metodeKeRekening(p.metodePembayaran);
+    if (!rek) continue;
+
+    const alokasi = hitungAlokasi({
+      kategori: p.peserta.kategori as KategoriLomba,
+      ukuranLengan: p.peserta.ukuranLengan,
+      tipe: p.peserta.tipe as "INDIVIDU" | "KELUARGA",
+      anggota: p.peserta.anggota,
+      pembayaran: {
+        totalPembayaran: p.totalPembayaran,
+        donasiTambahan: p.donasiTambahan,
+      },
+    });
+
+    acc[rek].totalUang    += alokasi.totalUang;
+    acc[rek].racePack     += alokasi.racePack;
+    acc[rek].operasional  += alokasi.operasional;
+    acc[rek].donasiPaket  += alokasi.donasiPaket;
+    acc[rek].donasiTambahan += alokasi.donasiTambahan;
+  }
+
+  // Akumulasi dari donasi VERIFIED (masuk ke totalUang & donasiPaket)
+  for (const d of donasiList) {
+    const rek = metodeKeRekening(d.metodePembayaran);
+    if (!rek) continue;
+    acc[rek].totalUang   += d.nominal;
+    acc[rek].donasiPaket += d.nominal;
+  }
+
+  // Akumulasi dari pemasukan manual (kas & sponsor) — masuk ke totalUang saja
+  for (const pm of pemasukanManualList) {
+    const rek = pm.rekening as NamaRekening;
+    acc[rek].totalUang += pm.nominal;
+  }
+
+  // Kurangi pengeluaran dari totalUang
+  for (const pk of pengeluaranList) {
+    const rek = pk.rekening as NamaRekening;
+    acc[rek].totalUang -= pk.nominal;
+  }
+
+  // Proses transfer antar rekening
+  for (const t of transferList) {
+    const dari = t.dari as NamaRekening;
+    const ke   = t.ke   as NamaRekening;
+    acc[dari].totalUang -= t.nominal;
+    acc[ke].totalUang   += t.nominal;
+  }
+
+  // Hitung saldo = totalUang final
+  const kantong: SaldoKantong[] = SEMUA_REKENING.map((rek) => ({
+    rekening: rek,
+    namaBank: REKENING_META[rek].namaBank,
+    namaPemilik: REKENING_META[rek].namaPemilik,
+    saldo: acc[rek].totalUang,
+    alokasi: acc[rek],
+  }));
+
+  const transferHistory: TransferAntarRecord[] = transferList.map((t) => ({
+    id: t.id,
+    dari: t.dari as NamaRekening,
+    ke:   t.ke   as NamaRekening,
+    nominal: t.nominal,
+    catatan: t.catatan,
+    tanggal: t.tanggal,
+    createdAt: t.createdAt,
+  }));
+
+  return { kantong, transferHistory };
+}
+
+// ─── inputTransferAntar ───────────────────────────────────────────────────────
+
+export async function inputTransferAntar(formData: FormData): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const session = await guardBendahara();
+
+  const dari    = formData.get("dari") as string;
+  const ke      = formData.get("ke") as string;
+  const nominal = parseInt(formData.get("nominal") as string, 10);
+  const tanggal = formData.get("tanggal") as string;
+  const catatan = formData.get("catatan") as string | null;
+
+  // Validasi
+  if (!dari || !ke) return { success: false, error: "Rekening asal dan tujuan wajib dipilih." };
+  if (dari === ke)  return { success: false, error: "Rekening asal dan tujuan tidak boleh sama." };
+  if (!nominal || isNaN(nominal) || nominal <= 0) return { success: false, error: "Nominal harus lebih dari 0." };
+  if (!tanggal)     return { success: false, error: "Tanggal transfer wajib diisi." };
+
+  const validRekening: NamaRekening[] = ["JAGO", "BSI", "MANDIRI", "QRIS"];
+  if (!validRekening.includes(dari as NamaRekening)) return { success: false, error: "Rekening asal tidak valid." };
+  if (!validRekening.includes(ke as NamaRekening))   return { success: false, error: "Rekening tujuan tidak valid." };
+
+  try {
+    await prisma.transferAntar.create({
+      data: {
+        dari: dari as NamaRekening,
+        ke:   ke   as NamaRekening,
+        nominal,
+        tanggal:   new Date(tanggal),
+        catatan:   catatan?.trim() || null,
+        createdBy: (session as { adminId?: string }).adminId ?? "unknown",
+      },
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("[inputTransferAntar] Error:", err);
+    return { success: false, error: "Gagal menyimpan transfer. Silakan coba lagi." };
+  }
+}
