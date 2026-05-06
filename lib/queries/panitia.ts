@@ -353,3 +353,197 @@ export async function getDemografiStats(): Promise<DemografiStats> {
     rataRataUmurPerempuan,
   };
 }
+
+// ─── Types Section 4 & 5 ──────────────────────────────────────────────────────
+
+export interface PembayaranStats {
+  totalPendaftaran: number;
+  sudahVerified: number;
+  masihPending: number;
+  ditolak: number;
+  persentaseVerifikasi: number;
+  totalNominalVerified: number;
+  totalNominalPending: number;
+  perMetode: { metode: string; label: string; jumlah: number }[];
+}
+
+export interface TrendDonasiMingguan {
+  label: string;   // "W1", "W2", dst atau "DD/MM - DD/MM"
+  jumlah: number;
+  nominal: number;
+}
+
+export interface DonasiStats {
+  totalTerkumpul: number;
+  targetDonasi: number;
+  persentase: number;
+  jumlahDonaturUnik: number;
+  rataRataDonasi: number;
+  trendMingguan: TrendDonasiMingguan[];
+}
+
+export interface PembayaranDonasiStats {
+  pembayaran: PembayaranStats;
+  donasi: DonasiStats;
+}
+
+// ─── Query Section 4 & 5 ──────────────────────────────────────────────────────
+
+const METODE_LABEL: Record<string, string> = {
+  QRIS:             "QRIS",
+  TRANSFER_JAGO:    "Transfer Jago",
+  TRANSFER_BSI:     "Transfer BSI",
+  TRANSFER_MANDIRI: "Transfer Mandiri",
+  GOPAY:            "GoPay",
+  OVO:              "OVO",
+  DANA:             "DANA",
+};
+
+
+
+export async function getPembayaranDonasiStats(): Promise<PembayaranDonasiStats> {
+  const targetDonasi = parseInt(process.env.TARGET_DONASI ?? "100000000", 10);
+
+  const [
+    pembayaranList,
+    donasiList,
+    jumlahKetuaGazaRafah,
+    jumlahAnggotaGazaRafah,
+  ] = await Promise.all([
+    // Semua pembayaran dengan metode
+    prisma.pembayaran.findMany({
+      select: {
+        status: true,
+        totalPembayaran: true,
+        metodePembayaran: true,
+        createdAt: true,
+      },
+    }),
+
+    // Semua donasi standalone VERIFIED
+    prisma.donasi.findMany({
+      where: { status: "VERIFIED" },
+      select: {
+        nominal: true,
+        createdAt: true,
+      },
+    }),
+
+    // Untuk hitung donasi paket
+    prisma.peserta.count({
+      where: {
+        status: "VERIFIED",
+        kategori: { in: ["FUN_RUN_GAZA", "FUN_RUN_RAFAH", "FUN_WALK_GAZA", "FUN_WALK_RAFAH"] },
+      },
+    }),
+    prisma.anggota.count({
+      where: {
+        peserta: {
+          status: "VERIFIED",
+          kategori: { in: ["FUN_RUN_GAZA", "FUN_RUN_RAFAH", "FUN_WALK_GAZA", "FUN_WALK_RAFAH"] },
+        },
+      },
+    }),
+  ]);
+
+  // ── Pembayaran stats ───────────────────────────────────────
+  const totalPendaftaran   = pembayaranList.length;
+  const sudahVerified      = pembayaranList.filter((p) => p.status === "VERIFIED").length;
+  const masihPending       = pembayaranList.filter((p) => p.status === "PENDING").length;
+  const ditolak            = pembayaranList.filter((p) => p.status === "DITOLAK").length;
+  const persentaseVerifikasi = totalPendaftaran > 0
+    ? Math.round((sudahVerified / totalPendaftaran) * 100)
+    : 0;
+
+  const totalNominalVerified = pembayaranList
+    .filter((p) => p.status === "VERIFIED")
+    .reduce((s, p) => s + p.totalPembayaran, 0);
+
+  const totalNominalPending = pembayaranList
+    .filter((p) => p.status === "PENDING")
+    .reduce((s, p) => s + p.totalPembayaran, 0);
+
+  // Breakdown per metode (semua status)
+  const metodeMap: Record<string, number> = {};
+  for (const p of pembayaranList) {
+    metodeMap[p.metodePembayaran] = (metodeMap[p.metodePembayaran] ?? 0) + 1;
+  }
+  const perMetode = Object.entries(metodeMap)
+    .map(([metode, jumlah]) => ({
+      metode,
+      label: METODE_LABEL[metode] ?? metode,
+      jumlah,
+    }))
+    .sort((a, b) => b.jumlah - a.jumlah);
+
+  // ── Donasi stats ───────────────────────────────────────────
+  const totalDonasiStandalone = donasiList.reduce((s, d) => s + d.nominal, 0);
+
+  const donasiTambahanAgg = await prisma.pembayaran.aggregate({
+    _sum: { donasiTambahan: true },
+    where: { status: "VERIFIED" },
+  });
+  const totalDonasiTambahan = donasiTambahanAgg._sum.donasiTambahan ?? 0;
+  const totalDonasiPaket    = (jumlahKetuaGazaRafah + jumlahAnggotaGazaRafah) * DONASI_PER_PESERTA;
+  const totalTerkumpul      = totalDonasiStandalone + totalDonasiTambahan + totalDonasiPaket;
+
+  const persentase = targetDonasi > 0
+    ? Math.min(Math.round((totalTerkumpul / targetDonasi) * 100), 100)
+    : 0;
+
+  const jumlahDonaturUnik = donasiList.length;
+  const rataRataDonasi    = jumlahDonaturUnik > 0
+    ? Math.round(totalDonasiStandalone / jumlahDonaturUnik)
+    : 0;
+
+  // ── Trend donasi 8 minggu terakhir ────────────────────────
+  const now = new Date();
+  const trendMingguan: TrendDonasiMingguan[] = [];
+
+  for (let i = 7; i >= 0; i--) {
+    const endOfWeek   = new Date(now);
+    endOfWeek.setDate(now.getDate() - i * 7);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const startOfWeek = new Date(endOfWeek);
+    startOfWeek.setDate(endOfWeek.getDate() - 6);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const donasiMingguIni = donasiList.filter((d) => {
+      const t = new Date(d.createdAt);
+      return t >= startOfWeek && t <= endOfWeek;
+    });
+
+    const dd  = String(startOfWeek.getDate()).padStart(2, "0");
+    const mm  = String(startOfWeek.getMonth() + 1).padStart(2, "0");
+    const dd2 = String(endOfWeek.getDate()).padStart(2, "0");
+    const mm2 = String(endOfWeek.getMonth() + 1).padStart(2, "0");
+
+    trendMingguan.push({
+      label:   `${dd}/${mm}–${dd2}/${mm2}`,
+      jumlah:  donasiMingguIni.length,
+      nominal: donasiMingguIni.reduce((s, d) => s + d.nominal, 0),
+    });
+  }
+
+  return {
+    pembayaran: {
+      totalPendaftaran,
+      sudahVerified,
+      masihPending,
+      ditolak,
+      persentaseVerifikasi,
+      totalNominalVerified,
+      totalNominalPending,
+      perMetode,
+    },
+    donasi: {
+      totalTerkumpul,
+      targetDonasi,
+      persentase,
+      jumlahDonaturUnik,
+      rataRataDonasi,
+      trendMingguan,
+    },
+  };
+}

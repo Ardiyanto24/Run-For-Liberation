@@ -22,6 +22,13 @@ const IconDashboard = () => (
   </svg>
 );
 
+const IconPembayaran = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+  </svg>
+);
+
 const IconLogout = () => (
   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round"
@@ -30,10 +37,10 @@ const IconLogout = () => (
 );
 
 // ─── Nav Items ────────────────────────────────────────────────────────────────
-// Hanya dashboard untuk sekarang — akan bertambah seiring section baru
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/panitia/dashboard", icon: <IconDashboard /> },
+  { label: "Dashboard",           href: "/panitia/dashboard",          icon: <IconDashboard />  },
+  { label: "Pembayaran & Donasi", href: "/panitia/pembayaran-donasi",  icon: <IconPembayaran /> },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
