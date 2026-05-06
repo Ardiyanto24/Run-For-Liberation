@@ -937,8 +937,6 @@ export interface DashboardData {
 export async function getBendaharaDashboard(): Promise<DashboardData> {
   await guardBendahara();
 
-  console.log("[dashboard] guard passed, querying...");
-
   const [
     pembayaranList,
     donasiList,
@@ -973,21 +971,39 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
     prisma.peserta.count({ where: { status: "PENDING"  } }),
   ]);
 
-  console.log("[dashboard] pembayaran VERIFIED:", pembayaranList.length);
-  console.log("[dashboard] donasi VERIFIED:", donasiList.length);
-  console.log("[dashboard] sample pembayaran[0]:", JSON.stringify(pembayaranList[0]?.totalPembayaran));
-
-  // ── Hitung pemasukan dari pendaftaran & donasi ────────────
+  // ── Hitung pemasukan dari pendaftaran ─────────────────────
+  // totalPendaftaran = totalPembayaran - donasiTambahan (murni biaya daftar)
   const totalPendaftaran = pembayaranList.reduce(
     (sum, p) => sum + (p.totalPembayaran - p.donasiTambahan), 0
   );
+
+  // ── Hitung total donasi (3 komponen) ─────────────────────
+  // 1. Donasi paket — 15K per orang, dihitung via hitungAlokasi agar konsisten
+  const totalDonasiPaket = pembayaranList.reduce((sum, p) => {
+    const alokasi = hitungAlokasi({
+      kategori:     p.peserta.kategori as KategoriLomba,
+      ukuranLengan: p.peserta.ukuranLengan,
+      tipe:         p.peserta.tipe as "INDIVIDU" | "KELUARGA",
+      anggota:      p.peserta.anggota,
+      pembayaran:   {
+        totalPembayaran: p.totalPembayaran,
+        donasiTambahan:  p.donasiTambahan,
+      },
+    });
+    return sum + alokasi.donasiPaket;
+  }, 0);
+
+  // 2. Donasi tambahan — nominal ekstra yang diinput peserta saat daftar
   const totalDonasiTambahan = pembayaranList.reduce(
     (sum, p) => sum + p.donasiTambahan, 0
   );
+
+  // 3. Donasi standalone — dari tabel Donasi (bukan dari pendaftaran)
   const totalDonasiStandalone = donasiList.reduce(
     (sum, d) => sum + d.nominal, 0
   );
-  const totalDonasi       = totalDonasiTambahan + totalDonasiStandalone;
+
+  const totalDonasi       = totalDonasiPaket + totalDonasiTambahan + totalDonasiStandalone;
   const pendaftaranDonasi = totalPendaftaran + totalDonasi;
 
   const kas     = pemasukanManualList.filter((p) => p.sumber === "KAS")    .reduce((s, p) => s + p.nominal, 0);
@@ -996,12 +1012,6 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
   const totalPemasukan   = pendaftaranDonasi + kas + sponsor;
   const totalPengeluaran = pengeluaranList.reduce((s, p) => s + p.nominal, 0);
   const saldoBersih      = totalPemasukan - totalPengeluaran;
-
-  console.log("[dashboard] totalPendaftaran:", totalPendaftaran);
-  console.log("[dashboard] totalDonasi:", totalDonasi);
-  console.log("[dashboard] totalPemasukan:", totalPemasukan);
-  console.log("[dashboard] totalPengeluaran:", totalPengeluaran);
-  console.log("[dashboard] saldoBersih:", saldoBersih);
 
   // ── Hitung saldo kantong ──────────────────────────────────
   const acc: Record<NamaRekening, AlokasiKantong> = {
@@ -1066,7 +1076,7 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
     alokasi:     acc[rek],
   }));
 
-  // ── Aktivitas terbaru ─────────────────────────────────────
+  // ── Aktivitas terbaru (10 transaksi terakhir) ─────────────
   const aktivitasRaw: AktivitasDashboard[] = [
     ...pemasukanManualList.map((p) => ({
       id:       p.id,
