@@ -298,14 +298,18 @@ model PemasukanManual {
 }
 
 model TransferAntar {
-  id        String       @id @default(cuid())
-  dari      NamaRekening
-  ke        NamaRekening
-  nominal   Int
-  catatan   String?
-  tanggal   DateTime
-  createdBy String       @map("created_by")
-  createdAt DateTime     @default(now()) @map("created_at")
+  id                    String       @id @default(cuid())
+  dari                  NamaRekening
+  ke                    NamaRekening
+  nominal               Int          // Total = sum keempat komponen
+  nominalRacePack       Int          @default(0) @map("nominal_race_pack")
+  nominalOperasional    Int          @default(0) @map("nominal_operasional")
+  nominalDonasiPaket    Int          @default(0) @map("nominal_donasi_paket")
+  nominalDonasiTambahan Int          @default(0) @map("nominal_donasi_tambahan")
+  catatan               String?
+  tanggal               DateTime
+  createdBy             String       @map("created_by")
+  createdAt             DateTime     @default(now()) @map("created_at")
 
   @@index([dari])
   @@index([ke])

@@ -216,6 +216,10 @@ export interface TransferAntarRecord {
   dari: NamaRekening;
   ke: NamaRekening;
   nominal: number;
+  nominalRacePack: number;
+  nominalOperasional: number;
+  nominalDonasiPaket: number;
+  nominalDonasiTambahan: number;
   catatan: string | null;
   tanggal: Date;
   createdAt: Date;
@@ -255,15 +259,12 @@ export async function getSaldoKantong(): Promise<{
 }> {
   await guardBendahara();
 
-  // Query semua data sekaligus
   const [pembayaranList, donasiList, pemasukanManualList, pengeluaranList, transferList] =
     await Promise.all([
       prisma.pembayaran.findMany({
         where: { status: "VERIFIED" },
         include: {
-          peserta: {
-            include: { anggota: true },
-          },
+          peserta: { include: { anggota: true } },
         },
       }),
       prisma.donasi.findMany({
@@ -274,14 +275,14 @@ export async function getSaldoKantong(): Promise<{
         select: { nominal: true, rekening: true },
       }),
       prisma.pengeluaran.findMany({
-        select: { nominal: true, rekening: true },
+        select: { nominal: true, rekening: true, jenis: true },
       }),
       prisma.transferAntar.findMany({
         orderBy: { tanggal: "desc" },
       }),
     ]);
 
-  // Inisialisasi akumulator per rekening
+  // ── Inisialisasi akumulator per rekening ──────────────────
   const acc: Record<NamaRekening, AlokasiKantong> = {
     JAGO:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
     BSI:     { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
@@ -289,30 +290,31 @@ export async function getSaldoKantong(): Promise<{
     QRIS:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
   };
 
-  // Akumulasi dari pembayaran peserta VERIFIED
+  // ── 1. Pembayaran peserta VERIFIED ────────────────────────
   for (const p of pembayaranList) {
     const rek = metodeKeRekening(p.metodePembayaran);
     if (!rek) continue;
 
     const alokasi = hitungAlokasi({
-      kategori: p.peserta.kategori as KategoriLomba,
+      kategori:     p.peserta.kategori as KategoriLomba,
       ukuranLengan: p.peserta.ukuranLengan,
-      tipe: p.peserta.tipe as "INDIVIDU" | "KELUARGA",
-      anggota: p.peserta.anggota,
+      tipe:         p.peserta.tipe as "INDIVIDU" | "KELUARGA",
+      anggota:      p.peserta.anggota,
       pembayaran: {
         totalPembayaran: p.totalPembayaran,
-        donasiTambahan: p.donasiTambahan,
+        donasiTambahan:  p.donasiTambahan,
       },
     });
 
-    acc[rek].totalUang    += alokasi.totalUang;
-    acc[rek].racePack     += alokasi.racePack;
-    acc[rek].operasional  += alokasi.operasional;
-    acc[rek].donasiPaket  += alokasi.donasiPaket;
+    acc[rek].totalUang      += alokasi.totalUang;
+    acc[rek].racePack       += alokasi.racePack;
+    acc[rek].operasional    += alokasi.operasional;
+    acc[rek].donasiPaket    += alokasi.donasiPaket;
     acc[rek].donasiTambahan += alokasi.donasiTambahan;
   }
 
-  // Akumulasi dari donasi VERIFIED (masuk ke totalUang & donasiPaket)
+  // ── 2. Donasi standalone VERIFIED ────────────────────────
+  // Donasi masuk sebagai donasiPaket (bukan race pack / operasional)
   for (const d of donasiList) {
     const rek = metodeKeRekening(d.metodePembayaran);
     if (!rek) continue;
@@ -320,43 +322,65 @@ export async function getSaldoKantong(): Promise<{
     acc[rek].donasiPaket += d.nominal;
   }
 
-  // Akumulasi dari pemasukan manual (kas & sponsor) — masuk ke totalUang saja
+  // ── 3. Pemasukan manual (Kas & Sponsor) ──────────────────
+  // Masuk sebagai totalUang saja — tidak ada breakdown alokasi
   for (const pm of pemasukanManualList) {
     const rek = pm.rekening as NamaRekening;
     acc[rek].totalUang += pm.nominal;
   }
 
-  // Kurangi pengeluaran dari totalUang
+  // ── 4. Pengeluaran — kurangi komponen yang sesuai ────────
   for (const pk of pengeluaranList) {
     const rek = pk.rekening as NamaRekening;
+    // Kurangi totalUang selalu
     acc[rek].totalUang -= pk.nominal;
+    // Kurangi komponen spesifik sesuai jenis pengeluaran
+    if (pk.jenis === "RACE_PACK")   acc[rek].racePack    -= pk.nominal;
+    if (pk.jenis === "OPERASIONAL") acc[rek].operasional -= pk.nominal;
+    if (pk.jenis === "DONASI")      acc[rek].donasiPaket -= pk.nominal;
   }
 
-  // Proses transfer antar rekening
+  // ── 5. Transfer antar rekening — per komponen ────────────
   for (const t of transferList) {
     const dari = t.dari as NamaRekening;
     const ke   = t.ke   as NamaRekening;
-    acc[dari].totalUang -= t.nominal;
-    acc[ke].totalUang   += t.nominal;
+
+    // Kurangi dari rekening asal per komponen
+    acc[dari].totalUang      -= t.nominal;
+    acc[dari].racePack       -= t.nominalRacePack;
+    acc[dari].operasional    -= t.nominalOperasional;
+    acc[dari].donasiPaket    -= t.nominalDonasiPaket;
+    acc[dari].donasiTambahan -= t.nominalDonasiTambahan;
+
+    // Tambah ke rekening tujuan per komponen
+    acc[ke].totalUang      += t.nominal;
+    acc[ke].racePack       += t.nominalRacePack;
+    acc[ke].operasional    += t.nominalOperasional;
+    acc[ke].donasiPaket    += t.nominalDonasiPaket;
+    acc[ke].donasiTambahan += t.nominalDonasiTambahan;
   }
 
-  // Hitung saldo = totalUang final
+  // ── Susun output ──────────────────────────────────────────
   const kantong: SaldoKantong[] = SEMUA_REKENING.map((rek) => ({
-    rekening: rek,
-    namaBank: REKENING_META[rek].namaBank,
+    rekening:    rek,
+    namaBank:    REKENING_META[rek].namaBank,
     namaPemilik: REKENING_META[rek].namaPemilik,
-    saldo: acc[rek].totalUang,
-    alokasi: acc[rek],
+    saldo:       acc[rek].totalUang,
+    alokasi:     acc[rek],
   }));
 
   const transferHistory: TransferAntarRecord[] = transferList.map((t) => ({
-    id: t.id,
-    dari: t.dari as NamaRekening,
-    ke:   t.ke   as NamaRekening,
-    nominal: t.nominal,
-    catatan: t.catatan,
-    tanggal: t.tanggal,
-    createdAt: t.createdAt,
+    id:                   t.id,
+    dari:                 t.dari as NamaRekening,
+    ke:                   t.ke   as NamaRekening,
+    nominal:              t.nominal,
+    nominalRacePack:      t.nominalRacePack,
+    nominalOperasional:   t.nominalOperasional,
+    nominalDonasiPaket:   t.nominalDonasiPaket,
+    nominalDonasiTambahan: t.nominalDonasiTambahan,
+    catatan:              t.catatan,
+    tanggal:              t.tanggal,
+    createdAt:            t.createdAt,
   }));
 
   return { kantong, transferHistory };
@@ -370,31 +394,55 @@ export async function inputTransferAntar(formData: FormData): Promise<{
 }> {
   const session = await guardBendahara();
 
-  const dari    = formData.get("dari") as string;
-  const ke      = formData.get("ke") as string;
-  const nominal = parseInt(formData.get("nominal") as string, 10);
+  const dari    = formData.get("dari")    as string;
+  const ke      = formData.get("ke")      as string;
   const tanggal = formData.get("tanggal") as string;
   const catatan = formData.get("catatan") as string | null;
 
-  // Validasi
-  if (!dari || !ke) return { success: false, error: "Rekening asal dan tujuan wajib dipilih." };
-  if (dari === ke)  return { success: false, error: "Rekening asal dan tujuan tidak boleh sama." };
-  if (!nominal || isNaN(nominal) || nominal <= 0) return { success: false, error: "Nominal harus lebih dari 0." };
-  if (!tanggal)     return { success: false, error: "Tanggal transfer wajib diisi." };
+  // Parse komponen nominal
+  const nominalRacePack       = parseInt(formData.get("nominalRacePack")       as string || "0", 10);
+  const nominalOperasional    = parseInt(formData.get("nominalOperasional")    as string || "0", 10);
+  const nominalDonasiPaket    = parseInt(formData.get("nominalDonasiPaket")    as string || "0", 10);
+  const nominalDonasiTambahan = parseInt(formData.get("nominalDonasiTambahan") as string || "0", 10);
+
+  // Total = penjumlahan keempat komponen
+  const nominal = nominalRacePack + nominalOperasional + nominalDonasiPaket + nominalDonasiTambahan;
+
+  // ── Validasi ──────────────────────────────────────────────
+  if (!dari || !ke)
+    return { success: false, error: "Rekening asal dan tujuan wajib dipilih." };
+  if (dari === ke)
+    return { success: false, error: "Rekening asal dan tujuan tidak boleh sama." };
+  if (!tanggal)
+    return { success: false, error: "Tanggal transfer wajib diisi." };
 
   const validRekening: NamaRekening[] = ["JAGO", "BSI", "MANDIRI", "QRIS"];
-  if (!validRekening.includes(dari as NamaRekening)) return { success: false, error: "Rekening asal tidak valid." };
-  if (!validRekening.includes(ke as NamaRekening))   return { success: false, error: "Rekening tujuan tidak valid." };
+  if (!validRekening.includes(dari as NamaRekening))
+    return { success: false, error: "Rekening asal tidak valid." };
+  if (!validRekening.includes(ke as NamaRekening))
+    return { success: false, error: "Rekening tujuan tidak valid." };
+
+  // Minimal satu komponen harus lebih dari 0
+  if (nominal <= 0)
+    return { success: false, error: "Minimal satu komponen nominal harus lebih dari 0." };
+
+  // Tidak boleh ada nilai negatif
+  if (nominalRacePack < 0 || nominalOperasional < 0 || nominalDonasiPaket < 0 || nominalDonasiTambahan < 0)
+    return { success: false, error: "Nominal tidak boleh bernilai negatif." };
 
   try {
     await prisma.transferAntar.create({
       data: {
-        dari: dari as NamaRekening,
-        ke:   ke   as NamaRekening,
+        dari:                 dari    as NamaRekening,
+        ke:                   ke      as NamaRekening,
         nominal,
-        tanggal:   new Date(tanggal),
-        catatan:   catatan?.trim() || null,
-        createdBy: (session as { adminId?: string }).adminId ?? "unknown",
+        nominalRacePack,
+        nominalOperasional,
+        nominalDonasiPaket,
+        nominalDonasiTambahan,
+        tanggal:              new Date(tanggal),
+        catatan:              catatan?.trim() || null,
+        createdBy:            (session as { adminId?: string }).adminId ?? "unknown",
       },
     });
 
