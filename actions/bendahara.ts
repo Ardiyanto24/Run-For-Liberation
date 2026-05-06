@@ -886,3 +886,220 @@ export async function hapusPengeluaran(id: string): Promise<{
     return { success: false, error: "Gagal menghapus pengeluaran." };
   }
 }
+
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+
+export type JenisAktivitas = "PEMASUKAN" | "PENGELUARAN" | "TRANSFER";
+
+export interface AktivitasDashboard {
+  id:       string;
+  jenis:    JenisAktivitas;
+  label:    string;       // nama/keterangan transaksi
+  nominal:  number;
+  rekening: NamaRekening | null;
+  tanggal:  Date;
+}
+
+export interface DashboardData {
+  // ── KPI Utama ──────────────────────────────────────────────
+  kpi: {
+    totalPemasukan:  number;
+    totalPengeluaran: number;
+    saldoBersih:     number;
+    totalDonasi:     number;
+  };
+
+  // ── Snapshot Kantong ───────────────────────────────────────
+  kantong: SaldoKantong[];
+
+  // ── Breakdown Pemasukan ────────────────────────────────────
+  pemasukan: {
+    pendaftaranDonasi: number;
+    kas:               number;
+    sponsor:           number;
+  };
+
+  // ── Aktivitas Terbaru ──────────────────────────────────────
+  aktivitas: AktivitasDashboard[];
+
+  // ── Info Tambahan ──────────────────────────────────────────
+  info: {
+    totalPeserta:          number;
+    pesertaVerified:       number;
+    pesertaPending:        number;
+    totalPengeluaranItem:  number;
+  };
+}
+
+export async function getBendaharaDashboard(): Promise<DashboardData> {
+  await guardBendahara();
+
+  // ── Query semua data paralel ──────────────────────────────
+  const [
+    pembayaranList,
+    donasiList,
+    pemasukanManualList,
+    pengeluaranList,
+    transferList,
+    pesertaCount,
+    pesertaVerifiedCount,
+    pesertaPendingCount,
+  ] = await Promise.all([
+    prisma.pembayaran.findMany({
+      where: { status: "VERIFIED" },
+      include: { peserta: { include: { anggota: true } } },
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.donasi.findMany({
+      where: { status: "VERIFIED" },
+      select: { nominal: true, metodePembayaran: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+    prisma.pemasukanManual.findMany({
+      orderBy: { tanggal: "desc" },
+    }),
+    prisma.pengeluaran.findMany({
+      orderBy: { tanggal: "desc" },
+    }),
+    prisma.transferAntar.findMany({
+      orderBy: { tanggal: "desc" },
+    }),
+    prisma.peserta.count(),
+    prisma.peserta.count({ where: { status: "VERIFIED" } }),
+    prisma.peserta.count({ where: { status: "PENDING"  } }),
+  ]);
+
+  // ── Hitung pemasukan dari pendaftaran & donasi ────────────
+  const totalPendaftaran = pembayaranList.reduce(
+    (sum, p) => sum + (p.totalPembayaran - p.donasiTambahan), 0
+  );
+  const totalDonasiTambahan = pembayaranList.reduce(
+    (sum, p) => sum + p.donasiTambahan, 0
+  );
+  const totalDonasiStandalone = donasiList.reduce(
+    (sum, d) => sum + d.nominal, 0
+  );
+  const totalDonasi        = totalDonasiTambahan + totalDonasiStandalone;
+  const pendaftaranDonasi  = totalPendaftaran + totalDonasi;
+
+  const kas     = pemasukanManualList.filter((p) => p.sumber === "KAS")    .reduce((s, p) => s + p.nominal, 0);
+  const sponsor = pemasukanManualList.filter((p) => p.sumber === "SPONSOR").reduce((s, p) => s + p.nominal, 0);
+
+  const totalPemasukan   = pendaftaranDonasi + kas + sponsor;
+  const totalPengeluaran = pengeluaranList.reduce((s, p) => s + p.nominal, 0);
+  const saldoBersih      = totalPemasukan - totalPengeluaran;
+
+  // ── Hitung saldo kantong (reuse logika getSaldoKantong) ───
+  const acc: Record<NamaRekening, AlokasiKantong> = {
+    JAGO:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+    BSI:     { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+    MANDIRI: { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+    QRIS:    { totalUang: 0, racePack: 0, operasional: 0, donasiPaket: 0, donasiTambahan: 0 },
+  };
+
+  for (const p of pembayaranList) {
+    const rek = metodeKeRekening(p.metodePembayaran);
+    if (!rek) continue;
+    const alokasi = hitungAlokasi({
+      kategori:     p.peserta.kategori as KategoriLomba,
+      ukuranLengan: p.peserta.ukuranLengan,
+      tipe:         p.peserta.tipe as "INDIVIDU" | "KELUARGA",
+      anggota:      p.peserta.anggota,
+      pembayaran:   { totalPembayaran: p.totalPembayaran, donasiTambahan: p.donasiTambahan },
+    });
+    acc[rek].totalUang      += alokasi.totalUang;
+    acc[rek].racePack       += alokasi.racePack;
+    acc[rek].operasional    += alokasi.operasional;
+    acc[rek].donasiPaket    += alokasi.donasiPaket;
+    acc[rek].donasiTambahan += alokasi.donasiTambahan;
+  }
+  for (const d of donasiList) {
+    const rek = metodeKeRekening(d.metodePembayaran);
+    if (!rek) continue;
+    acc[rek].totalUang   += d.nominal;
+    acc[rek].donasiPaket += d.nominal;
+  }
+  for (const pm of pemasukanManualList) {
+    acc[pm.rekening as NamaRekening].totalUang += pm.nominal;
+  }
+  for (const pk of pengeluaranList) {
+    const rek = pk.rekening as NamaRekening;
+    acc[rek].totalUang   -= pk.nominal;
+    if (pk.jenis === "RACE_PACK")   acc[rek].racePack    -= pk.nominal;
+    if (pk.jenis === "OPERASIONAL") acc[rek].operasional -= pk.nominal;
+    if (pk.jenis === "DONASI")      acc[rek].donasiPaket -= pk.nominal;
+  }
+  for (const t of transferList) {
+    const dari = t.dari as NamaRekening;
+    const ke   = t.ke   as NamaRekening;
+    acc[dari].totalUang      -= t.nominal;
+    acc[dari].racePack       -= t.nominalRacePack;
+    acc[dari].operasional    -= t.nominalOperasional;
+    acc[dari].donasiPaket    -= t.nominalDonasiPaket;
+    acc[dari].donasiTambahan -= t.nominalDonasiTambahan;
+    acc[ke].totalUang        += t.nominal;
+    acc[ke].racePack         += t.nominalRacePack;
+    acc[ke].operasional      += t.nominalOperasional;
+    acc[ke].donasiPaket      += t.nominalDonasiPaket;
+    acc[ke].donasiTambahan   += t.nominalDonasiTambahan;
+  }
+
+  const kantong: SaldoKantong[] = SEMUA_REKENING.map((rek) => ({
+    rekening:    rek,
+    namaBank:    REKENING_META[rek].namaBank,
+    namaPemilik: REKENING_META[rek].namaPemilik,
+    saldo:       acc[rek].totalUang,
+    alokasi:     acc[rek],
+  }));
+
+  // ── Aktivitas terbaru (gabungan 10 terakhir) ──────────────
+  const aktivitasRaw: AktivitasDashboard[] = [
+    ...pemasukanManualList.map((p) => ({
+      id:       p.id,
+      jenis:    "PEMASUKAN" as JenisAktivitas,
+      label:    `${p.sumber === "KAS" ? "Kas" : "Sponsor"} — ${p.keterangan}`,
+      nominal:  p.nominal,
+      rekening: p.rekening as NamaRekening,
+      tanggal:  p.tanggal,
+    })),
+    ...pengeluaranList.map((p) => ({
+      id:       p.id,
+      jenis:    "PENGELUARAN" as JenisAktivitas,
+      label:    p.namaPengeluaran,
+      nominal:  p.nominal,
+      rekening: p.rekening as NamaRekening,
+      tanggal:  p.tanggal,
+    })),
+    ...transferList.map((t) => ({
+      id:       t.id,
+      jenis:    "TRANSFER" as JenisAktivitas,
+      label:    `Transfer ${t.dari} → ${t.ke}`,
+      nominal:  t.nominal,
+      rekening: t.dari as NamaRekening,
+      tanggal:  t.tanggal,
+    })),
+  ]
+    .sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime())
+    .slice(0, 10);
+
+  return {
+    kpi: {
+      totalPemasukan,
+      totalPengeluaran,
+      saldoBersih,
+      totalDonasi,
+    },
+    kantong,
+    pemasukan: { pendaftaranDonasi, kas, sponsor },
+    aktivitas: aktivitasRaw,
+    info: {
+      totalPeserta:         pesertaCount,
+      pesertaVerified:      pesertaVerifiedCount,
+      pesertaPending:       pesertaPendingCount,
+      totalPengeluaranItem: pengeluaranList.length,
+    },
+  };
+}
