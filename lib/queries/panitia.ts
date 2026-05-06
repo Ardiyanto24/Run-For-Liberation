@@ -1,26 +1,19 @@
 // lib/queries/panitia.ts
-// Query functions untuk dashboard panitia — semua data adalah agregat,
-// tidak ada data personal peserta yang dikembalikan.
 
 import prisma from "@/lib/prisma";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const DONASI_PER_PESERTA = 15_000;
 
 export interface OverviewStats {
-  // Peserta
-  totalPesertaFisik: number;       // ketua + seluruh anggota keluarga
-  totalPendaftaran: number;        // jumlah baris di tabel peserta (ketua)
-  pesertaVerified: number;         // ketua dengan status VERIFIED
-  pesertaPending: number;          // ketua dengan status PENDING
-  pesertaDitolak: number;          // ketua dengan status DITOLAK
-
-  // Donasi
-  totalDonasiTerkumpul: number;    // semua sumber, hanya VERIFIED
+  totalPesertaFisik: number;
+  totalPendaftaran: number;
+  pesertaVerified: number;
+  pesertaPending: number;
+  pesertaDitolak: number;
+  totalDonasiTerkumpul: number;
   targetDonasi: number;
   persentaseDonasi: number;
 }
-
-// ─── Query ────────────────────────────────────────────────────────────────────
 
 export async function getOverviewStats(): Promise<OverviewStats> {
   const targetDonasi = parseInt(process.env.TARGET_DONASI ?? "100000000", 10);
@@ -33,16 +26,15 @@ export async function getOverviewStats(): Promise<OverviewStats> {
     totalAnggota,
     donasiAggregate,
     donasiTambahanAggregate,
+    jumlahKetuaGazaRafah,
+    jumlahAnggotaGazaRafah,
   ] = await Promise.all([
-    // Total baris pendaftaran (ketua)
     prisma.peserta.count(),
-
-    // Breakdown status
     prisma.peserta.count({ where: { status: "VERIFIED" } }),
     prisma.peserta.count({ where: { status: "PENDING" } }),
     prisma.peserta.count({ where: { status: "DITOLAK" } }),
 
-    // Total anggota keluarga dari pendaftaran VERIFIED
+    // Anggota keluarga dari pendaftaran VERIFIED
     prisma.anggota.count({
       where: { peserta: { status: "VERIFIED" } },
     }),
@@ -58,18 +50,33 @@ export async function getOverviewStats(): Promise<OverviewStats> {
       _sum: { donasiTambahan: true },
       where: { status: "VERIFIED" },
     }),
+
+    // Jumlah ketua VERIFIED kategori Gaza/Rafah (untuk donasi paket)
+    prisma.peserta.count({
+      where: {
+        status: "VERIFIED",
+        kategori: { in: ["FUN_RUN_GAZA", "FUN_RUN_RAFAH", "FUN_WALK_GAZA", "FUN_WALK_RAFAH"] },
+      },
+    }),
+
+    // Jumlah anggota keluarga VERIFIED yang ketuanya Gaza/Rafah
+    prisma.anggota.count({
+      where: {
+        peserta: {
+          status: "VERIFIED",
+          kategori: { in: ["FUN_RUN_GAZA", "FUN_RUN_RAFAH", "FUN_WALK_GAZA", "FUN_WALK_RAFAH"] },
+        },
+      },
+    }),
   ]);
 
-  // Total peserta fisik = ketua VERIFIED + anggota mereka
-  // (yang belum verified tidak dihitung sebagai peserta fisik konfirmasi)
-  const totalPesertaFisik = pesertaVerified + totalAnggota;
+  const totalPesertaFisik      = pesertaVerified + totalAnggota;
+  const totalDonasiStandalone  = donasiAggregate._sum.nominal ?? 0;
+  const totalDonasiTambahan    = donasiTambahanAggregate._sum.donasiTambahan ?? 0;
+  const totalDonasiPaket       = (jumlahKetuaGazaRafah + jumlahAnggotaGazaRafah) * DONASI_PER_PESERTA;
 
-  // Total donasi: standalone + tambahan dari pendaftaran
-  // (donasi paket sudah masuk ke totalPembayaran, jadi tidak dihitung ulang di sini
-  //  agar tidak overlap dengan keuangan bendahara)
-  const totalDonasiStandalone = donasiAggregate._sum.nominal ?? 0;
-  const totalDonasiTambahan = donasiTambahanAggregate._sum.donasiTambahan ?? 0;
-  const totalDonasiTerkumpul = totalDonasiStandalone + totalDonasiTambahan;
+  // Sama persis dengan getStatistikDonasi() di lib/queries/donasi.ts
+  const totalDonasiTerkumpul = totalDonasiStandalone + totalDonasiTambahan + totalDonasiPaket;
 
   const persentaseDonasi = targetDonasi > 0
     ? Math.min(Math.round((totalDonasiTerkumpul / targetDonasi) * 100), 100)
