@@ -25,3 +25,10 @@ export async function getTreasuryIncomeSignedUrl(
   if (!rawPath) return null;
   return getTreasurySignedUrl("treasury-income-proofs", rawPath);
 }
+
+export async function getTreasuryExpenseSignedUrl(
+  rawPath: string | null
+): Promise<string | null> {
+  if (!rawPath) return null;
+  return getTreasurySignedUrl("treasury-expense-proofs", rawPath);
+}

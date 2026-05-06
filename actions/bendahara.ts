@@ -648,3 +648,241 @@ export async function hapusPemasukan(id: string): Promise<{
     return { success: false, error: "Gagal menghapus data pemasukan." };
   }
 }
+
+
+// ============================================================
+// PENGELUARAN
+// ============================================================
+
+// ─── Types ───────────────────────────────────────────────────
+
+export type DivisiPengeluaran =
+  | "ACARA"
+  | "HUMAS_SPONSDAN"
+  | "MEDIA"
+  | "LOGISTIK"
+  | "SEKBEND";
+
+export type JenisPengeluaran = "RACE_PACK" | "OPERASIONAL" | "DONASI";
+
+export interface PengeluaranRecord {
+  id:              string;
+  namaPengeluaran: string;
+  divisi:          DivisiPengeluaran;
+  jenis:           JenisPengeluaran;
+  nominal:         number;
+  rekening:        NamaRekening;
+  buktiUrl:        string | null;
+  buktiNama:       string | null;
+  catatan:         string | null;
+  tanggal:         Date;
+  createdAt:       Date;
+}
+
+export interface RingkasanPengeluaran {
+  total:       number;
+  perDivisi:   Record<DivisiPengeluaran, number>;
+  perJenis:    Record<JenisPengeluaran, number>;
+  perRekening: Record<NamaRekening, number>;
+}
+
+// ─── getPengeluaran ───────────────────────────────────────────
+
+export async function getPengeluaran(): Promise<{
+  list:     PengeluaranRecord[];
+  ringkasan: RingkasanPengeluaran;
+}> {
+  await guardBendahara();
+
+  const list = await prisma.pengeluaran.findMany({
+    orderBy: { tanggal: "desc" },
+  });
+
+  const records: PengeluaranRecord[] = list.map((p) => ({
+    id:              p.id,
+    namaPengeluaran: p.namaPengeluaran,
+    divisi:          p.divisi          as DivisiPengeluaran,
+    jenis:           p.jenis           as JenisPengeluaran,
+    nominal:         p.nominal,
+    rekening:        p.rekening        as NamaRekening,
+    buktiUrl:        p.buktiUrl,
+    buktiNama:       p.buktiNama,
+    catatan:         p.catatan,
+    tanggal:         p.tanggal,
+    createdAt:       p.createdAt,
+  }));
+
+  // ── Ringkasan ──────────────────────────────────────────────
+  const perDivisi: Record<DivisiPengeluaran, number> = {
+    ACARA: 0, HUMAS_SPONSDAN: 0, MEDIA: 0, LOGISTIK: 0, SEKBEND: 0,
+  };
+  const perJenis: Record<JenisPengeluaran, number> = {
+    RACE_PACK: 0, OPERASIONAL: 0, DONASI: 0,
+  };
+  const perRekening: Record<NamaRekening, number> = {
+    JAGO: 0, BSI: 0, MANDIRI: 0, QRIS: 0,
+  };
+
+  let total = 0;
+  for (const r of records) {
+    total                  += r.nominal;
+    perDivisi[r.divisi]   += r.nominal;
+    perJenis[r.jenis]     += r.nominal;
+    perRekening[r.rekening] += r.nominal;
+  }
+
+  return { list: records, ringkasan: { total, perDivisi, perJenis, perRekening } };
+}
+
+// ─── inputPengeluaran ─────────────────────────────────────────
+
+export async function inputPengeluaran(formData: FormData): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const session = await guardBendahara();
+
+  const namaPengeluaran = formData.get("namaPengeluaran") as string;
+  const divisi          = formData.get("divisi")          as string;
+  const jenis           = formData.get("jenis")           as string;
+  const nominalRaw      = formData.get("nominal")         as string;
+  const rekening        = formData.get("rekening")        as string;
+  const tanggalRaw      = formData.get("tanggal")         as string;
+  const catatan         = formData.get("catatan")         as string | null;
+  const buktiFile       = formData.get("bukti")           as File | null;
+
+  // ── Validasi ──────────────────────────────────────────────
+  const validDivisi:   DivisiPengeluaran[] = ["ACARA", "HUMAS_SPONSDAN", "MEDIA", "LOGISTIK", "SEKBEND"];
+  const validJenis:    JenisPengeluaran[]  = ["RACE_PACK", "OPERASIONAL", "DONASI"];
+  const validRekening: NamaRekening[]      = ["JAGO", "BSI", "MANDIRI", "QRIS"];
+
+  if (!namaPengeluaran?.trim())
+    return { success: false, error: "Nama pengeluaran wajib diisi." };
+  if (!validDivisi.includes(divisi as DivisiPengeluaran))
+    return { success: false, error: "Divisi tidak valid." };
+  if (!validJenis.includes(jenis as JenisPengeluaran))
+    return { success: false, error: "Jenis pengeluaran tidak valid." };
+
+  const nominal = parseInt(nominalRaw?.replace(/\D/g, "") || "0", 10);
+  if (!nominal || nominal <= 0)
+    return { success: false, error: "Nominal harus lebih dari 0." };
+
+  if (!validRekening.includes(rekening as NamaRekening))
+    return { success: false, error: "Rekening tidak valid." };
+  if (!tanggalRaw)
+    return { success: false, error: "Tanggal wajib diisi." };
+
+  try {
+    // Simpan ke DB dulu untuk dapat ID
+    const record = await prisma.pengeluaran.create({
+      data: {
+        namaPengeluaran: namaPengeluaran.trim(),
+        divisi:          divisi   as DivisiPengeluaran,
+        jenis:           jenis    as JenisPengeluaran,
+        nominal,
+        rekening:        rekening as NamaRekening,
+        tanggal:         new Date(tanggalRaw),
+        catatan:         catatan?.trim() || null,
+        createdBy:       (session as { adminId?: string }).adminId ?? "unknown",
+      },
+    });
+
+    // Upload nota jika ada
+    if (buktiFile && buktiFile.size > 0) {
+      const buktiPath = await uploadTreasuryFile(
+        buktiFile,
+        "treasury-expense-proofs",
+        record.id
+      );
+
+      await prisma.pengeluaran.update({
+        where: { id: record.id },
+        data: { buktiUrl: buktiPath, buktiNama: buktiFile.name },
+      });
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("[inputPengeluaran] Error:", err);
+    const message = err instanceof Error ? err.message : "Gagal menyimpan pengeluaran.";
+    return { success: false, error: message };
+  }
+}
+
+// ─── editPengeluaran ──────────────────────────────────────────
+
+export async function editPengeluaran(
+  id: string,
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  await guardBendahara();
+
+  if (!id?.trim()) return { success: false, error: "ID tidak valid." };
+
+  const namaPengeluaran = formData.get("namaPengeluaran") as string;
+  const divisi          = formData.get("divisi")          as string;
+  const jenis           = formData.get("jenis")           as string;
+  const nominalRaw      = formData.get("nominal")         as string;
+  const rekening        = formData.get("rekening")        as string;
+  const tanggalRaw      = formData.get("tanggal")         as string;
+  const catatan         = formData.get("catatan")         as string | null;
+
+  const validDivisi:   DivisiPengeluaran[] = ["ACARA", "HUMAS_SPONSDAN", "MEDIA", "LOGISTIK", "SEKBEND"];
+  const validJenis:    JenisPengeluaran[]  = ["RACE_PACK", "OPERASIONAL", "DONASI"];
+  const validRekening: NamaRekening[]      = ["JAGO", "BSI", "MANDIRI", "QRIS"];
+
+  if (!namaPengeluaran?.trim())
+    return { success: false, error: "Nama pengeluaran wajib diisi." };
+  if (!validDivisi.includes(divisi as DivisiPengeluaran))
+    return { success: false, error: "Divisi tidak valid." };
+  if (!validJenis.includes(jenis as JenisPengeluaran))
+    return { success: false, error: "Jenis pengeluaran tidak valid." };
+
+  const nominal = parseInt(nominalRaw?.replace(/\D/g, "") || "0", 10);
+  if (!nominal || nominal <= 0)
+    return { success: false, error: "Nominal harus lebih dari 0." };
+
+  if (!validRekening.includes(rekening as NamaRekening))
+    return { success: false, error: "Rekening tidak valid." };
+  if (!tanggalRaw)
+    return { success: false, error: "Tanggal wajib diisi." };
+
+  try {
+    await prisma.pengeluaran.update({
+      where: { id },
+      data: {
+        namaPengeluaran: namaPengeluaran.trim(),
+        divisi:          divisi   as DivisiPengeluaran,
+        jenis:           jenis    as JenisPengeluaran,
+        nominal,
+        rekening:        rekening as NamaRekening,
+        tanggal:         new Date(tanggalRaw),
+        catatan:         catatan?.trim() || null,
+      },
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("[editPengeluaran] Error:", err);
+    return { success: false, error: "Gagal mengupdate pengeluaran." };
+  }
+}
+
+// ─── hapusPengeluaran ─────────────────────────────────────────
+
+export async function hapusPengeluaran(id: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  await guardBendahara();
+
+  if (!id?.trim()) return { success: false, error: "ID tidak valid." };
+
+  try {
+    await prisma.pengeluaran.delete({ where: { id } });
+    return { success: true };
+  } catch (err) {
+    console.error("[hapusPengeluaran] Error:", err);
+    return { success: false, error: "Gagal menghapus pengeluaran." };
+  }
+}
