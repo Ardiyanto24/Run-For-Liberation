@@ -492,8 +492,8 @@ export async function getRingkasanPemasukan(): Promise<RingkasanPemasukan> {
 
   const [pembayaranList, donasiList, pemasukanManualList] = await Promise.all([
     prisma.pembayaran.findMany({
-      where:  { status: "VERIFIED" },
-      select: { totalPembayaran: true, donasiTambahan: true },
+      where: { status: "VERIFIED" },
+      include: { peserta: { include: { anggota: true } } },
     }),
     prisma.donasi.findMany({
       where:  { status: "VERIFIED" },
@@ -504,35 +504,61 @@ export async function getRingkasanPemasukan(): Promise<RingkasanPemasukan> {
     }),
   ]);
 
-  // Pendaftaran = biayaPendaftaran saja (totalPembayaran - donasiTambahan)
-  const totalPendaftaran = pembayaranList.reduce(
-    (sum, p) => sum + (p.totalPembayaran - p.donasiTambahan),
-    0
+  // ── Total uang fisik masuk dari pendaftaran & donasi ──────
+  const totalDariPembayaran = pembayaranList.reduce(
+    (sum, p) => sum + p.totalPembayaran, 0
+  );
+  const totalDariDonasi = donasiList.reduce(
+    (sum, d) => sum + d.nominal, 0
   );
 
-  // Donasi = donasi tambahan dari pembayaran + donasi standalone
+  // ── Komponen donasi untuk sub-breakdown ──────────────────
+  const totalDonasiPaket = pembayaranList.reduce((sum, p) => {
+    const alokasi = hitungAlokasi({
+      kategori:     p.peserta.kategori as KategoriLomba,
+      ukuranLengan: p.peserta.ukuranLengan,
+      tipe:         p.peserta.tipe as "INDIVIDU" | "KELUARGA",
+      anggota:      p.peserta.anggota,
+      pembayaran:   {
+        totalPembayaran: p.totalPembayaran,
+        donasiTambahan:  p.donasiTambahan,
+      },
+    });
+    return sum + alokasi.donasiPaket;
+  }, 0);
+
   const totalDonasiTambahan = pembayaranList.reduce(
-    (sum, p) => sum + p.donasiTambahan,
-    0
+    (sum, p) => sum + p.donasiTambahan, 0
   );
   const totalDonasiStandalone = donasiList.reduce(
-    (sum, d) => sum + d.nominal,
-    0
+    (sum, d) => sum + d.nominal, 0
   );
-  const totalDonasi = totalDonasiTambahan + totalDonasiStandalone;
+  const totalDonasi = totalDonasiPaket + totalDonasiTambahan + totalDonasiStandalone;
 
-  const kas     = pemasukanManualList.filter((p) => p.sumber === "KAS")    .reduce((sum, p) => sum + p.nominal, 0);
-  const sponsor = pemasukanManualList.filter((p) => p.sumber === "SPONSOR").reduce((sum, p) => sum + p.nominal, 0);
+  // ── Pendaftaran murni = totalPembayaran - donasi paket - donasi tambahan
+  // = hanya Race Pack + Operasional
+  const totalPendaftaran = totalDariPembayaran - totalDonasiPaket - totalDonasiTambahan;
+
+  // Validasi: totalPendaftaran + totalDonasi harus = totalDariPembayaran + totalDariDonasi
+  // (totalDariPembayaran - donasiPaket - donasiTambahan)
+  // + (donasiPaket + donasiTambahan + donasiStandalone)
+  // = totalDariPembayaran + donasiStandalone
+  // = totalDariPembayaran + totalDariDonasi ✓
+
+  const kas     = pemasukanManualList.filter((p) => p.sumber === "KAS")    .reduce((s, p) => s + p.nominal, 0);
+  const sponsor = pemasukanManualList.filter((p) => p.sumber === "SPONSOR").reduce((s, p) => s + p.nominal, 0);
+
+  const pendaftaranDonasiTotal = totalDariPembayaran + totalDariDonasi;
 
   return {
     pendaftaranDonasi: {
       totalPendaftaran,
       totalDonasi,
-      total: totalPendaftaran + totalDonasi,
+      total: pendaftaranDonasiTotal,
     },
     kas,
     sponsor,
-    grandTotal: totalPendaftaran + totalDonasi + kas + sponsor,
+    grandTotal: pendaftaranDonasiTotal + kas + sponsor,
   };
 }
 
@@ -971,14 +997,23 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
     prisma.peserta.count({ where: { status: "PENDING"  } }),
   ]);
 
-  // ── Hitung pemasukan dari pendaftaran ─────────────────────
-  // totalPendaftaran = totalPembayaran - donasiTambahan (murni biaya daftar)
-  const totalPendaftaran = pembayaranList.reduce(
-    (sum, p) => sum + (p.totalPembayaran - p.donasiTambahan), 0
+  // ── Total uang fisik masuk ────────────────────────────────
+  // totalPembayaran sudah mencakup biaya daftar + donasi paket + donasi tambahan
+  const totalDariPembayaran = pembayaranList.reduce(
+    (sum, p) => sum + p.totalPembayaran, 0
   );
+  const totalDariDonasi = donasiList.reduce(
+    (sum, d) => sum + d.nominal, 0
+  );
+  const kas     = pemasukanManualList.filter((p) => p.sumber === "KAS")    .reduce((s, p) => s + p.nominal, 0);
+  const sponsor = pemasukanManualList.filter((p) => p.sumber === "SPONSOR").reduce((s, p) => s + p.nominal, 0);
 
-  // ── Hitung total donasi (3 komponen) ─────────────────────
-  // 1. Donasi paket — 15K per orang, dihitung via hitungAlokasi agar konsisten
+  const totalPemasukan   = totalDariPembayaran + totalDariDonasi + kas + sponsor;
+  const totalPengeluaran = pengeluaranList.reduce((s, p) => s + p.nominal, 0);
+  const saldoBersih      = totalPemasukan - totalPengeluaran;
+
+  // ── Total Donasi — semua komponen donasi ─────────────────
+  // Donasi paket: 15K per orang via hitungAlokasi
   const totalDonasiPaket = pembayaranList.reduce((sum, p) => {
     const alokasi = hitungAlokasi({
       kategori:     p.peserta.kategori as KategoriLomba,
@@ -993,25 +1028,21 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
     return sum + alokasi.donasiPaket;
   }, 0);
 
-  // 2. Donasi tambahan — nominal ekstra yang diinput peserta saat daftar
+  // Donasi tambahan: nominal ekstra yang diinput peserta saat daftar
   const totalDonasiTambahan = pembayaranList.reduce(
     (sum, p) => sum + p.donasiTambahan, 0
   );
 
-  // 3. Donasi standalone — dari tabel Donasi (bukan dari pendaftaran)
+  // Donasi standalone: dari tabel Donasi (bukan dari pendaftaran)
   const totalDonasiStandalone = donasiList.reduce(
     (sum, d) => sum + d.nominal, 0
   );
 
-  const totalDonasi       = totalDonasiPaket + totalDonasiTambahan + totalDonasiStandalone;
-  const pendaftaranDonasi = totalPendaftaran + totalDonasi;
+  const totalDonasi = totalDonasiPaket + totalDonasiTambahan + totalDonasiStandalone;
 
-  const kas     = pemasukanManualList.filter((p) => p.sumber === "KAS")    .reduce((s, p) => s + p.nominal, 0);
-  const sponsor = pemasukanManualList.filter((p) => p.sumber === "SPONSOR").reduce((s, p) => s + p.nominal, 0);
-
-  const totalPemasukan   = pendaftaranDonasi + kas + sponsor;
-  const totalPengeluaran = pengeluaranList.reduce((s, p) => s + p.nominal, 0);
-  const saldoBersih      = totalPemasukan - totalPengeluaran;
+  // ── Breakdown untuk ChartPemasukan di dashboard ──────────
+  // pendaftaranDonasi = semua uang dari pembayaran + donasi standalone
+  const pendaftaranDonasi = totalDariPembayaran + totalDariDonasi;
 
   // ── Hitung saldo kantong ──────────────────────────────────
   const acc: Record<NamaRekening, AlokasiKantong> = {
