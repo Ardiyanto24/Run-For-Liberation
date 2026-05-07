@@ -692,7 +692,7 @@ export async function kirimUlangEmail(
   if (!session) return { success: false, error: "Unauthorized" };
 
   // Ambil data peserta lengkap dari DB
-  const peserta = await prisma.pendaftaran.findUnique({
+  const peserta = await prisma.peserta.findUnique({
     where: { id: pesertaId },
     include: { anggota: true, pembayaran: true },
   });
@@ -707,13 +707,20 @@ export async function kirimUlangEmail(
 
   try {
     // Generate e-ticket image
+    const tanggalDaftar = peserta.createdAt.toLocaleDateString("id-ID", {
+      day: "numeric", month: "long", year: "numeric",
+    });
+
     const pdfBuffer = await generateEticketPdf({
-      namaLengkap: peserta.namaLengkap,
-      nomorBib: peserta.nomorBib,
-      kategori: peserta.kategori,
-      tipe: peserta.tipe,
+      peserta: {
+        namaLengkap: peserta.namaLengkap,
+        nomorBib:    peserta.nomorBib,
+        kategori:    peserta.kategori,
+        tipe:        peserta.tipe,
+        totalBayar:  peserta.pembayaran?.totalPembayaran,
+        tanggalDaftar,
+      },
       qrToken: peserta.qrToken,
-      anggota: peserta.anggota,
     });
 
     // Kirim email
