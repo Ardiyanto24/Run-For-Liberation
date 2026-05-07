@@ -104,9 +104,9 @@ export default function LaporanClientShell({ initialData }: { initialData: Lapor
 
       {/* ── Ringkasan Pemasukan ── */}
       <RingkasanPemasukan
-        pendaftaran={data.ringkasanPemasukan.pendaftaran}
-        donasi={data.ringkasanPemasukan.donasi}
-        kasSpons={data.ringkasanPemasukan.kasSpons}
+        pendaftaranDonasi={data.ringkasanPemasukan.pendaftaranDonasi}
+        kas={data.ringkasanPemasukan.kas}
+        sponsor={data.ringkasanPemasukan.sponsor}
       />
 
       {/* ── Breakdown ── */}

@@ -1219,9 +1219,9 @@ export interface LaporanKeuanganData {
     totalDonasi:      number;
   };
   ringkasanPemasukan: {
-    pendaftaran: number;
-    donasi:      number;
-    kasSpons:    number;
+    pendaftaranDonasi: number;
+    kas:               number;
+    sponsor:           number;
   };
   breakdown:     BreakdownLaporan;
   pemasukan:     RowPemasukan[];
@@ -1441,9 +1441,9 @@ export async function getLaporanKeuangan(
   return {
     kpi: { totalPemasukan, totalPengeluaran, saldoBersih, totalDonasi },
     ringkasanPemasukan: {
-      pendaftaran: totalDariPembayaran,
-      donasi:      totalDariDonasi,
-      kasSpons:    totalKas + totalSponsor,
+      pendaftaranDonasi: totalDariPembayaran + totalDariDonasi,
+      kas:               totalKas,
+      sponsor:           totalSponsor,
     },
     breakdown,
     pemasukan:   rowsPemasukan,
