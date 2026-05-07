@@ -36,7 +36,7 @@ export default function PanitiaShell({ children }: { children: React.ReactNode }
           <div className="w-9" />
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>
