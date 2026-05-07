@@ -1158,3 +1158,288 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
     },
   };
 }
+
+// ============================================================
+// LAPORAN KEUANGAN
+// ============================================================
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface RowPemasukan {
+  id:        string;
+  no:        number;
+  tanggal:   Date;
+  jenis:     "PENDAFTARAN" | "DONASI_STANDALONE" | "KAS" | "SPONSOR";
+  label:     string;      // nama yang sudah disamarkan / keterangan
+  kategori:  string;      // sub-keterangan (misal: FUN_RUN_GAZA, nama sponsor, dll)
+  rekening:  NamaRekening | null;
+  nominal:   number;
+}
+
+export interface RowPengeluaran {
+  id:        string;
+  no:        number;
+  tanggal:   Date;
+  jenis:     "RACE_PACK" | "OPERASIONAL" | "DONASI";
+  divisi:    string;
+  label:     string;
+  rekening:  NamaRekening;
+  nominal:   number;
+}
+
+export interface DetailDonasi {
+  totalPaket:     number;
+  totalTambahan:  number;
+  totalStandalone: number;
+  total:           number;
+}
+
+export interface BreakdownLaporan {
+  racePack: {
+    pemasukan:   number;
+    pengeluaran: number;
+    selisih:     number;
+  };
+  operasional: {
+    pemasukan:   number;
+    pengeluaran: number;
+    selisih:     number;
+  };
+  donasi: DetailDonasi & {
+    pengeluaran: number;
+    selisih:     number;
+  };
+}
+
+export interface LaporanKeuanganData {
+  kpi: {
+    totalPemasukan:   number;
+    totalPengeluaran: number;
+    saldoBersih:      number;
+    totalDonasi:      number;
+  };
+  breakdown:     BreakdownLaporan;
+  pemasukan:     RowPemasukan[];
+  pengeluaran:   RowPengeluaran[];
+  // rentang tanggal seluruh data (untuk default filter)
+  tanggalMin:    Date | null;
+  tanggalMax:    Date | null;
+}
+
+// ─── Helper label kategori ────────────────────────────────────────────────────
+
+function labelKategori(k: string): string {
+  switch (k) {
+    case "FUN_RUN_GAZA":   return "Fun Run Gaza";
+    case "FUN_RUN_RAFAH":  return "Fun Run Rafah";
+    case "FUN_WALK_GAZA":  return "Fun Walk Gaza";
+    case "FUN_WALK_RAFAH": return "Fun Walk Rafah";
+    default:               return k;
+  }
+}
+
+// ─── Main Action ──────────────────────────────────────────────────────────────
+
+export async function getLaporanKeuangan(
+  filterMulai?: Date,
+  filterSampai?: Date,
+): Promise<LaporanKeuanganData> {
+  await guardBendahara();
+
+  // ── Bangun where clause tanggal ──────────────────────────
+  // Untuk pembayaran & donasi: filter berdasarkan verifikasiAt / updatedAt
+  // Untuk pemasukan manual & pengeluaran: filter berdasarkan tanggal
+
+  const rangeWhere = (filterMulai && filterSampai)
+    ? { gte: filterMulai, lte: filterSampai }
+    : undefined;
+
+  const [
+    pembayaranList,
+    donasiList,
+    pemasukanManualList,
+    pengeluaranList,
+  ] = await Promise.all([
+    prisma.pembayaran.findMany({
+      where: {
+        status: "VERIFIED",
+        ...(rangeWhere ? { verifikasiAt: rangeWhere } : {}),
+      },
+      include: {
+        peserta: { include: { anggota: true } },
+      },
+      orderBy: { verifikasiAt: "asc" },
+    }),
+    prisma.donasi.findMany({
+      where: {
+        status: "VERIFIED",
+        ...(rangeWhere ? { verifikasiAt: rangeWhere } : {}),
+      },
+      orderBy: { verifikasiAt: "asc" },
+    }),
+    prisma.pemasukanManual.findMany({
+      where: rangeWhere ? { tanggal: rangeWhere } : {},
+      orderBy: { tanggal: "asc" },
+    }),
+    prisma.pengeluaran.findMany({
+      where: rangeWhere ? { tanggal: rangeWhere } : {},
+      orderBy: { tanggal: "asc" },
+    }),
+  ]);
+
+  // ── Bangun baris pemasukan ────────────────────────────────
+
+  const rowsPemasukan: RowPemasukan[] = [];
+  let counter = 1;
+
+  // 1. Pendaftaran (disamarkan)
+  for (const p of pembayaranList) {
+    rowsPemasukan.push({
+      id:       p.id,
+      no:       counter++,
+      tanggal:  p.verifikasiAt ?? p.updatedAt,
+      jenis:    "PENDAFTARAN",
+      label:    `Pendaftar #${counter - 1}`,
+      kategori: labelKategori(p.peserta.kategori),
+      rekening: metodeKeRekening(p.metodePembayaran),
+      nominal:  p.totalPembayaran,
+    });
+  }
+
+  // 2. Donasi standalone
+  for (const d of donasiList) {
+    rowsPemasukan.push({
+      id:       d.id,
+      no:       counter++,
+      tanggal:  d.verifikasiAt ?? d.updatedAt,
+      jenis:    "DONASI_STANDALONE",
+      label:    "Donasi Standalone",
+      kategori: d.sembunyikanNama ? "Anonim" : (d.namaDonatur ?? "—"),
+      rekening: metodeKeRekening(d.metodePembayaran),
+      nominal:  d.nominal,
+    });
+  }
+
+  // 3. Kas & Sponsor
+  for (const pm of pemasukanManualList) {
+    rowsPemasukan.push({
+      id:       pm.id,
+      no:       counter++,
+      tanggal:  pm.tanggal,
+      jenis:    pm.sumber === "KAS" ? "KAS" : "SPONSOR",
+      label:    pm.keterangan,
+      kategori: pm.sumber === "KAS" ? "Kas Masuk" : "Sponsor",
+      rekening: pm.rekening as NamaRekening,
+      nominal:  pm.nominal,
+    });
+  }
+
+  // Urutkan by tanggal ascending, re-nomori
+  rowsPemasukan.sort((a, b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime());
+  rowsPemasukan.forEach((r, i) => { r.no = i + 1; });
+
+  // ── Bangun baris pengeluaran ──────────────────────────────
+
+  const rowsPengeluaran: RowPengeluaran[] = pengeluaranList.map((p, i) => ({
+    id:       p.id,
+    no:       i + 1,
+    tanggal:  p.tanggal,
+    jenis:    p.jenis as "RACE_PACK" | "OPERASIONAL" | "DONASI",
+    divisi:   p.divisi,
+    label:    p.namaPengeluaran,
+    rekening: p.rekening as NamaRekening,
+    nominal:  p.nominal,
+  }));
+
+  // ── KPI ──────────────────────────────────────────────────
+
+  const totalDariPembayaran  = pembayaranList.reduce((s, p) => s + p.totalPembayaran, 0);
+  const totalDariDonasi      = donasiList.reduce((s, d) => s + d.nominal, 0);
+  const totalKas             = pemasukanManualList.filter((p) => p.sumber === "KAS").reduce((s, p) => s + p.nominal, 0);
+  const totalSponsor         = pemasukanManualList.filter((p) => p.sumber === "SPONSOR").reduce((s, p) => s + p.nominal, 0);
+  const totalPemasukan       = totalDariPembayaran + totalDariDonasi + totalKas + totalSponsor;
+  const totalPengeluaran     = pengeluaranList.reduce((s, p) => s + p.nominal, 0);
+  const saldoBersih          = totalPemasukan - totalPengeluaran;
+
+  const totalDonasiPaket = pembayaranList.reduce((sum, p) => {
+    const a = hitungAlokasi({
+      kategori:     p.peserta.kategori as KategoriLomba,
+      ukuranLengan: p.peserta.ukuranLengan,
+      tipe:         p.peserta.tipe as "INDIVIDU" | "KELUARGA",
+      anggota:      p.peserta.anggota,
+      pembayaran:   { totalPembayaran: p.totalPembayaran, donasiTambahan: p.donasiTambahan },
+    });
+    return sum + a.donasiPaket;
+  }, 0);
+
+  const totalDonasiTambahan   = pembayaranList.reduce((s, p) => s + p.donasiTambahan, 0);
+  const totalDonasiStandalone = totalDariDonasi;
+  const totalDonasi           = totalDonasiPaket + totalDonasiTambahan + totalDonasiStandalone;
+
+  // ── Breakdown ─────────────────────────────────────────────
+
+  const totalRacePackMasuk = pembayaranList.reduce((sum, p) => {
+    const a = hitungAlokasi({
+      kategori:     p.peserta.kategori as KategoriLomba,
+      ukuranLengan: p.peserta.ukuranLengan,
+      tipe:         p.peserta.tipe as "INDIVIDU" | "KELUARGA",
+      anggota:      p.peserta.anggota,
+      pembayaran:   { totalPembayaran: p.totalPembayaran, donasiTambahan: p.donasiTambahan },
+    });
+    return sum + a.racePack;
+  }, 0);
+
+  const totalOperasionalMasuk = pembayaranList.reduce((sum, p) => {
+    const a = hitungAlokasi({
+      kategori:     p.peserta.kategori as KategoriLomba,
+      ukuranLengan: p.peserta.ukuranLengan,
+      tipe:         p.peserta.tipe as "INDIVIDU" | "KELUARGA",
+      anggota:      p.peserta.anggota,
+      pembayaran:   { totalPembayaran: p.totalPembayaran, donasiTambahan: p.donasiTambahan },
+    });
+    return sum + a.operasional;
+  }, 0) + totalKas + totalSponsor;
+
+  const pengeluaranRacePack   = pengeluaranList.filter((p) => p.jenis === "RACE_PACK").reduce((s, p) => s + p.nominal, 0);
+  const pengeluaranOperasional = pengeluaranList.filter((p) => p.jenis === "OPERASIONAL").reduce((s, p) => s + p.nominal, 0);
+  const pengeluaranDonasi      = pengeluaranList.filter((p) => p.jenis === "DONASI").reduce((s, p) => s + p.nominal, 0);
+
+  const breakdown: BreakdownLaporan = {
+    racePack: {
+      pemasukan:   totalRacePackMasuk,
+      pengeluaran: pengeluaranRacePack,
+      selisih:     totalRacePackMasuk - pengeluaranRacePack,
+    },
+    operasional: {
+      pemasukan:   totalOperasionalMasuk,
+      pengeluaran: pengeluaranOperasional,
+      selisih:     totalOperasionalMasuk - pengeluaranOperasional,
+    },
+    donasi: {
+      totalPaket:      totalDonasiPaket,
+      totalTambahan:   totalDonasiTambahan,
+      totalStandalone: totalDonasiStandalone,
+      total:           totalDonasi,
+      pengeluaran:     pengeluaranDonasi,
+      selisih:         totalDonasi - pengeluaranDonasi,
+    },
+  };
+
+  // ── Rentang tanggal ──────────────────────────────────────
+
+  const semuaTanggal = [
+    ...rowsPemasukan.map((r) => new Date(r.tanggal).getTime()),
+    ...rowsPengeluaran.map((r) => new Date(r.tanggal).getTime()),
+  ];
+  const tanggalMin = semuaTanggal.length ? new Date(Math.min(...semuaTanggal)) : null;
+  const tanggalMax = semuaTanggal.length ? new Date(Math.max(...semuaTanggal)) : null;
+
+  return {
+    kpi: { totalPemasukan, totalPengeluaran, saldoBersih, totalDonasi },
+    breakdown,
+    pemasukan:   rowsPemasukan,
+    pengeluaran: rowsPengeluaran,
+    tanggalMin,
+    tanggalMax,
+  };
+}
