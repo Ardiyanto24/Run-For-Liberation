@@ -1244,11 +1244,10 @@ function labelKategori(k: string): string {
 
 // ─── Main Action ──────────────────────────────────────────────────────────────
 
-export async function getLaporanKeuangan(
+export async function _getLaporanKeuanganInternal(
   filterMulai?: Date,
   filterSampai?: Date,
 ): Promise<LaporanKeuanganData> {
-  await guardBendahara();
 
   // ── Bangun where clause tanggal ──────────────────────────
   // Untuk pembayaran & donasi: filter berdasarkan verifikasiAt / updatedAt
@@ -1451,4 +1450,13 @@ export async function getLaporanKeuangan(
     tanggalMin,
     tanggalMax,
   };
+}
+
+// Publik untuk bendahara — dengan guard
+export async function getLaporanKeuangan(
+  filterMulai?: Date,
+  filterSampai?: Date,
+): Promise<LaporanKeuanganData> {
+  await guardBendahara();
+  return _getLaporanKeuanganInternal(filterMulai, filterSampai);
 }

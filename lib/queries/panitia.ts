@@ -721,3 +721,15 @@ export async function getRacePackStats(): Promise<RacePackStats> {
     listIndividu,
   };
 }
+
+// ─── Laporan Keuangan (read-only untuk panitia) ───────────────────────────────
+
+import { _getLaporanKeuanganInternal } from "@/actions/bendahara";
+export type { LaporanKeuanganData } from "@/actions/bendahara";
+
+export async function getLaporanKeuanganPanitia(
+  filterMulai?: Date,
+  filterSampai?: Date,
+) {
+  return _getLaporanKeuanganInternal(filterMulai, filterSampai);
+}
