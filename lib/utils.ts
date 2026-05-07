@@ -167,3 +167,34 @@ export function hitungHargaPendaftaran(
 
   return hargaSatuan * jumlahPeserta;
 }
+
+// ─── 11. Kalkulasi Harga Keluarga Gaza (per-individu) ─────────
+// Dipakai oleh submitPendaftaran untuk keluarga Gaza,
+// di mana tiap anggota bisa punya ukuranLengan berbeda.
+
+export function hitungHargaKeluarga(
+  kategori: KategoriLomba,
+  ketuaLengan: UkuranLengan | "" | undefined,
+  anggotaLengan: (UkuranLengan | "" | null | undefined)[]
+): number {
+  const isGaza =
+    kategori === "FUN_RUN_GAZA" || kategori === "FUN_WALK_GAZA";
+
+  // Rafah: flat price per orang, tidak ada bedanya
+  if (!isGaza) {
+    return hitungHargaPendaftaran(
+      kategori,
+      1 + anggotaLengan.length,
+      undefined
+    );
+  }
+
+  // Gaza: hitung ketua + tiap anggota secara terpisah
+  const hargaKetua = hitungHargaPendaftaran(kategori, 1, ketuaLengan as UkuranLengan);
+
+  const hargaAnggota = anggotaLengan.reduce((sum, lengan) => {
+    return sum + hitungHargaPendaftaran(kategori, 1, (lengan ?? "") as UkuranLengan);
+  }, 0);
+
+  return hargaKetua + hargaAnggota;
+}

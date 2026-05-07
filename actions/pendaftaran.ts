@@ -5,9 +5,10 @@
 import prisma from "@/lib/prisma";
 import { moveBuktiBayar } from "@/lib/supabase";
 import { pendaftaranSchema } from "@/lib/validation";
-import { hitungHargaPendaftaran } from "@/lib/utils";
+import { hitungHargaPendaftaran, hitungHargaKeluarga } from "@/lib/utils";
 import type { KategoriLomba, UkuranLengan } from "@/types";
 import { sendKonfirmasiPendaftaran } from "@/lib/emails";
+
 
 // ============================================================
 // TYPES
@@ -154,11 +155,22 @@ export async function submitPendaftaran(
   let biayaPendaftaran: number;
 
   try {
-    biayaPendaftaran = hitungHargaPendaftaran(
-      data.kategori as KategoriLomba,
-      jumlahPeserta,
-      isGaza ? (data.ukuranLengan as UkuranLengan) : undefined
-    );
+    if (data.tipe === "KELUARGA") {
+      // Hitung per-individu agar ukuranLengan tiap anggota diperhitungkan
+      biayaPendaftaran = hitungHargaKeluarga(
+        data.kategori as KategoriLomba,
+        isGaza ? (data.ukuranLengan as UkuranLengan) : undefined,
+        isGaza
+          ? (data.anggota ?? []).map((a) => a.ukuranLengan as UkuranLengan)
+          : []
+      );
+    } else {
+      biayaPendaftaran = hitungHargaPendaftaran(
+        data.kategori as KategoriLomba,
+        jumlahPeserta,
+        isGaza ? (data.ukuranLengan as UkuranLengan) : undefined
+      );
+    }
   } catch (err) {
     console.error("[submitPendaftaran] Gagal hitung harga:", {
       email:        data.email,
