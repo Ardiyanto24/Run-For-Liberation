@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from "react";
 import { getPaymentProofSignedUrl } from "@/actions/get-signed-url";
+import { kirimUlangEmail } from "@/actions/admin";
 
 // ── Types lokal (sesuaikan dengan types/index.ts jika berbeda) ──
 interface Anggota {
@@ -62,7 +63,6 @@ function formatTanggal(date: Date) {
 }
 
 function isImageUrl(url: string) {
-  // Pakai pathname saja, abaikan query string (?token=... dari signed URL)
   const pathname = url.split("?")[0];
   return /\.(jpg|jpeg|png|webp|gif)$/i.test(pathname);
 }
@@ -218,8 +218,12 @@ export default function ModalDetailPeserta({
   const [aksiMode, setAksiMode] = useState<AksiMode>("idle");
   const [catatanTolak, setCatatanTolak] = useState("");
   const [errorCatatan, setErrorCatatan] = useState<string | null>(null);
-  const [signedUrl, setSignedUrl]     = useState<string | null>(null);
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loadingBukti, setLoadingBukti] = useState(false);
+
+  // State kirim ulang email
+  const [kirimUlangLoading, setKirimUlangLoading] = useState(false);
+  const [kirimUlangStatus, setKirimUlangStatus] = useState<"idle" | "success" | "error">("idle");
 
   useEffect(() => {
     if (!peserta) {
@@ -285,6 +289,15 @@ export default function ModalDetailPeserta({
     setCatatanTolak("");
   };
 
+  const handleKirimUlangEmail = async () => {
+    setKirimUlangLoading(true);
+    setKirimUlangStatus("idle");
+    const result = await kirimUlangEmail(peserta.id);
+    setKirimUlangLoading(false);
+    setKirimUlangStatus(result.success ? "success" : "error");
+    setTimeout(() => setKirimUlangStatus("idle"), 4000);
+  };
+
   return (
     <>
       {/* ── OVERLAY ── */}
@@ -314,7 +327,6 @@ export default function ModalDetailPeserta({
                     {peserta.email}
                   </span>
                   <span className="text-[#6B7A99]">·</span>
-                  {/* Badge kategori — update label */}
                   <span
                     className={`text-xs font-semibold px-2 py-0.5 rounded-md ${kategoriBadgeClass(peserta.kategori)}`}
                     style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
@@ -395,17 +407,10 @@ export default function ModalDetailPeserta({
                 />
                 <DataRow label="Jumlah Peserta" value={`${totalAnggota} orang`} />
 
-                {/* Jersey — hanya jika paket Gaza */}
                 {isGaza && (
                   <>
-                    <DataRow
-                      label="Tipe Lengan"
-                      value={labelLengan(peserta.ukuranLengan)}
-                    />
-                    <DataRow
-                      label="Ukuran Jersey"
-                      value={peserta.ukuranJersey ?? "—"}
-                    />
+                    <DataRow label="Tipe Lengan" value={labelLengan(peserta.ukuranLengan)} />
+                    <DataRow label="Ukuran Jersey" value={peserta.ukuranJersey ?? "—"} />
                   </>
                 )}
 
@@ -453,7 +458,6 @@ export default function ModalDetailPeserta({
                         </p>
                         <p className="text-xs text-[#6B7A99]" style={{ fontFamily: "'Barlow', sans-serif" }}>
                           {a.jenisKelamin === "LAKI_LAKI" ? "Laki-laki" : "Perempuan"}
-                          {/* Info jersey anggota — hanya jika Gaza */}
                           {isGaza && a.ukuranJersey && (
                             <span className="ml-2 text-[#1A54C8] font-medium">
                               · {labelLengan(a.ukuranLengan)} · {a.ukuranJersey}
@@ -562,7 +566,57 @@ export default function ModalDetailPeserta({
                 {aksiMode !== "idle" ? "Batal" : "Tutup"}
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+
+                {/* ── Tombol Kirim Ulang Email — hanya untuk VERIFIED ── */}
+                {peserta.status === "VERIFIED" && aksiMode === "idle" && (
+                  <button
+                    onClick={handleKirimUlangEmail}
+                    disabled={kirimUlangLoading}
+                    className={[
+                      "flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm font-semibold transition-colors",
+                      kirimUlangStatus === "success"
+                        ? "bg-[rgba(0,122,61,0.08)] text-[#007A3D] border-[rgba(0,122,61,0.3)]"
+                        : kirimUlangStatus === "error"
+                        ? "bg-[rgba(206,17,38,0.08)] text-[#CE1126] border-[rgba(206,17,38,0.3)]"
+                        : "bg-[#F0F4FF] text-[#1A54C8] border-[rgba(26,84,200,0.25)] hover:bg-[#E0E8FF]",
+                      kirimUlangLoading ? "opacity-60 cursor-not-allowed" : "",
+                    ].join(" ")}
+                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                  >
+                    {kirimUlangLoading ? (
+                      <>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                        </svg>
+                        Mengirim...
+                      </>
+                    ) : kirimUlangStatus === "success" ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Email Terkirim!
+                      </>
+                    ) : kirimUlangStatus === "error" ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Gagal, Coba Lagi
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Kirim Ulang Email
+                      </>
+                    )}
+                  </button>
+                )}
+
                 {peserta.status === "PENDING" && aksiMode === "idle" && (
                   <button
                     onClick={() => setAksiMode("inputTolak")}

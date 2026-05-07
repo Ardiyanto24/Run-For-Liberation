@@ -678,3 +678,62 @@ export async function getDetailDonasi(donasiId: string): Promise<
     return { success: false, error: "Gagal mengambil data donasi." };
   }
 }
+
+
+// ============================================================
+// KIRIM ULANG EMAIL VERIFIKASI
+// ============================================================
+
+export async function kirimUlangEmail(
+  pesertaId: string
+): Promise<{ success: boolean; error?: string }> {
+  // Pastikan hanya admin yang bisa akses
+  const session = await getAdminSession();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  // Ambil data peserta lengkap dari DB
+  const peserta = await prisma.pendaftaran.findUnique({
+    where: { id: pesertaId },
+    include: { anggota: true, pembayaran: true },
+  });
+
+  if (!peserta) return { success: false, error: "Peserta tidak ditemukan" };
+  if (peserta.status !== "VERIFIED") {
+    return { success: false, error: "Hanya peserta VERIFIED yang bisa dikirim ulang email-nya" };
+  }
+  if (!peserta.nomorBib || !peserta.qrToken) {
+    return { success: false, error: "Data BIB atau QR Token belum tersedia" };
+  }
+
+  try {
+    // Generate e-ticket image
+    const pdfBuffer = await generateEticketPdf({
+      namaLengkap: peserta.namaLengkap,
+      nomorBib: peserta.nomorBib,
+      kategori: peserta.kategori,
+      tipe: peserta.tipe,
+      qrToken: peserta.qrToken,
+      anggota: peserta.anggota,
+    });
+
+    // Kirim email
+    const result = await sendNotifikasiVerifikasi({
+      peserta: {
+        namaLengkap: peserta.namaLengkap,
+        email: peserta.email,
+        nomorBib: peserta.nomorBib,
+        kategori: peserta.kategori,
+        tipe: peserta.tipe,
+        anggota: peserta.anggota.map((a) => ({ namaLengkap: a.namaLengkap })),
+      },
+      qrToken: peserta.qrToken,
+      pdfBuffer: pdfBuffer ?? undefined,
+    });
+
+    return result;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("[kirimUlangEmail] Error:", message);
+    return { success: false, error: message };
+  }
+}
