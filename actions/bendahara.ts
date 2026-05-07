@@ -1218,10 +1218,14 @@ export interface LaporanKeuanganData {
     saldoBersih:      number;
     totalDonasi:      number;
   };
+  ringkasanPemasukan: {
+    pendaftaran: number;
+    donasi:      number;
+    kasSpons:    number;
+  };
   breakdown:     BreakdownLaporan;
   pemasukan:     RowPemasukan[];
   pengeluaran:   RowPengeluaran[];
-  // rentang tanggal seluruh data (untuk default filter)
   tanggalMin:    Date | null;
   tanggalMax:    Date | null;
 }
@@ -1436,6 +1440,11 @@ export async function getLaporanKeuangan(
 
   return {
     kpi: { totalPemasukan, totalPengeluaran, saldoBersih, totalDonasi },
+    ringkasanPemasukan: {
+      pendaftaran: totalDariPembayaran,
+      donasi:      totalDariDonasi,
+      kasSpons:    totalKas + totalSponsor,
+    },
     breakdown,
     pemasukan:   rowsPemasukan,
     pengeluaran: rowsPengeluaran,

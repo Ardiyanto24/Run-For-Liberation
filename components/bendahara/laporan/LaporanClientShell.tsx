@@ -10,6 +10,7 @@ import BreakdownSection from "./BreakdownSection";
 import FilterTanggal from "./FilterTanggal";
 import TabelPemasukan from "./TabelPemasukan";
 import TabelPengeluaran from "./TabelPengeluaran";
+import RingkasanPemasukan from "./RingkasanPemasukan";
 
 function formatRp(n: number) { return "Rp " + n.toLocaleString("id-ID"); }
 
@@ -99,6 +100,13 @@ export default function LaporanClientShell({ initialData }: { initialData: Lapor
         totalPengeluaran={data.kpi.totalPengeluaran}
         saldoBersih={data.kpi.saldoBersih}
         totalDonasi={data.kpi.totalDonasi}
+      />
+
+      {/* ── Ringkasan Pemasukan ── */}
+      <RingkasanPemasukan
+        pendaftaran={data.ringkasanPemasukan.pendaftaran}
+        donasi={data.ringkasanPemasukan.donasi}
+        kasSpons={data.ringkasanPemasukan.kasSpons}
       />
 
       {/* ── Breakdown ── */}
