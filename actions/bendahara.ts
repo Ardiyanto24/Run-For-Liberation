@@ -96,14 +96,14 @@ function hitungAlokasi(peserta: {
   if (peserta.tipe === "INDIVIDU") {
     let racePack: number;
     if (isGaza) {
-      racePack = peserta.ukuranLengan === "PANJANG" ? 105_000 : 95_000;
+      racePack = peserta.ukuranLengan === "PANJANG" ? 100_000 : 90_000;
     } else {
       racePack = 15_000; // Rafah
     }
     return {
       totalUang,
       racePack,
-      operasional: 5_000,
+      operasional: 10_000,
       donasiPaket: 15_000,
       donasiTambahan,
     };
