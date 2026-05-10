@@ -251,7 +251,17 @@ export function usePendaftaranForm() {
       fd.append("noKontak",         formData.peserta.noKontak);
       fd.append("donasiTambahan",   String(formData.donasiTambahan));
       fd.append("metodePembayaran", formData.metodePembayaran ?? "");
-      fd.append("anggota",          JSON.stringify(formData.anggota));
+      const isGaza =
+        formData.kategori === "FUN_RUN_GAZA" ||
+        formData.kategori === "FUN_WALK_GAZA";
+
+      const anggotaBersih = formData.anggota.map((a) => {
+        if (isGaza) return a;
+        const { ukuranJersey, ukuranLengan, ...rest } = a;
+        return rest;
+      });
+
+      fd.append("anggota", JSON.stringify(anggotaBersih));
 
       // ── Stage 1: Upload file ke Supabase ──────────────────
       let buktiBayarPath: string;
