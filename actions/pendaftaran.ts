@@ -162,7 +162,7 @@ export async function submitPendaftaran(
         isGaza ? (data.ukuranLengan as UkuranLengan) : undefined,
         isGaza
           ? (data.anggota ?? []).map((a) => a.ukuranLengan as UkuranLengan)
-          : []
+          : (data.anggota ?? []).map(() => undefined)
       );
     } else {
       biayaPendaftaran = hitungHargaPendaftaran(
