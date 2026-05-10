@@ -103,7 +103,7 @@ function hitungAlokasi(peserta: {
     return {
       totalUang,
       racePack,
-      operasional: 10_000,
+      operasional: isGaza ? 10_000 : 5_000,
       donasiPaket: 15_000,
       donasiTambahan,
     };
@@ -120,7 +120,7 @@ function hitungAlokasi(peserta: {
   let totalRacePack = 0;
   if (isGaza) {
     for (const a of semuaAnggota) {
-      totalRacePack += a.ukuranLengan === "PANJANG" ? 105_000 : 95_000;
+      totalRacePack += a.ukuranLengan === "PANJANG" ? 100_000 : 90_000;
     }
   } else {
     totalRacePack = 15_000 * jumlah;
@@ -129,7 +129,7 @@ function hitungAlokasi(peserta: {
   return {
     totalUang,
     racePack: totalRacePack,
-    operasional: 5_000 * jumlah,
+    operasional: isGaza ? 10_000 * jumlah : 5_000 * jumlah,
     donasiPaket: 15_000 * jumlah,
     donasiTambahan,
   };
