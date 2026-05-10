@@ -329,6 +329,7 @@ export async function getSaldoKantong(): Promise<{
   for (const pm of pemasukanManualList) {
     const rek = pm.rekening as NamaRekening;
     acc[rek].totalUang += pm.nominal;
+    acc[rek].operasional += pm.nominal;
   }
 
   // ── 4. Pengeluaran — kurangi komponen yang sesuai ────────
@@ -1076,7 +1077,9 @@ export async function getBendaharaDashboard(): Promise<DashboardData> {
     acc[rek].donasiStandalone += d.nominal; // pisah dari donasiPaket
   }
   for (const pm of pemasukanManualList) {
-    acc[pm.rekening as NamaRekening].totalUang += pm.nominal;
+    const rek = pm.rekening as NamaRekening;
+    acc[rek].totalUang   += pm.nominal;
+    acc[rek].operasional += pm.nominal;
   }
   for (const pk of pengeluaranList) {
     const rek = pk.rekening as NamaRekening;
