@@ -10,7 +10,7 @@ export type TimelineMilestone = {
 const timelineData: TimelineMilestone[] = [
   { tanggal: "28 Apr - 15 Mei", label: "Pendaftaran", status: "now" },
   { tanggal: "7 - 22 Mei", label: "Virtual Run", status: "upcoming" },
-  { tanggal: "8 Mei", label: "Refleksi Kepalestinaan", status: "upcoming" },
+  { tanggal: "15 Mei", label: "Refleksi Kepalestinaan", status: "upcoming" },
   { tanggal: "23 Mei", label: "Pengambilan Race Pack", status: "upcoming" },
   { tanggal: "24 Mei", label: "Race Day", status: "race-day" },
 ];
