@@ -63,6 +63,12 @@ export async function GET() {
   }
 
   // ── 5. Generate e-ticket PNG ──
+  console.log("DEBUG pembayaran:", {
+    hasPembayaran: !!peserta.pembayaran,
+    metodePembayaran: peserta.pembayaran?.metodePembayaran,
+    totalPembayaran: peserta.pembayaran?.totalPembayaran,
+  });
+
   const pngBuffer = await generateEticketImage({
     peserta: {
       namaLengkap: peserta.namaLengkap,
