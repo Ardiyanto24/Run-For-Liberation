@@ -261,7 +261,7 @@ export default function FaqPage() {
 
             {/* Admin Akhwat */}
             <a
-              href="https://wa.me/8898102926234" 
+              href="https://wa.me/62898102926234" 
               target="_blank"
               rel="noopener noreferrer"
               style={{
