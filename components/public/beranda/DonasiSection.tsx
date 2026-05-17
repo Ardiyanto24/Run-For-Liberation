@@ -16,6 +16,7 @@ function formatRupiah(angka: number): string {
 interface DonasiSectionProps {
   totalTerkumpul: number;
   jumlahDonatur: number;
+  jumlahDonaturUmum: number;
   jumlahPeserta: number;
   targetDonasi: number;
   persentase: number;
@@ -24,6 +25,7 @@ interface DonasiSectionProps {
 export default function DonasiSection({
   totalTerkumpul,
   jumlahDonatur,
+  jumlahDonaturUmum,
   jumlahPeserta,
   targetDonasi,
   persentase,
@@ -311,7 +313,7 @@ export default function DonasiSection({
             </div>
             <div className="don-stat">
               <span className="don-stat-num" style={{ color: "#fff" }}>
-                {Math.max(0, jumlahDonatur - jumlahPeserta).toLocaleString("id-ID")}
+                {jumlahDonaturUmum.toLocaleString("id-ID")}
               </span>
               <span className="don-stat-label">Donatur Umum</span>
             </div>

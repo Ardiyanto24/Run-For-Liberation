@@ -4,13 +4,20 @@ import { getStatistikDonasi } from "@/lib/queries/donasi";
 import DonasiSection from "./DonasiSection";
 
 export default async function DonasiSectionWrapper() {
-  const { totalTerkumpul, jumlahDonatur, jumlahPeserta, targetDonasi, persentase } =
-    await getStatistikDonasi();
+  const {
+    totalTerkumpul,
+    jumlahDonatur,
+    jumlahDonaturUmum,
+    jumlahPeserta,
+    targetDonasi,
+    persentase,
+  } = await getStatistikDonasi();
 
   return (
     <DonasiSection
       totalTerkumpul={totalTerkumpul}
       jumlahDonatur={jumlahDonatur}
+      jumlahDonaturUmum={jumlahDonaturUmum}
       jumlahPeserta={jumlahPeserta}
       targetDonasi={targetDonasi}
       persentase={persentase}
