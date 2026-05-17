@@ -15,6 +15,7 @@ interface KategoriItem {
   slotClass: string;
   benefits: string[];
   popular?: boolean;
+  isClosed?: boolean; // ← tambahan
 }
 
 const kategoriList: KategoriItem[] = [
@@ -24,10 +25,11 @@ const kategoriList: KategoriItem[] = [
     tagline: "Lari 5K dengan semangat solidaritas untuk Gaza",
     harga: "Rp 125.000",
     gambar: "/images/kategori/funrun.png",
-    slotLabel: "🔥 Slot Terbatas",
-    slotClass: "slot-low",
+    slotLabel: "🔒 Pendaftaran Ditutup",
+    slotClass: "slot-closed",
     benefits: ["Race Pack Lengkap", "Refreshment", "Kontribusi Palestina"],
-    popular: true,
+    popular: false,
+    isClosed: true,
   },
   {
     id: "fun-run-rafah",
@@ -45,9 +47,10 @@ const kategoriList: KategoriItem[] = [
     tagline: "Jalan santai keluarga untuk Gaza",
     harga: "Rp 125.000",
     gambar: "/images/kategori/funwalk.png",
-    slotLabel: "🔥 Slot Terbatas",
-    slotClass: "slot-low",
+    slotLabel: "🔒 Pendaftaran Ditutup",
+    slotClass: "slot-closed",
     benefits: ["Race Pack Lengkap", "Refreshment", "Kontribusi Palestina"],
+    isClosed: true,
   },
   {
     id: "fun-walk-rafah",
@@ -67,7 +70,6 @@ export default function KategoriSection() {
   useEffect(() => {
     const cards = gridRef.current?.querySelectorAll<HTMLElement>(".cat-card");
     if (!cards) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -76,14 +78,12 @@ export default function KategoriSection() {
             const delay = el.dataset.delay ?? "0";
             setTimeout(() => el.classList.add("in-view"), Number(delay));
           } else {
-            // Reset saat keluar viewport → animasi bisa diputar ulang
             el.classList.remove("in-view");
           }
         });
       },
       { threshold: 0.15 }
     );
-
     cards.forEach((card) => observer.observe(card));
     return () => observer.disconnect();
   }, []);
@@ -99,16 +99,13 @@ export default function KategoriSection() {
           from { opacity: 0; transform: translateY(24px); }
           to { opacity: 1; transform: translateY(0); }
         }
-
-        .kat-sec {
-          background: #F0F4FF;
-          padding: 80px 24px;
+        @keyframes closedShimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
         }
 
-        .kat-inner {
-          max-width: 1280px;
-          margin: 0 auto;
-        }
+        .kat-sec { background: #F0F4FF; padding: 80px 24px; }
+        .kat-inner { max-width: 1280px; margin: 0 auto; }
 
         .sec-label {
           display: inline-block;
@@ -121,10 +118,7 @@ export default function KategoriSection() {
           border-radius: 20px;
           margin-bottom: 12px;
         }
-        .sec-label.blue {
-          background: rgba(26,84,200,0.1);
-          color: #1A54C8;
-        }
+        .sec-label.blue { background: rgba(26,84,200,0.1); color: #1A54C8; }
 
         .sec-title {
           font-family: 'Bebas Neue', sans-serif;
@@ -158,7 +152,7 @@ export default function KategoriSection() {
           text-decoration: none;
           display: flex;
           flex-direction: column;
-          /* state awal sebelum masuk viewport */
+          position: relative;
           opacity: 0;
           translate: 0 28px;
           transition:
@@ -169,20 +163,22 @@ export default function KategoriSection() {
             border-color 0.3s ease;
         }
 
-        .cat-card.in-view {
-          opacity: 1;
-          translate: 0 0;
-        }
+        .cat-card.in-view { opacity: 1; translate: 0 0; }
 
-        .cat-card:hover {
+        /* Card normal — hover aktif */
+        .cat-card:not(.cat-card--closed):hover {
           border-color: #1A54C8;
           transform: translateY(-8px);
           box-shadow: 0 16px 56px rgba(26,84,200,0.16);
         }
 
-        .cat-card.popular {
-          border-color: #1A54C8;
+        /* Card ditutup — visual redup, tidak bisa hover naik */
+        .cat-card--closed {
+          border-color: rgba(0,0,0,0.08);
+          filter: grayscale(35%);
         }
+
+        .cat-card.popular { border-color: #1A54C8; }
 
         .cat-banner {
           height: 170px;
@@ -200,8 +196,39 @@ export default function KategoriSection() {
           display: block;
         }
 
-        .cat-card:hover .banner-img {
-          transform: scale(1.08);
+        .cat-card:not(.cat-card--closed):hover .banner-img { transform: scale(1.08); }
+
+        /* Overlay "Ditutup" di atas banner */
+        .closed-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.52);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          z-index: 3;
+        }
+
+        .closed-overlay-icon {
+          font-size: 28px;
+          line-height: 1;
+        }
+
+        .closed-overlay-text {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 20px;
+          letter-spacing: 2px;
+          color: #fff;
+          text-transform: uppercase;
+        }
+
+        .closed-overlay-sub {
+          font-size: 11px;
+          color: rgba(255,255,255,0.7);
+          font-weight: 600;
+          letter-spacing: 0.5px;
         }
 
         .popular-badge {
@@ -237,6 +264,8 @@ export default function KategoriSection() {
           margin-bottom: 4px;
         }
 
+        .cat-card--closed .cat-name { color: #9AA3B2; }
+
         .cat-price {
           font-family: 'Bebas Neue', sans-serif;
           font-size: 28px;
@@ -245,6 +274,12 @@ export default function KategoriSection() {
           display: block;
           margin-bottom: 8px;
           line-height: 1;
+        }
+
+        .cat-card--closed .cat-price {
+          color: #9AA3B2;
+          text-decoration: line-through;
+          text-decoration-color: rgba(0,0,0,0.25);
         }
 
         .cat-slot {
@@ -259,8 +294,9 @@ export default function KategoriSection() {
           width: fit-content;
         }
         .slot-unlimited { background: rgba(0,122,61,0.09); color: #007A3D; }
-        .slot-low { background: rgba(206,17,38,0.08); color: #CE1126; }
-        .slot-mid { background: rgba(26,84,200,0.08); color: #1A54C8; }
+        .slot-low       { background: rgba(206,17,38,0.08); color: #CE1126; }
+        .slot-mid       { background: rgba(26,84,200,0.08); color: #1A54C8; }
+        .slot-closed    { background: rgba(0,0,0,0.06);     color: #6B7A99; }
 
         .cat-bens {
           list-style: none;
@@ -283,6 +319,9 @@ export default function KategoriSection() {
           font-size: 12px;
           flex-shrink: 0;
         }
+
+        .cat-card--closed .cat-bens li { color: #B0B8C6; }
+        .cat-card--closed .cat-bens li::before { color: #B0B8C6; }
 
         .cat-cta-wrap {
           text-align: center;
@@ -326,10 +365,7 @@ export default function KategoriSection() {
         }
         .btn-link:hover { gap: 8px; }
 
-        @media (max-width: 900px) {
-          .cat-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
+        @media (max-width: 900px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 580px) {
           .cat-grid { grid-template-columns: 1fr; }
           .kat-sec { padding: 60px 20px; }
@@ -348,7 +384,7 @@ export default function KategoriSection() {
             {kategoriList.map((kat, i) => (
               <div
                 key={kat.id}
-                className={`cat-card${kat.popular ? " popular" : ""}`}
+                className={`cat-card${kat.popular ? " popular" : ""}${kat.isClosed ? " cat-card--closed" : ""}`}
                 data-delay={i * 250}
               >
                 <div className="cat-banner">
@@ -357,7 +393,17 @@ export default function KategoriSection() {
                     alt={`Banner ${kat.nama}`}
                     className="banner-img"
                   />
-                  {kat.popular && (
+
+                  {/* Overlay ditutup */}
+                  {kat.isClosed && (
+                    <div className="closed-overlay">
+                      <span className="closed-overlay-icon">🔒</span>
+                      <span className="closed-overlay-text">Ditutup</span>
+                      <span className="closed-overlay-sub">Slot Sudah Terisi</span>
+                    </div>
+                  )}
+
+                  {kat.popular && !kat.isClosed && (
                     <div className="popular-badge">⚡ Populer</div>
                   )}
                 </div>

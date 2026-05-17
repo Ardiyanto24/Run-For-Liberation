@@ -5,18 +5,16 @@
 import { KategoriLomba, UkuranLengan } from "@/types";
 import FieldError from "./FieldError";
 
-// ============================================================
-// DATA CARD
-// ============================================================
 interface KategoriCard {
   value: KategoriLomba;
   icon: string;
   label: string;
   paket: string;
-  harga: string;           // untuk Rafah: satu harga langsung
-  hargaPendek?: string;    // untuk Gaza: harga lengan pendek
-  hargaPanjang?: string;   // untuk Gaza: harga lengan panjang
+  harga: string;
+  hargaPendek?: string;
+  hargaPanjang?: string;
   isGaza: boolean;
+  isClosed: boolean; // ← tambahan
   racepack: string[];
   accentColor: string;
 }
@@ -33,6 +31,7 @@ const KATEGORI_CARDS: KategoriCard[] = [
     hargaPendek: "Rp 115.000",
     hargaPanjang: "Rp 125.000",
     isGaza: true,
+    isClosed: true, // ← ditutup
     racepack: [...RACEPACK_DASAR, "Jersey (pilih tipe lengan)"],
     accentColor: "#1A54C8",
   },
@@ -43,6 +42,7 @@ const KATEGORI_CARDS: KategoriCard[] = [
     paket: "Paket Rafah",
     harga: "Rp 35.000",
     isGaza: false,
+    isClosed: false,
     racepack: RACEPACK_DASAR,
     accentColor: "#0E3A8C",
   },
@@ -55,6 +55,7 @@ const KATEGORI_CARDS: KategoriCard[] = [
     hargaPendek: "Rp 115.000",
     hargaPanjang: "Rp 125.000",
     isGaza: true,
+    isClosed: true, // ← ditutup
     racepack: [...RACEPACK_DASAR, "Jersey (pilih tipe lengan)"],
     accentColor: "#007A3D",
   },
@@ -65,14 +66,15 @@ const KATEGORI_CARDS: KategoriCard[] = [
     paket: "Paket Rafah",
     harga: "Rp 35.000",
     isGaza: false,
+    isClosed: false,
     racepack: RACEPACK_DASAR,
     accentColor: "#CE1126",
   },
 ];
 
-// ============================================================
-// PROPS
-// ============================================================
+// Hanya tampilkan yang tidak ditutup
+const ACTIVE_CARDS = KATEGORI_CARDS.filter((c) => !c.isClosed);
+
 interface Step2KategoriProps {
   value: KategoriLomba | null;
   ukuranLengan: UkuranLengan | "";
@@ -82,9 +84,6 @@ interface Step2KategoriProps {
   errorLengan?: string;
 }
 
-// ============================================================
-// KOMPONEN
-// ============================================================
 export default function Step2Kategori({
   value,
   ukuranLengan,
@@ -93,7 +92,7 @@ export default function Step2Kategori({
   error,
   errorLengan,
 }: Step2KategoriProps) {
-  const selectedCard = KATEGORI_CARDS.find((c) => c.value === value);
+  const selectedCard = ACTIVE_CARDS.find((c) => c.value === value);
   const showPilihLengan = selectedCard?.isGaza === true;
 
   return (
@@ -102,12 +101,11 @@ export default function Step2Kategori({
         Pilih Kategori
       </h2>
       <p className="text-sm text-[#6B7A99] mb-7 leading-relaxed">
-        Pilih kategori yang sesuai. Paket Gaza mendapatkan jersey, Paket Rafah tanpa jersey.
+        Saat ini hanya <strong className="text-[#0A1628]">Paket Rafah</strong> yang tersedia. Paket Gaza telah ditutup.
       </p>
 
-      {/* Grid Card */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
-        {KATEGORI_CARDS.map((card) => {
+        {ACTIVE_CARDS.map((card) => {
           const isSelected = value === card.value;
           return (
             <button
@@ -121,7 +119,6 @@ export default function Step2Kategori({
                   : "border-[rgba(26,84,200,0.13)] bg-[#F5F8FF] hover:border-[#4A7CE8] hover:shadow-[0_2px_12px_rgba(26,84,200,0.08)]",
               ].join(" ")}
             >
-              {/* Centang */}
               {isSelected && (
                 <span className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#1A54C8] flex items-center justify-center">
                   <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -130,7 +127,6 @@ export default function Step2Kategori({
                 </span>
               )}
 
-              {/* Header */}
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-3xl leading-none">{card.icon}</span>
                 <div>
@@ -143,7 +139,6 @@ export default function Step2Kategori({
                 </div>
               </div>
 
-              {/* Harga */}
               {card.isGaza ? (
                 <div className="mb-3">
                   <div className="flex gap-3 items-end">
@@ -171,7 +166,6 @@ export default function Step2Kategori({
                 </div>
               )}
 
-              {/* Racepack */}
               <div className="text-[10px] font-bold text-[#6B7A99] uppercase tracking-wider mb-1.5">
                 Racepack
               </div>
@@ -190,7 +184,6 @@ export default function Step2Kategori({
 
       <FieldError message={error} />
 
-      {/* Pilih Tipe Lengan — muncul hanya jika kategori Gaza dipilih */}
       {showPilihLengan && (
         <div className="mt-5 p-4 rounded-xl border-2 border-[#1A54C8]/20 bg-[#F5F8FF]">
           <h3 className="text-sm font-bold text-[#0A1628] mb-1">
