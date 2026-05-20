@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { inputTransferAntar } from "@/actions/bendahara";
+import { inputTransferAntar, deleteTransferAntar } from "@/actions/bendahara";
 import type { NamaRekening, TransferAntarRecord } from "@/actions/bendahara";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -83,6 +83,8 @@ export default function FormTransferAntar({ history, onSuccess }: FormTransferAn
   const [isPending, startTransition] = useTransition();
   const [error, setError]     = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [deletingId, setDeletingId]       = useState<string | null>(null);
+  const [deleteError, setDeleteError]     = useState<string | null>(null);
 
   // Form state
   const [dari, setDari]     = useState<NamaRekening | "">("");
@@ -147,6 +149,21 @@ export default function FormTransferAntar({ history, onSuccess }: FormTransferAn
   ].join(" ");
 
   const labelClass = "block text-xs font-semibold text-[#0A1628] mb-1.5 uppercase tracking-wide";
+
+  const handleDelete = (id: string) => {
+    if (!window.confirm("Hapus riwayat transfer ini?")) return;
+    setDeletingId(id);
+    setDeleteError(null);
+    startTransition(async () => {
+      const result = await deleteTransferAntar(id);
+      setDeletingId(null);
+      if (!result.success) {
+        setDeleteError(result.error ?? "Gagal menghapus.");
+        return;
+      }
+      onSuccess();
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -368,6 +385,23 @@ export default function FormTransferAntar({ history, onSuccess }: FormTransferAn
                     style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                     {t.ke}
                   </span>
+                  <button
+                    onClick={() => handleDelete(t.id)}
+                    disabled={deletingId === t.id}
+                    className="flex-shrink-0 p-1 rounded-lg text-[#6B7A99] hover:text-[#CE1126] hover:bg-[rgba(206,17,38,0.07)] transition-colors disabled:opacity-40"
+                    title="Hapus transfer ini"
+                  >
+                    {deletingId === t.id ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    )}
+                  </button>
                   {t.catatan && (
                     <span className="text-xs text-[#6B7A99] truncate flex-1" style={{ fontFamily: "'Barlow', sans-serif" }}>
                       {t.catatan}
@@ -381,6 +415,11 @@ export default function FormTransferAntar({ history, onSuccess }: FormTransferAn
                     style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                     {formatRupiah(t.nominal)}
                   </span>
+                  {deleteError && deletingId === null && (
+                    <p className="text-[10px] text-[#CE1126] mt-1" style={{ fontFamily: "'Barlow', sans-serif" }}>
+                      {deleteError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Breakdown komponen — hanya tampil jika ada yang > 0 */}

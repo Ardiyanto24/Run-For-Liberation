@@ -456,6 +456,26 @@ export async function inputTransferAntar(formData: FormData): Promise<{
   }
 }
 
+// ─── deleteTransferAntar ──────────────────────────────────────────────────────
+
+export async function deleteTransferAntar(id: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  await guardBendahara();
+
+  if (!id) return { success: false, error: "ID tidak valid." };
+
+  try {
+    await (prisma.transferAntar as any).delete({ where: { id } });
+    return { success: true };
+  } catch (err) {
+    console.error("[deleteTransferAntar] Error:", err);
+    return { success: false, error: "Gagal menghapus data. Silakan coba lagi." };
+  }
+}
+
+
 // ============================================================
 // PEMASUKAN
 // ============================================================
