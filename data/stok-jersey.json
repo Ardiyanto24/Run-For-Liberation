@@ -4,10 +4,10 @@
   "stok": [
     { "ukuran": "SS",   "lengan": "PENDEK", "stok_total": 1, "stok_dipesan": 0 },
     { "ukuran": "S",    "lengan": "PENDEK", "stok_total": 3, "stok_dipesan": 0 },
-    { "ukuran": "M",    "lengan": "PENDEK", "stok_total": 4, "stok_dipesan": 0 },
-    { "ukuran": "L",    "lengan": "PENDEK", "stok_total": 5, "stok_dipesan": 0 },
+    { "ukuran": "M",    "lengan": "PENDEK", "stok_total": 3, "stok_dipesan": 1 },
+    { "ukuran": "L",    "lengan": "PENDEK", "stok_total": 3, "stok_dipesan": 2 },
     { "ukuran": "XL",   "lengan": "PENDEK", "stok_total": 3, "stok_dipesan": 0 },
-    { "ukuran": "XXL",  "lengan": "PENDEK", "stok_total": 1, "stok_dipesan": 0 },
+    { "ukuran": "XXL",  "lengan": "PENDEK", "stok_total": 0, "stok_dipesan": 1 },
     { "ukuran": "XXXL", "lengan": "PENDEK", "stok_total": 0,  "stok_dipesan": 0 },
     { "ukuran": "SS",   "lengan": "PANJANG", "stok_total": 0, "stok_dipesan": 0 },
     { "ukuran": "S",    "lengan": "PANJANG", "stok_total": 2, "stok_dipesan": 0 },
