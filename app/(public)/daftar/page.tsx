@@ -1,7 +1,7 @@
 // app/(public)/daftar/page.tsx
 
-import DaftarForm from "./DaftarForm";
+import { redirect } from "next/navigation";
 
 export default function DaftarPage() {
-  return <DaftarForm />;
+  redirect("/daftar/tutup");
 }

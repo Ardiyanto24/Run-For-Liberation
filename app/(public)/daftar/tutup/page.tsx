@@ -1,12 +1,11 @@
 // app/(public)/daftar/tutup/page.tsx
-// Halaman notifikasi penutupan pendaftaran — Server Component
 
 import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Pendaftaran Ditutup | Run For Liberation 2026",
-  description: "Informasi status pendaftaran Run For Liberation 2026.",
+  description: "Informasi penutupan pendaftaran Run For Liberation 2026.",
 };
 
 export default function DaftarTutupPage() {
@@ -21,9 +20,9 @@ export default function DaftarTutupPage() {
           0%, 100% { opacity: 1; transform: scale(1); }
           50%       { opacity: 0.5; transform: scale(0.75); }
         }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(-5px); }
+        @keyframes wave {
+          0%, 100% { transform: rotate(-10deg); }
+          50%       { transform: rotate(10deg); }
         }
 
         .closed-wrap {
@@ -72,11 +71,12 @@ export default function DaftarTutupPage() {
         }
 
         .closed-icon {
-          font-size: 56px;
-          margin-bottom: 20px;
-          display: block;
+          font-size: 52px;
+          margin-bottom: 16px;
+          display: inline-block;
           line-height: 1;
-          animation: bounce 2.5s ease-in-out infinite;
+          animation: wave 1.8s ease-in-out infinite;
+          transform-origin: 70% 70%;
         }
 
         .closed-title {
@@ -84,16 +84,25 @@ export default function DaftarTutupPage() {
           font-size: clamp(28px, 5vw, 44px);
           color: #0A1628;
           letter-spacing: 1px;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
           line-height: 1.1;
+        }
+
+        .highlight {
+          color: #1A54C8;
         }
 
         .closed-subtitle {
           font-size: 15px;
           color: #6B7A99;
-          line-height: 1.65;
-          max-width: 480px;
-          margin: 0 auto 32px;
+          line-height: 1.7;
+          max-width: 500px;
+          margin: 0 auto 28px;
+        }
+
+        .closed-subtitle strong {
+          color: #0A1628;
+          font-weight: 700;
         }
 
         .closed-divider {
@@ -101,95 +110,107 @@ export default function DaftarTutupPage() {
           height: 3px;
           background: linear-gradient(90deg, #1A54C8, #CE1126);
           border-radius: 99px;
-          margin: 0 auto 32px;
+          margin: 0 auto 28px;
         }
 
-        .paket-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-          margin-bottom: 28px;
+        /* Info box OTS */
+        .ots-box {
+          background: linear-gradient(135deg, rgba(0,122,61,0.06) 0%, rgba(26,84,200,0.06) 100%);
+          border: 2px solid rgba(0,122,61,0.2);
+          border-radius: 16px;
+          padding: 24px 28px;
+          margin-bottom: 20px;
           text-align: left;
         }
 
-        .paket-card {
-          border-radius: 14px;
-          padding: 20px 22px;
-          border: 2px solid;
-        }
-        .paket-card.closed-pkg {
-          background: rgba(206,17,38,0.04);
-          border-color: rgba(206,17,38,0.2);
-        }
-        .paket-card.coming {
-          background: rgba(0,122,61,0.04);
-          border-color: rgba(0,122,61,0.25);
-        }
-
-        .paket-badge {
-          display: inline-flex;
+        .ots-header {
+          display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 4px 12px;
-          border-radius: 99px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          margin-bottom: 12px;
+          gap: 10px;
+          margin-bottom: 14px;
         }
-        .badge-dot {
-          width: 6px; height: 6px;
-          border-radius: 50%;
-          animation: pulse 2s infinite;
-        }
-        .paket-card.closed-pkg .paket-badge {
-          background: rgba(206,17,38,0.1);
-          color: #CE1126;
-        }
-        .paket-card.closed-pkg .badge-dot { background: #CE1126; }
-        .paket-card.coming .paket-badge {
-          background: rgba(0,122,61,0.1);
-          color: #007A3D;
-        }
-        .paket-card.coming .badge-dot { background: #007A3D; }
 
-        .paket-name {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 17px;
-          font-weight: 800;
-          color: #0A1628;
-          margin-bottom: 6px;
+        .ots-icon {
+          font-size: 28px;
+          line-height: 1;
         }
-        .paket-desc {
-          font-size: 13px;
+
+        .ots-title {
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: 18px;
+          font-weight: 800;
+          color: #007A3D;
+          letter-spacing: 0.3px;
+        }
+
+        .ots-subtitle {
+          font-size: 12px;
           color: #6B7A99;
+          font-weight: 600;
+          margin-top: 1px;
+        }
+
+        .ots-items {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .ots-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          font-size: 13.5px;
+          color: #374151;
           line-height: 1.55;
         }
-        .paket-date {
-          display: inline-block;
-          margin-top: 10px;
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 15px;
-          color: #007A3D;
-          letter-spacing: 0.8px;
-          background: rgba(0,122,61,0.08);
-          padding: 4px 12px;
-          border-radius: 6px;
+
+        .ots-item-icon {
+          font-size: 16px;
+          flex-shrink: 0;
+          margin-top: 1px;
         }
 
-        .closed-note {
-          background: rgba(26,84,200,0.05);
-          border: 1px solid rgba(26,84,200,0.12);
-          border-radius: 10px;
-          padding: 14px 18px;
-          font-size: 13px;
-          color: #4A5C7A;
-          line-height: 1.65;
-          margin-bottom: 32px;
+        .ots-time {
+          display: inline-block;
+          background: #007A3D;
+          color: #fff;
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 15px;
+          letter-spacing: 1px;
+          padding: 3px 12px;
+          border-radius: 6px;
+          margin-left: 4px;
+          vertical-align: middle;
+        }
+
+        /* Info merch */
+        .merch-box {
+          background: rgba(26,84,200,0.04);
+          border: 1px solid rgba(26,84,200,0.14);
+          border-radius: 12px;
+          padding: 16px 20px;
+          margin-bottom: 28px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
           text-align: left;
         }
-        .closed-note strong { color: #1A54C8; }
+
+        .merch-icon {
+          font-size: 28px;
+          flex-shrink: 0;
+        }
+
+        .merch-text {
+          font-size: 13px;
+          color: #4A5C7A;
+          line-height: 1.6;
+        }
+
+        .merch-text strong {
+          color: #1A54C8;
+        }
 
         .cta-group {
           display: flex;
@@ -210,6 +231,7 @@ export default function DaftarTutupPage() {
           text-transform: uppercase;
           text-decoration: none;
           transition: all 0.25s;
+          display: inline-block;
         }
         .btn-primary:hover {
           background: #1340A0;
@@ -217,30 +239,11 @@ export default function DaftarTutupPage() {
           box-shadow: 0 6px 20px rgba(26,84,200,0.3);
         }
 
-        .btn-outline {
-          background: transparent;
-          color: #1A54C8;
-          padding: 13px 28px;
-          border-radius: 8px;
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 15px;
-          font-weight: 700;
-          letter-spacing: 0.8px;
-          text-transform: uppercase;
-          text-decoration: none;
-          border: 2px solid rgba(26,84,200,0.25);
-          transition: all 0.25s;
-        }
-        .btn-outline:hover {
-          border-color: #1A54C8;
-          background: rgba(26,84,200,0.05);
-        }
-
         @media (max-width: 540px) {
           .closed-card { padding: 32px 20px 28px; }
-          .paket-grid { grid-template-columns: 1fr; }
+          .ots-box { padding: 20px 18px; }
           .cta-group { flex-direction: column; align-items: center; }
-          .btn-primary, .btn-outline { width: 100%; text-align: center; }
+          .btn-primary { width: 100%; text-align: center; }
         }
       `}</style>
 
@@ -256,43 +259,56 @@ export default function DaftarTutupPage() {
 
           <div className="closed-card">
 
-            <span className="closed-icon">🏁</span>
+            <span className="closed-icon">👋</span>
 
-            <h1 className="closed-title">Pendaftaran Sementara Ditutup</h1>
+            <h1 className="closed-title">
+              Terima Kasih,{" "}
+              <span className="highlight">270 Pendaftar!</span>
+            </h1>
+
             <p className="closed-subtitle">
-              Terima kasih atas antusiasme luar biasa dari seluruh peserta.
-              Berikut informasi terkini mengenai status pendaftaran tiap paket.
+              Pendaftaran online telah resmi ditutup.<br />
+              Sampai jumpa di{" "}
+              <strong>Masjid Agung Kota Surakarta</strong>,{" "}
+              <strong>Ahad, 24 Mei 2026</strong>. 🏃‍♂️🚶‍♀️
             </p>
 
             <div className="closed-divider" />
 
-            <div className="paket-grid">
-              <div className="paket-card closed-pkg">
-                <div className="paket-badge">
-                  <span className="badge-dot" />
-                  Ditutup
+            {/* OTS Box */}
+            <div className="ots-box">
+              <div className="ots-header">
+                <span className="ots-icon">🎟️</span>
+                <div>
+                  <div className="ots-title">Pendaftaran On The Spot (OTS)</div>
+                  <div className="ots-subtitle">Masih bisa daftar langsung di lokasi!</div>
                 </div>
-                <div className="paket-name">Fun Run &amp; Walk — Gaza</div>
-                <p className="paket-desc">
-                  Pendaftaran paket Gaza telah resmi ditutup. Slot sudah terisi penuh. Jazakumullahu khairan!
-                </p>
               </div>
-
-              <div className="paket-card coming">
-                <div className="paket-badge">
-                  <span className="badge-dot" />
-                  Segera Dibuka
+              <div className="ots-items">
+                <div className="ots-item">
+                  <span className="ots-item-icon">📦</span>
+                  <span>Tersedia untuk <strong>Paket Rafah</strong> — daftar langsung di lokasi event.</span>
                 </div>
-                <div className="paket-name">Fun Run &amp; Walk — Rafah</div>
-                <p className="paket-desc">
-                  Pendaftaran paket Rafah akan dibuka kembali pada:
-                </p>
-                <span className="paket-date">📅 17 – 22 Mei 2026</span>
+                <div className="ots-item">
+                  <span className="ots-item-icon">🕐</span>
+                  <span>
+                    Pendaftaran OTS dibuka pukul
+                    <span className="ots-time">05.00 – 05.45 WIB</span>
+                  </span>
+                </div>
+                <div className="ots-item">
+                  <span className="ots-item-icon">📍</span>
+                  <span>Lokasi: <strong>Masjid Agung Kota Surakarta</strong></span>
+                </div>
               </div>
             </div>
 
-            <div className="closed-note">
-              <strong>💡 Info:</strong> Pantau terus media sosial kami untuk pengumuman resmi pembukaan pendaftaran paket Rafah. Slot terbatas — pastikan kamu tidak ketinggalan!
+            {/* Merch Box */}
+            <div className="merch-box">
+              <span className="merch-icon">👕</span>
+              <p className="merch-text">
+                <strong>Jersey masih tersedia!</strong> Dapatkan jersey eksklusif Run For Liberation 2026 sebagai merchandise di lokasi. Jangan sampai kehabisan!
+              </p>
             </div>
 
             <div className="cta-group">
